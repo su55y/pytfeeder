@@ -31,7 +31,7 @@ class PageState(Enum):
 Lines = Union[List[Channel], List[Entry]]
 
 
-class FeederSelector:
+class FeederPager:
     def __init__(self, feeder: Feeder):
         self.feeder = feeder
         self.state = PageState.CHANNELS
@@ -82,10 +82,10 @@ class FeederSelector:
         def _go_down(event) -> None:
             self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
+        @kb.add("l")
         @kb.add("enter")
         @kb.add("right")
-        @kb.add("l")
-        def _enter_line(event) -> None:
+        def _choose_line(event) -> None:
             match self.state:
                 case PageState.CHANNELS:
                     if self.selected_line >= len(self.channels):
@@ -100,8 +100,8 @@ class FeederSelector:
                     play_video(self.entries[self.selected_line].id)
                     event.app.exit()
 
-        @kb.add("left")
         @kb.add("h")
+        @kb.add("left")
         def _back(event) -> None:
             match self.state:
                 case PageState.CHANNELS:
@@ -136,7 +136,7 @@ if __name__ == "__main__":
         event.app.exit()
 
     Application(
-        layout=Layout(VSplit([Label("", width=1), FeederSelector(feeder)])),
+        layout=Layout(VSplit([Label("", width=1), FeederPager(feeder)])),
         full_screen=True,
         style=Style.from_dict(
             {"select-box cursor-line": "nounderline bg:orange fg:black"}
