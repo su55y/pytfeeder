@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum, auto
 import subprocess as sp
 from typing import List, Union
@@ -5,7 +6,14 @@ from typing import List, Union
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import merge_formatted_text
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import FormattedTextControl, Layout, VSplit, Window
+from prompt_toolkit.layout import (
+    Dimension,
+    FormattedTextControl,
+    HSplit,
+    Layout,
+    VSplit,
+    Window,
+)
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
 from pytfeeder.args import parse_args
@@ -39,15 +47,36 @@ class FeederPager:
         self.entries: List[Entry] = []
         self.selected_line = 0
 
-        self.container = Window(
-            content=FormattedTextControl(
-                text=self._get_formatted_text,
-                focusable=True,
-                key_bindings=self._get_key_bindings(),
-            ),
-            style="class:select-box",
-            cursorline=True,
+        self.__toolbar_text = ""
+        self.bottom_toolbar = FormattedTextControl(
+            text=self._get_toolbar_text,
+            focusable=False,
         )
+        self.container = HSplit(
+            [
+                Window(
+                    content=FormattedTextControl(
+                        text=self._get_formatted_text,
+                        focusable=True,
+                        key_bindings=self._get_key_bindings(),
+                    ),
+                    style="class:select-box",
+                    cursorline=True,
+                ),
+                Window(
+                    height=Dimension.exact(1),
+                    content=self.bottom_toolbar,
+                    style="class:toolbar",
+                ),
+            ]
+        )
+
+    def _sync(self):
+        self.feeder.sync_channels()
+        asyncio.run(self.feeder.sync_entries())
+
+    def _get_toolbar_text(self):
+        return " %s [hjkl]: navigate, [q]: quit, [r,s]: sync " % self.__toolbar_text
 
     def _get_formatted_text(self):
         result = []
@@ -90,10 +119,11 @@ class FeederPager:
                 case PageState.CHANNELS:
                     if self.selected_line >= len(self.channels):
                         return
-                    id = self.channels[self.selected_line].channel_id
-                    self.entries = self.feeder.channel_feed(id)
+                    channel = self.channels[self.selected_line]
+                    self.entries = self.feeder.channel_feed(channel.channel_id)
                     self.state = PageState.ENTRIES
                     self.selected_line = 0
+                    self.__toolbar_text = channel.title
                 case PageState.ENTRIES:
                     if self.selected_line >= len(self.entries):
                         return
@@ -110,6 +140,12 @@ class FeederPager:
                     self.state = PageState.CHANNELS
                     self.entries = []
                     self.selected_line = 0
+                    self.__toolbar_text = ""
+
+        @kb.add("r")
+        @kb.add("s")
+        def _sync(event) -> None:
+            self._sync()
 
         @kb.add("q")
         def _exit(event) -> None:
@@ -139,7 +175,11 @@ if __name__ == "__main__":
         layout=Layout(VSplit([Label("", width=1), FeederPager(feeder)])),
         full_screen=True,
         style=Style.from_dict(
-            {"select-box cursor-line": "nounderline bg:orange fg:black"}
+            {
+                "select-box cursor-line": "nounderline bg:orange fg:black",
+                "toolbar": "bg:orange fg:black",
+                "toolbar.text": "",
+            },
         ),
         key_bindings=kb,
     ).run()
