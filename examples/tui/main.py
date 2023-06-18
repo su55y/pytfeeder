@@ -71,12 +71,8 @@ class FeederPager:
             ]
         )
 
-    def _sync(self):
-        self.feeder.sync_channels()
-        asyncio.run(self.feeder.sync_entries())
-
     def _get_toolbar_text(self):
-        return " %s [hjkl]: navigate, [q]: quit, [r,s]: sync " % self.__toolbar_text
+        return " %s [hjkl]: navigate, [q]: quit" % self.__toolbar_text
 
     def _get_formatted_text(self):
         result = []
@@ -142,11 +138,6 @@ class FeederPager:
                     self.selected_line = 0
                     self.__toolbar_text = ""
 
-        @kb.add("r")
-        @kb.add("s")
-        def _sync(event) -> None:
-            self._sync()
-
         @kb.add("q")
         def _exit(event) -> None:
             event.app.exit()
@@ -161,8 +152,12 @@ if __name__ == "__main__":
     config = Config(dirs.default_config_path())
     if not config:
         exit(1)
-    db_file = dirs.default_storage_path()
+    db_file = config.storage_path or dirs.default_storage_path()
+    if not db_file.parent.exists():
+        db_file.parent.mkdir(parents=True)
     feeder = Feeder(config, Storage(db_file))
+    feeder.sync_channels()
+    asyncio.run(feeder.sync_entries())
 
     kb = KeyBindings()
 

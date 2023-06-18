@@ -5,12 +5,18 @@ import sqlite3
 from typing import List, Optional, Tuple
 
 from ..models import Entry, Channel
+from .hooks import DBHooks
 
 
 class Storage:
     def __init__(self, db_file: Path) -> None:
         self.db_file = db_file
         self.log = logging.getLogger()
+        self.__init_db()
+
+    def __init_db(self) -> None:
+        if err := DBHooks(self.db_file).init_db():
+            raise err
 
     @contextmanager
     def get_cursor(self):

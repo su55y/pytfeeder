@@ -2,13 +2,13 @@ import argparse
 import asyncio
 import logging
 import sys
-from typing import List
+from typing import Any, Dict, List
 
 from pytfeeder.config import Config
 import pytfeeder.dirs as dirs
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Entry, Channel
-from pytfeeder.storage import Storage, DBHooks
+from pytfeeder.storage import Storage
 
 
 def init_logger(**kwargs):
@@ -33,14 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-d",
         "--cache-dir",
-        default=dirs.default_cachedir_path(),
-        help="Location of cache directory (default: %(default)s)",
-    )
-    parser.add_argument(
-        "-l",
-        "--log-file",
-        default=dirs.default_logfile_path(),
-        help="Location of log file (default: %(default)s)",
+        help="Location of cache directory (default: %s)" % dirs.default_cachedir_path(),
     )
     parser.add_argument("-i", "--channel-id", help="print channel feed")
     parser.add_argument("-s", "--sync", action="store_true", help="just update feeds")
@@ -70,18 +63,18 @@ def run():
     if not config:
         exit(1)
 
-    if not args.cache_dir.exists():
-        args.cache_dir.mkdir(parents=True)
+    cache_dir = args.cache_dir or dirs.default_cachedir_path()
+    if not cache_dir.exists():
+        cache_dir.mkdir(parents=True)
 
-    logger_opts = {"file": args.log_file or config.log_file}
+    logger_opts: Dict[str, Any] = {
+        "file": config.log_file or dirs.default_logfile_path()
+    }
     if config.log_level is not None:
         logger_opts["level"] = config.log_level
     init_logger(**logger_opts)
 
-    db_file = args.cache_dir.joinpath("test.db")
-    if err := DBHooks(db_file).init_db():
-        exit(repr(err))
-
+    db_file = config.storage_path or dirs.default_storage_path()
     feeder = Feeder(config, Storage(db_file))
     if args.sync:
         feeder.sync_channels()
