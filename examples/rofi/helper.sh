@@ -12,7 +12,6 @@ case $ROFI_RETV in
     0) main ;;
     # select line
     1)
-        notify-send "rofi" "$@"
         [ "$ROFI_INFO" = "feed" ] && {
             printf "back\000info\037main\n"
             pytfeeder-rofi -f
