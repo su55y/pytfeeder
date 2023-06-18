@@ -3,8 +3,6 @@ from functools import cache
 from pathlib import Path
 from os import getenv
 
-from pytfeeder import __name__ as PACKAGENAME
-
 
 @cache
 def default_cache_path() -> Path:
@@ -12,7 +10,7 @@ def default_cache_path() -> Path:
         cache_home = Path(xdg_cache_home)
     else:
         cache_home = Path.joinpath(Path.home(), ".cache")
-    return Path.joinpath(cache_home, PACKAGENAME)
+    return Path.joinpath(cache_home, __package__)
 
 
 def default_config_path(config_name="config.yaml") -> Path:
@@ -20,11 +18,11 @@ def default_config_path(config_name="config.yaml") -> Path:
         config_home = Path(xdg_config_home)
     else:
         config_home = Path.joinpath(Path.home(), ".config")
-    return Path.joinpath(config_home, PACKAGENAME, config_name)
+    return Path.joinpath(config_home, __package__, config_name)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="package: %s" % __package__)
     parser.add_argument(
         "-c",
         "--config-file",
@@ -40,7 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-l",
         "--log-file",
-        default=default_cache_path().joinpath("%s.log" % PACKAGENAME),
+        default=default_cache_path().joinpath("%s.log" % __package__),
         help="Location of log file (default: %(default)s)",
     )
     parser.add_argument("-i", "--channel-id", help="print channel feed")
