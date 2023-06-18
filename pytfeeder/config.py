@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from os.path import expanduser, expandvars
 
 import yaml
@@ -18,8 +18,8 @@ class Config:
     log_file: Optional[Path] = None
     storage_path: Optional[Path] = None
 
-    def __init__(self, path_str: str) -> None:
-        path = self._check_path(path_str)
+    def __init__(self, path: Union[Path, str]) -> None:
+        path = self._check_path(path)
         try:
             with open(path) as f:
                 config = yaml.safe_load(f)
@@ -39,8 +39,9 @@ class Config:
         except Exception as e:
             exit(str(e))
 
-    def _check_path(self, path_str) -> Path:
-        path = Path(expandvars(expanduser(path_str)))
+    def _check_path(self, path: Union[Path, str]) -> Path:
+        if isinstance(path, str):
+            path = Path(expandvars(expanduser(path)))
         if not path.parent.exists() or not path.parent.is_dir():
             exit(f"{path.parent} not exists or not a directory")
         elif path.suffix == ".yaml" or path.suffix == ".yml":
@@ -54,3 +55,7 @@ class Config:
                 return logging.DEBUG
             case "info" | "INFO":
                 return logging.INFO
+            case "warning" | "WARNING":
+                return logging.WARNING
+            case "error" | "ERROR":
+                return logging.ERROR
