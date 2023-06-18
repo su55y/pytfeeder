@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# printf "\000markup-rows\037true\n"
-# printf "\000urgent\037true\n"
-
 main(){
     printf "\000message\037YouTube feeder-rofi\n"
     printf "common feed\000info\037feed\n"
