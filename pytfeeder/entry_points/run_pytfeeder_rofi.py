@@ -1,23 +1,52 @@
+import argparse
+import asyncio
 import logging
 import sys
-
-import asyncio
 from typing import List
 
-from pytfeeder.args import parse_args
 from pytfeeder.config import Config
+import pytfeeder.dirs as dirs
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Entry, Channel
 from pytfeeder.storage import Storage, DBHooks
 
 
-def init_logger(file="/tmp/pyt-feed.log", level=logging.INFO, format=None):
+def init_logger(**kwargs):
+    if not (file := kwargs.get("file")):
+        return
     LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(funcName)s:%(lineno)d)"
     logger = logging.getLogger()
-    logger.setLevel(level)
+    logger.setLevel(kwargs.get("level", logging.INFO))
     handler = logging.FileHandler(file)
-    handler.setFormatter(logging.Formatter(format or LOG_FMT))
+    handler.setFormatter(logging.Formatter(kwargs.get("format", LOG_FMT)))
     logger.addHandler(handler)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="package: %s" % __package__)
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        default=dirs.default_config_path(),
+        help="Location of config file (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-d",
+        "--cache-dir",
+        default=dirs.default_cachedir_path(),
+        help="Location of cache directory (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-l",
+        "--log-file",
+        default=dirs.default_logfile_path(),
+        help="Location of log file (default: %(default)s)",
+    )
+    parser.add_argument("-i", "--channel-id", help="print channel feed")
+    parser.add_argument("-s", "--sync", action="store_true", help="just update feeds")
+    parser.add_argument("-f", "--feed", action="store_true", help="common feed")
+
+    return parser.parse_args()
 
 
 def print_entries(entries: List[Entry]):

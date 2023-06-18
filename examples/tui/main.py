@@ -16,7 +16,7 @@ from prompt_toolkit.layout import (
 )
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
-from pytfeeder.args import parse_args
+import pytfeeder.dirs as dirs
 from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
@@ -158,11 +158,10 @@ class FeederPager:
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    config = Config(args.config_file)
+    config = Config(dirs.default_config_path())
     if not config:
         exit(1)
-    db_file = args.cache_dir.joinpath("test.db")
+    db_file = dirs.default_storage_path()
     feeder = Feeder(config, Storage(db_file))
 
     kb = KeyBindings()
