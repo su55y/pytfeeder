@@ -6,11 +6,18 @@ from os.path import expanduser, expandvars
 
 import yaml
 
+from .dirs import default_storage_path
 from .models import Channel
 
 
 @dataclass
 class Config:
+    """Configuration settings
+
+    Args:
+        path (Path | str, optional): The path to the configuration file. If provided, the configuration will be loaded from the file.
+    """
+
     channels: List[Channel]
     common_feed_limit: Optional[int] = None
     channel_feed_limit: Optional[int] = None
@@ -18,13 +25,34 @@ class Config:
     log_file: Optional[Path] = None
     storage_path: Optional[Path] = None
 
-    def __init__(self, path: Union[Path, str]) -> None:
-        path = self._check_path(path)
+    def __init__(
+        self,
+        path: Optional[Union[Path, str]] = None,
+        channels: Optional[List[Channel]] = None,
+        common_feed_limit: Optional[int] = None,
+        channel_feed_limit: Optional[int] = None,
+        log_level: Optional[int] = None,
+        log_file: Optional[Path] = None,
+        storage_path: Optional[Path] = None,
+    ) -> None:
+        self.channels = channels or []
+        self.common_feed_limit = common_feed_limit
+        self.channel_feed_limit = channel_feed_limit
+        self.log_level = log_level
+        self.log_file = log_file
+        self.storage_path = storage_path or default_storage_path()
+        if path:
+            self._override_defaults(path)
+
+    def _override_defaults(self, config_path: Union[Path, str]) -> None:
+        path = self._check_path(config_path)
+        if not path:
+            exit("invalid config path '%s'" % config_path)
         try:
             with open(path) as f:
                 config = yaml.safe_load(f)
                 if not isinstance(config, Dict):
-                    raise Exception("invalid config")
+                    exit("invalid config file given")
                 self.channels = [Channel(**c) for c in config.pop("channels", [])]
                 if log_level := config.get("log_level"):
                     self.log_level = self._choose_log_level(log_level)
@@ -39,15 +67,12 @@ class Config:
         except Exception as e:
             exit(str(e))
 
-    def _check_path(self, path: Union[Path, str]) -> Path:
+    def _check_path(self, path: Union[Path, str]) -> Optional[Path]:
         if isinstance(path, str):
             path = Path(expandvars(expanduser(path)))
-        if not path.parent.exists() or not path.parent.is_dir():
-            exit(f"{path.parent} not exists or not a directory")
-        elif path.suffix == ".yaml" or path.suffix == ".yml":
-            return path
-        else:
-            exit(f"invalid config path '{path}'")
+        if path.parent.exists() and path.parent.is_dir():
+            if path.suffix == ".yaml" or path.suffix == ".yml":
+                return path
 
     def _choose_log_level(self, lvl: str) -> Optional[int]:
         match lvl:
