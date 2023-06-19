@@ -152,10 +152,9 @@ if __name__ == "__main__":
     config = Config(dirs.default_config_path())
     if not config:
         exit(1)
-    db_file = config.storage_path or dirs.default_storage_path()
-    if not db_file.parent.exists():
-        db_file.parent.mkdir(parents=True)
-    feeder = Feeder(config, Storage(db_file))
+    if not config.storage_path.parent.exists():
+        config.storage_path.parent.mkdir(parents=True)
+    feeder = Feeder(config, Storage(config.storage_path))
     feeder.sync_channels()
     asyncio.run(feeder.sync_entries())
 

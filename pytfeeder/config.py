@@ -19,11 +19,11 @@ class Config:
     """
 
     channels: List[Channel]
+    storage_path: Path
     common_feed_limit: Optional[int] = None
     channel_feed_limit: Optional[int] = None
     log_level: Optional[int] = None
     log_file: Optional[Path] = None
-    storage_path: Optional[Path] = None
 
     def __init__(
         self,
