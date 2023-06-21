@@ -9,7 +9,7 @@ setup(
     url="https://github.com/su55y/pytfeeder",
     description="---",
     long_description="---",
-    packages=find_packages("."),
+    packages=find_packages(".", exclude=["tests", "tests.*", "examples"]),
     install_requires=[],
     python_requires=">=3.7",
     classifiers=[
