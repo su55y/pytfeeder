@@ -30,6 +30,6 @@ EOF
 rofi -i -show "yt_feed_rofi"\
     -modi "yt_feed_rofi:$SCRIPTPATH/helper.sh"\
     -no-config\
-    -no-custom\
-    -theme-str "$(theme)"\
-    -normal-window
+    -kb-custom-1 "Ctrl+s"\
+    -kb-custom-2 "Ctrl+c"\
+    -theme-str "$(theme)"

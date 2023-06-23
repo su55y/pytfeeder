@@ -32,6 +32,7 @@ class Feeder:
         return self.stor.select_entries(limit=limit or self.config.common_feed_limit)
 
     def clean_cache(self) -> None:
+        self.sync_channels()
         self.stor.delete_all_entries()
         self.stor.delete_inactive_channels()
 

@@ -37,6 +37,11 @@ def parse_args() -> argparse.Namespace:
         help="Channels print format (default: '%s')" % r"{title}\000info\037{id}",
     )
     parser.add_argument(
+        "--clean-cache",
+        action="store_true",
+        help="Deletes inactive channels and viewed entries",
+    )
+    parser.add_argument(
         "--entries-fmt",
         default=DEFAULT_FMT,
         metavar="STR",
@@ -121,10 +126,13 @@ def run():
 
     db_file = config.storage_path or dirs.default_storage_path()
     feeder = Feeder(config, Storage(db_file))
+    if args.clean_cache:
+        feeder.clean_cache()
+        print("\000message\037cache cleaned")
     if args.sync:
         feeder.sync_channels()
         asyncio.run(feeder.sync_entries())
-        exit(0)
+        print("\000message\037feeds synced")
     printer = RofiPrinter(
         feeder=feeder,
         config=config,
@@ -137,4 +145,5 @@ def run():
     elif args.feed:
         printer.print_common_feed()
     else:
+        print("common feed\000info\037feed")
         printer.print_channels()
