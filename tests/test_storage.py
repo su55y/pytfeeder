@@ -45,3 +45,10 @@ class StorageTest(unittest.TestCase):
     def test3_insert_duplicate(self):
         count = self.stor.add_entries(sample_entries, sample_channel.channel_id)
         self.assertEqual(count, 0)
+
+    def test4_delete(self):
+        self.stor.delete_all_entries()
+        self.stor.update_active_channels([])
+        self.stor.delete_inactive_channels()
+        self.assertIsNone(self.stor.select_channel(sample_channel.channel_id))
+        self.assertEqual(len(self.stor.select_entries()), 0)
