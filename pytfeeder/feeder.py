@@ -31,6 +31,10 @@ class Feeder:
     def common_feed(self, limit: Optional[int] = None) -> List[Entry]:
         return self.stor.select_entries(limit=limit or self.config.common_feed_limit)
 
+    def clean_cache(self) -> None:
+        self.stor.delete_all_entries()
+        self.stor.delete_inactive_channels()
+
     def sync_channels(self) -> None:
         if new_channels_count := self.stor.add_channels(self.config.channels):
             self.log.info("%d new channels added" % new_channels_count)
