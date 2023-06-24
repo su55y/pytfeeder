@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 import logging
-from typing import List, Optional
+from typing import List
 
 from pytfeeder.config import Config
 import pytfeeder.dirs as dirs
@@ -34,18 +34,18 @@ def parse_args() -> argparse.Namespace:
         "--channels-fmt",
         default=DEFAULT_FMT,
         metavar="STR",
-        help="Channels print format (default: '%s')" % r"{title}\000info\037{id}",
+        help=r"Channels print format (default: '{title}\000info\037{id}')",
     )
     parser.add_argument(
         "--clean-cache",
         action="store_true",
-        help="Deletes inactive channels and viewed entries",
+        help="Deletes inactive channels and watched entries",
     )
     parser.add_argument(
         "--entries-fmt",
         default=DEFAULT_FMT,
         metavar="STR",
-        help="Entries print format (default: '%s')" % r"{title}\000info\037{id}",
+        help=r"Entries print format (default: '{title}\000info\037{id}')",
     )
     parser.add_argument(
         "-i",
@@ -66,18 +66,13 @@ def parse_args() -> argparse.Namespace:
 
 class RofiPrinter:
     def __init__(
-        self,
-        feeder: Feeder,
-        config: Config,
-        channels_fmt: str,
-        entries_fmt: str,
-        limit: Optional[int] = None,
+        self, feeder: Feeder, config: Config, args: argparse.Namespace
     ) -> None:
         self.config = config
         self.feeder = feeder
-        self.channels_fmt = channels_fmt
-        self.entries_fmt = entries_fmt
-        self.limit = limit
+        self.channels_fmt = args.channels_fmt
+        self.entries_fmt = args.entries_fmt
+        self.limit = args.limit
 
     def print_channels(self) -> None:
         for channel in self.feeder.channels:
@@ -106,7 +101,8 @@ class RofiPrinter:
                 highlight.append(str(i + 1))
             print(self.entries_fmt.format(title=entry.title, id=entry.id))
 
-        print("\000active\037%s" % ",".join(highlight))
+        if highlight:
+            print("\000active\037%s" % ",".join(highlight))
 
 
 def run():
@@ -133,13 +129,7 @@ def run():
         feeder.sync_channels()
         asyncio.run(feeder.sync_entries())
         print("\000message\037feeds synced")
-    printer = RofiPrinter(
-        feeder=feeder,
-        config=config,
-        channels_fmt=args.channels_fmt,
-        entries_fmt=args.entries_fmt,
-        limit=args.limit,
-    )
+    printer = RofiPrinter(feeder=feeder, config=config, args=args)
     if args.channel_id:
         printer.print_channel_feed(args.channel_id)
     elif args.feed:
