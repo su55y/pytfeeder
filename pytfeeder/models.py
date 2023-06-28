@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import List
 
 
@@ -6,8 +7,9 @@ from typing import List
 class Entry:
     id: str
     title: str
-    updated: str
+    updated: str = str(datetime.now(timezone.utc))
     is_viewed: bool = False
+
 
 @dataclass
 class Channel:

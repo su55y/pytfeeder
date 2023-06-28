@@ -60,7 +60,7 @@ class Storage:
             query = "SELECT id, title, updated, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY updated DESC {limit}".format(
                 where="" if (not channel_id and not timedelta) else "WHERE",
                 channel_id=f"channel_id = '{channel_id}'" if channel_id else "",
-                timedelta=f" updated > {timedelta} " if timedelta else "",
+                timedelta=f"updated > '{timedelta}'" if timedelta else "",
                 and_="AND" if (timedelta and channel_id) else "",
                 limit=f"LIMIT {limit}" if limit else "",
             )
