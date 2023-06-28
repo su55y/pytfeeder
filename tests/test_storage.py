@@ -1,8 +1,12 @@
+from datetime import datetime, timedelta, timezone
+import logging
 from pathlib import Path
 import unittest
 
 from pytfeeder.storage import DBHooks, Storage
 from .mocks import sample_channel, sample_entries
+
+logging.basicConfig(level=logging.DEBUG, filename="/tmp/test.log")
 
 
 class StorageTest(unittest.TestCase):
@@ -41,6 +45,10 @@ class StorageTest(unittest.TestCase):
         self.assertIsNone(self.stor.select_channel(""))
         entries = self.stor.select_entries(channel_id="-")
         self.assertEqual(len(entries), 0)
+
+    def test3_select_by_timedelta(self):
+        td = str(datetime.now(timezone.utc) - timedelta(hours=24))
+        self.assertEqual(len(self.stor.select_entries(timedelta=td)), 1)
 
     def test3_insert_duplicate(self):
         count = self.stor.add_entries(sample_entries, sample_channel.channel_id)

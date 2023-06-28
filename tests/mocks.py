@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from pytfeeder.models import Entry, Channel
 
 entry_fmt = """
@@ -22,7 +23,7 @@ sample_entries = [
     Entry(
         id=f"video_id_{n:02d}",
         title=f"Video #{n}",
-        updated=f"2023-01-{n:02d}T00:00:00+00:00",
+        updated=str(datetime.now(timezone.utc) - timedelta(hours=25 * (3 - n))),
     )
     for n in range(3, 0, -1)
 ]
