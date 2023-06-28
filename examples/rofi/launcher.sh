@@ -32,4 +32,5 @@ rofi -i -show "yt_feed_rofi"\
     -no-config\
     -kb-custom-1 "Ctrl+s"\
     -kb-custom-2 "Ctrl+c"\
-    -theme-str "$(theme)"
+    -theme-str "$(theme)"\
+    -normal-window

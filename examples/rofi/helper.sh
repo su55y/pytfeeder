@@ -14,7 +14,7 @@ case $ROFI_RETV in
     1)
         [ "$ROFI_INFO" = "feed" ] && {
             printf "back\000info\037main\n"
-            pytfeeder-rofi -f
+            pytfeeder-rofi -f -l 100
             printf "\000new-selection\0370\n"
         }
         [ "$ROFI_INFO" = "main" ] && main
