@@ -13,7 +13,7 @@ from pytfeeder.storage import Storage
 def init_logger(**kwargs):
     if not (file := kwargs.get("file")):
         return
-    LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(funcName)s:%(lineno)d)"
+    LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
     logger = logging.getLogger()
     logger.setLevel(kwargs.get("level", logging.INFO))
     handler = logging.FileHandler(file)
@@ -126,7 +126,6 @@ def run():
         feeder.clean_cache()
         print("\000message\037cache cleaned")
     if args.sync:
-        feeder.sync_channels()
         asyncio.run(feeder.sync_entries())
         print("\000message\037feeds synced")
     printer = RofiPrinter(feeder=feeder, config=config, args=args)

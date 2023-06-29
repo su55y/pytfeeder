@@ -19,7 +19,6 @@ class Feeder:
 
     @cached_property
     def channels(self) -> List[Channel]:
-        self.sync_channels()
         return self.config.channels
 
     def channel_feed(self, channel_id: str, limit: Optional[int] = None) -> List[Entry]:
@@ -32,20 +31,7 @@ class Feeder:
         return self.stor.select_entries(limit=limit or self.config.common_feed_limit)
 
     def clean_cache(self) -> None:
-        self.sync_channels()
         self.stor.delete_all_entries()
-        self.stor.delete_inactive_channels()
-
-    def sync_channels(self) -> None:
-        if new_channels_count := self.stor.add_channels(self.config.channels):
-            self.log.info("%d new channels added" % new_channels_count)
-        active_channels_ids = [(c.channel_id,) for c in self.config.channels]
-        active_count = self.stor.update_active_channels(active_channels_ids)
-        if active_count != len(self.config.channels):
-            self.log.warning(
-                "mismatch storage with config active channels: %d != %d"
-                % (active_count, len(active_channels_ids)),
-            )
 
     async def sync_entries(self) -> None:
         async with ClientSession() as session:

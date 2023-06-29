@@ -155,7 +155,6 @@ if __name__ == "__main__":
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
     feeder = Feeder(config, Storage(config.storage_path))
-    feeder.sync_channels()
     asyncio.run(feeder.sync_entries())
 
     kb = KeyBindings()
