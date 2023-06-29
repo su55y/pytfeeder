@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 import unittest
 
-from pytfeeder.storage import DBHooks, Storage
+from pytfeeder.storage import Storage
 from .mocks import sample_channel, sample_entries
 
 logging.basicConfig(level=logging.DEBUG, filename="/tmp/test_storage.log")
@@ -15,15 +15,12 @@ class StorageTest(unittest.TestCase):
         cls.db_file = Path("/tmp/test_storage.db")
         if cls.db_file.exists():
             cls.db_file.unlink()
-        cls.db_hooks = DBHooks(cls.db_file)
-        if err := cls.db_hooks.init_db():
-            raise err
         cls.stor = Storage(cls.db_file)
 
     @classmethod
     def tearDownClass(cls):
-        if err := cls.db_hooks.drop_db():
-            raise err
+        if cls.db_file.exists():
+            cls.db_file.unlink()
 
     def test1_insert(self):
         self.assertEqual(

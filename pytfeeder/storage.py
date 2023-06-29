@@ -4,8 +4,16 @@ from pathlib import Path
 import sqlite3
 from typing import List, Optional
 
-from ..models import Entry
-from .hooks import DBHooks
+from .models import Entry
+
+TB_ENTRIES = """
+CREATE TABLE IF NOT EXISTS tb_entries(
+    id TEXT NOT NULL CHECK(length(id) == 11) PRIMARY KEY,
+    title TEXT NOT NULL,
+    updated DATETIME NOT NULL,
+    channel_id TEXT NOT NULL,
+    is_viewed TINYINT NOT NULL DEFAULT 0
+);"""
 
 
 class Storage:
@@ -15,8 +23,8 @@ class Storage:
         self.__init_db()
 
     def __init_db(self) -> None:
-        if err := DBHooks(self.db_file).init_db():
-            raise err
+        with self.get_cursor() as cursor:
+            cursor.execute(TB_ENTRIES)
 
     @contextmanager
     def get_cursor(self):
