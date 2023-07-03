@@ -17,6 +17,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
+            "pytfeeder = pytfeeder.entry_points.run_pytfeeder:run",
             "pytfeeder-rofi = pytfeeder.entry_points.run_pytfeeder_rofi:run",
         ]
     },
