@@ -36,6 +36,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-s", "--sync", action="store_true", help="Just update feeds and exit"
     )
+    parser.add_argument(
+        "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
+    )
 
     return parser.parse_args()
 
@@ -61,3 +64,5 @@ def run():
         feeder.clean_cache()
     if args.sync:
         asyncio.run(feeder.sync_entries())
+    if args.unviewed:
+        print(feeder.unviewed_count())

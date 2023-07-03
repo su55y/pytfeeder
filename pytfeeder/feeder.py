@@ -30,6 +30,9 @@ class Feeder:
     def common_feed(self, limit: Optional[int] = None) -> List[Entry]:
         return self.stor.select_entries(limit=limit or self.config.common_feed_limit)
 
+    def unviewed_count(self, channel_id: Optional[str] = None) -> int:
+        return self.stor.select_unviewed(channel_id)
+
     def clean_cache(self) -> None:
         self.stor.delete_all_entries()
 

@@ -68,6 +68,15 @@ class Storage:
             self.mark_entries_as_viewed(entries)
         return entries
 
+    def select_unviewed(self, channel_id: Optional[str] = None) -> int:
+        with self.get_cursor() as cursor:
+            query = "SELECT COUNT(*) FROM tb_entries WHERE is_viewed = 0 {for_channel}".format(
+                for_channel=f"AND channel_id = {channel_id}" if channel_id else ""
+            )
+            self.log.debug(query)
+            count, *_ = cursor.execute(query).fetchone()
+            return count
+
     def mark_entries_as_viewed(self, entries: List[Entry]):
         with self.get_cursor() as cursor:
             update_query = "UPDATE tb_entries SET is_viewed = 1 WHERE id = ?"

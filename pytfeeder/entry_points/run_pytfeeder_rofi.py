@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import logging
 from typing import List
 
 from pytfeeder.config import Config
@@ -8,17 +7,7 @@ import pytfeeder.dirs as dirs
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Entry
 from pytfeeder.storage import Storage
-
-
-def init_logger(**kwargs):
-    if not (file := kwargs.get("file")):
-        return
-    LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
-    logger = logging.getLogger()
-    logger.setLevel(kwargs.get("level", logging.INFO))
-    handler = logging.FileHandler(file)
-    handler.setFormatter(logging.Formatter(kwargs.get("format", LOG_FMT)))
-    logger.addHandler(handler)
+from .run_pytfeeder import init_logger
 
 
 def parse_args() -> argparse.Namespace:
