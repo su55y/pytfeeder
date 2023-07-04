@@ -21,7 +21,10 @@ def parse_args() -> argparse.Namespace:
         help="Deletes inactive channels and watched entries",
     )
     parser.add_argument(
-        "-s", "--sync", action="store_true", help="Just update feeds and exit"
+        "-s",
+        "--sync",
+        action="store_true",
+        help="Updates all feeds and prints new entries count",
     )
     parser.add_argument(
         "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
@@ -40,6 +43,8 @@ def run():
     if args.clean_cache:
         feeder.clean_cache()
     if args.sync:
+        before_updates = feeder.unviewed_count()
         asyncio.run(feeder.sync_entries())
+        print(feeder.unviewed_count() - before_updates)
     if args.unviewed:
         print(feeder.unviewed_count())

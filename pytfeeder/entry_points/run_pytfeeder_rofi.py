@@ -47,7 +47,10 @@ def parse_args() -> argparse.Namespace:
         "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit"
     )
     parser.add_argument(
-        "-s", "--sync", action="store_true", help="Just update feeds and exit"
+        "-s",
+        "--sync",
+        action="store_true",
+        help="Updates all feeds and prints message with new entries count",
     )
 
     return parser.parse_args()
@@ -105,8 +108,12 @@ def run():
         feeder.clean_cache()
         print("\000message\037cache cleaned")
     if args.sync:
+        before_update = feeder.unviewed_count()
         asyncio.run(feeder.sync_entries())
-        print("\000message\037feeds synced")
+        print(
+            "\000message\037New entries count: %d"
+            % (feeder.unviewed_count() - before_update)
+        )
     printer = RofiPrinter(feeder=feeder, config=config, args=args)
     if args.channel_id:
         printer.print_channel_feed(args.channel_id)
