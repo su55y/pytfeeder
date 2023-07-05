@@ -44,6 +44,10 @@ class StorageTest(unittest.TestCase):
         count = self.stor.add_entries(sample_entries, sample_channel.channel_id)
         self.assertEqual(count, 0)
 
+    def test3_mark_as_viewed(self):
+        self.stor.mark_entry_as_viewed(id=sample_entries[0].id)
+        self.assertTrue(self.stor.select_entries()[0])
+
     def test4_delete(self):
-        self.stor.delete_all_entries()
+        self.stor.delete_all_entries(force=True)
         self.assertEqual(len(self.stor.select_entries()), 0)
