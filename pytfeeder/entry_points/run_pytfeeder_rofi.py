@@ -52,6 +52,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Updates all feeds and prints message with new entries count",
     )
+    parser.add_argument(
+        "-v",
+        "--viewed",
+        metavar="ID",
+        help="Mark as viewed (without context accept as vidid)",
+    )
+    parser.add_argument("--context", help="context to mark as viewed")
 
     return parser.parse_args()
 
@@ -71,6 +78,7 @@ class RofiPrinter:
             print(self.channels_fmt.format(title=channel.title, id=channel.channel_id))
 
     def print_common_feed(self) -> None:
+        print("\000data\037common_feed")
         self._print_entries(
             self.feeder.common_feed(self.limit or self.config.common_feed_limit)
         )
@@ -78,6 +86,7 @@ class RofiPrinter:
     def print_channel_feed(self, channel_id: str) -> None:
         if len(channel_id) != 24:
             exit("invalid channel_id")
+        print("\000data\037%s" % channel_id)
         self._print_entries(
             self.feeder.channel_feed(
                 channel_id, self.limit or self.config.channel_feed_limit
@@ -114,6 +123,14 @@ def run():
             "\000message\037New entries count: %d"
             % (feeder.unviewed_count() - before_update)
         )
+    if args.viewed:
+        if args.viewed == "common_feed":
+            feeder.mark_as_viewed()
+        elif len(args.viewed) == 24:
+            feeder.mark_as_viewed(channel_id=args.viewed)
+        elif len(args.viewed) == 11:
+            feeder.mark_as_viewed(id=args.viewed)
+
     printer = RofiPrinter(feeder=feeder, config=config, args=args)
     if args.channel_id:
         printer.print_channel_feed(args.channel_id)

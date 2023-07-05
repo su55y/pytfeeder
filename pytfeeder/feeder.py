@@ -30,6 +30,16 @@ class Feeder:
     def common_feed(self, limit: Optional[int] = None) -> List[Entry]:
         return self.stor.select_entries(limit=limit or self.config.common_feed_limit)
 
+    def mark_as_viewed(
+        self, id: Optional[str] = None, channel_id: Optional[str] = None
+    ) -> None:
+        if id:
+            self.stor.mark_entry_as_viewed(id)
+        elif channel_id:
+            self.stor.mark_channel_entries_as_viewed(channel_id)
+        else:
+            self.stor.mark_all_entries_as_viewed()
+
     def unviewed_count(self, channel_id: Optional[str] = None) -> int:
         return self.stor.select_unviewed(channel_id)
 

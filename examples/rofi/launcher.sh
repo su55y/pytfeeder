@@ -32,5 +32,8 @@ rofi -i -show "yt_feed_rofi"\
     -no-config\
     -kb-custom-1 "Ctrl+s"\
     -kb-custom-2 "Ctrl+c"\
+    -kb-custom-3 "Ctrl+x"\
+    -kb-move-front ""\
+    -kb-custom-4 "Ctrl+a"\
     -theme-str "$(theme)"\
     -normal-window

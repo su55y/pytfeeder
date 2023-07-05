@@ -65,7 +65,6 @@ class Storage:
                         is_viewed=bool(is_viewed),
                     )
                 )
-            self.mark_entries_as_viewed(entries)
         return entries
 
     def select_unviewed(self, channel_id: Optional[str] = None) -> int:
@@ -77,17 +76,25 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
-    def mark_entries_as_viewed(self, entries: List[Entry]):
+    def mark_entry_as_viewed(self, id: str) -> None:
         with self.get_cursor() as cursor:
-            update_query = "UPDATE tb_entries SET is_viewed = 1 WHERE id = ?"
-            count = cursor.executemany(
-                update_query, [(e.id,) for e in entries]
-            ).rowcount
-            if len(entries) != cursor.rowcount:
-                self.log.warning(
-                    "can't mark all selected entries as viewed (%d of %d)"
-                    % (count, len(entries))
-                )
+            query = "UPDATE tb_entries SET is_viewed = 1 WHERE id = ?"
+            self.log.debug("%s, id: %s" % (query, id))
+            count = cursor.execute(query, (id,)).rowcount
+            if count != 1:
+                self.log.warning("rowcount != 1 for mark_entry_as_viewed(%s)" % id)
+
+    def mark_channel_entries_as_viewed(self, channel_id: str) -> None:
+        with self.get_cursor() as cursor:
+            query = "UPDATE tb_entries SET is_viewed = 1 WHERE channel_id = ?"
+            self.log.debug("%s, channel_id: %s" % (query, channel_id))
+            cursor.execute(query, (channel_id,))
+
+    def mark_all_entries_as_viewed(self):
+        with self.get_cursor() as cursor:
+            query = "UPDATE tb_entries SET is_viewed = 1"
+            self.log.debug(query)
+            cursor.execute(query)
 
     def add_entries(self, entries: List[Entry], channel_id: str) -> int:
         if not entries:
