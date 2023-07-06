@@ -6,8 +6,11 @@ from os.path import expanduser, expandvars
 
 import yaml
 
-from .dirs import default_storage_path
+from .dirs import default_storage_path, default_logfile_path
 from .models import Channel
+
+
+LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
 
 
 @dataclass
@@ -20,10 +23,11 @@ class Config:
 
     channels: List[Channel]
     storage_path: Path
+    log_level: int
+    log_file: Path
+    log_fmt: str
     common_feed_limit: Optional[int] = None
     channel_feed_limit: Optional[int] = None
-    log_level: Optional[int] = None
-    log_file: Optional[Path] = None
 
     def __init__(
         self,
@@ -33,13 +37,15 @@ class Config:
         channel_feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
+        log_fmt: Optional[str] = None,
         storage_path: Optional[Path] = None,
     ) -> None:
         self.channels = channels or []
         self.common_feed_limit = common_feed_limit
         self.channel_feed_limit = channel_feed_limit
-        self.log_level = log_level
-        self.log_file = log_file
+        self.log_level = log_level or 0
+        self.log_file = log_file or default_logfile_path()
+        self.log_fmt = log_fmt or LOG_FMT
         self.storage_path = storage_path or default_storage_path()
         if path:
             self._override_defaults(path)
@@ -47,17 +53,19 @@ class Config:
     def _override_defaults(self, config_path: Union[Path, str]) -> None:
         path = self._check_path(config_path)
         if not path:
-            exit("invalid config path '%s'" % config_path)
+            exit("Invalid config path '%s'" % config_path)
         try:
             with open(path) as f:
                 config = yaml.safe_load(f)
                 if not isinstance(config, Dict):
-                    exit("invalid config file given")
+                    exit("Invalid config file given")
                 self.channels = [Channel(**c) for c in config.pop("channels", [])]
                 if log_level := config.get("log_level"):
                     self.log_level = self._choose_log_level(log_level)
                 if log_file := config.get("log_file"):
                     self.log_file = Path(log_file)
+                if log_fmt := config.get("log_fmt"):
+                    self.log_fmt = log_fmt
                 if common_feed_limit := config.get("common_feed_limit"):
                     self.common_feed_limit = common_feed_limit
                 if channel_feed_limit := config.get("channel_feed_limit"):
@@ -65,7 +73,7 @@ class Config:
                 if storage_path := config.get("storage_path"):
                     self.storage_path = Path(storage_path)
         except Exception as e:
-            exit(str(e))
+            exit("Can't parse config: %s" % e)
 
     def _check_path(self, path: Union[Path, str]) -> Optional[Path]:
         if isinstance(path, str):
@@ -74,7 +82,7 @@ class Config:
             if path.suffix == ".yaml" or path.suffix == ".yml":
                 return path
 
-    def _choose_log_level(self, lvl: str) -> Optional[int]:
+    def _choose_log_level(self, lvl: str) -> int:
         match lvl:
             case "debug" | "DEBUG":
                 return logging.DEBUG
@@ -84,3 +92,6 @@ class Config:
                 return logging.WARNING
             case "error" | "ERROR":
                 return logging.ERROR
+            case "none" | "None" | "NONE":
+                return 0
+        return 0

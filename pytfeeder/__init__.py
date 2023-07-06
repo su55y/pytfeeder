@@ -6,14 +6,11 @@ from .feeder import Feeder
 from .storage import Storage
 
 
-def init_logger(**kwargs):
-    if not (file := kwargs.get("file")):
-        return
-    LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
+def init_logger(config: Config):
     logger = logging.getLogger()
-    logger.setLevel(kwargs.get("level", logging.INFO))
-    handler = logging.FileHandler(file)
-    handler.setFormatter(logging.Formatter(kwargs.get("format", LOG_FMT)))
+    logger.setLevel(config.log_level)
+    handler = logging.FileHandler(config.log_file)
+    handler.setFormatter(logging.Formatter(config.log_fmt))
     logger.addHandler(handler)
 
 
@@ -22,10 +19,8 @@ def init_feeder(config: Config):
     if not cache_dir.exists():
         cache_dir.mkdir(parents=True)
 
-    init_logger(
-        file=config.log_file or dirs.default_logfile_path(),
-        level=config.log_level,
-    )
+    if config.log_level > 0:
+        init_logger(config)
 
     db_file = config.storage_path or dirs.default_storage_path()
     return Feeder(config, Storage(db_file))
