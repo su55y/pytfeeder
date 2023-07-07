@@ -56,9 +56,8 @@ def parse_args() -> argparse.Namespace:
         "-v",
         "--viewed",
         metavar="ID",
-        help="Mark as viewed (without context accept as vidid)",
+        help="Mark as viewed (Accepts entry/channel id or keyword 'all')",
     )
-    parser.add_argument("--context", help="context to mark as viewed")
 
     return parser.parse_args()
 
@@ -74,6 +73,9 @@ class RofiPrinter:
         self.limit = args.limit
 
     def print_channels(self) -> None:
+        print("\000message\037%d unviewed entries" % self.feeder.unviewed_count())
+        print("\000data\037main")
+        print("common feed\000info\037feed")
         for channel in self.feeder.channels:
             print(self.channels_fmt.format(title=channel.title, id=channel.channel_id))
 
@@ -86,6 +88,8 @@ class RofiPrinter:
     def print_channel_feed(self, channel_id: str) -> None:
         if len(channel_id) != 24:
             exit("invalid channel_id")
+
+        print("\000message\037%s" % self._channel_feed_message(channel_id))
         print("\000data\037%s" % channel_id)
         self._print_entries(
             self.feeder.channel_feed(
@@ -93,9 +97,21 @@ class RofiPrinter:
             )
         )
 
-    def _print_entries(self, entries: List[Entry]):
+    def _channel_feed_message(self, channel_id: str) -> str:
+        message = ""
+        if filtered_channels := [
+            c for c in self.config.channels if c.channel_id == channel_id
+        ]:
+            message = filtered_channels.pop().title
+        if unviewed_count := self.feeder.unviewed_count(channel_id):
+            unviewed = "%d unviewed entries" % unviewed_count
+            message = f"{message}, {unviewed}" if message else unviewed
+        return message
+
+    def _print_entries(self, entries: List[Entry]) -> None:
         if not entries:
             print("\000message\037no entries")
+            return
         highlight = []
         for i, entry in enumerate(entries):
             if not entry.is_viewed:
@@ -120,11 +136,10 @@ def run():
         before_update = feeder.unviewed_count()
         asyncio.run(feeder.sync_entries())
         print(
-            "\000message\037New entries count: %d"
-            % (feeder.unviewed_count() - before_update)
+            "\000message\037%d new entries" % (feeder.unviewed_count() - before_update)
         )
     if args.viewed:
-        if args.viewed == "common_feed":
+        if args.viewed == "all":
             feeder.mark_as_viewed()
         elif len(args.viewed) == 24:
             feeder.mark_as_viewed(channel_id=args.viewed)
@@ -137,5 +152,4 @@ def run():
     elif args.feed:
         printer.print_common_feed()
     else:
-        print("common feed\000info\037feed")
         printer.print_channels()
