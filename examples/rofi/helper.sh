@@ -35,6 +35,7 @@ case $ROFI_RETV in
     ;;
     # kb-custom-1 (Ctrl-s) -- sync
     10) 
+        [ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
         case $ROFI_DATA in
         common_feed) pytfeeder-rofi -s -f ;;
         main)  pytfeeder-rofi -s ;;
@@ -45,7 +46,7 @@ case $ROFI_RETV in
     11) pytfeeder-rofi --clean-cache ;;
     # kb-custom-3 (Ctrl-x) -- mark entry as viewed
     12)
-        printf "back\000info\037main\n"
+        [ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
         case $ROFI_DATA in
         common_feed) pytfeeder-rofi -v "$ROFI_INFO" -f ;;
         *) [ "${#ROFI_DATA}" -eq 24 ] && pytfeeder-rofi -v "$ROFI_INFO" -i "$ROFI_DATA" ;;
@@ -55,7 +56,7 @@ case $ROFI_RETV in
     13)
         [ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
         case $ROFI_DATA in
-        common_feed) pytfeeder-rofi -v "$ROFI_DATA" -f ;;
+        common_feed) pytfeeder-rofi -v all -f ;;
         main) pytfeeder-rofi -v all ;;
         *) [ "${#ROFI_DATA}" -eq 24 ] && pytfeeder-rofi -v "$ROFI_DATA" -i "$ROFI_DATA" ;;
         esac

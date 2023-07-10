@@ -80,6 +80,7 @@ class RofiPrinter:
             print(self.channels_fmt.format(title=channel.title, id=channel.channel_id))
 
     def print_common_feed(self) -> None:
+        print("\000message\037%d unviewed entries" % self.feeder.unviewed_count())
         print("\000data\037common_feed")
         self._print_entries(
             self.feeder.common_feed(self.limit or self.config.common_feed_limit)
