@@ -26,14 +26,14 @@ class Config:
     log_level: int
     log_file: Path
     log_fmt: str
-    common_feed_limit: Optional[int] = None
+    feed_limit: Optional[int] = None
     channel_feed_limit: Optional[int] = None
 
     def __init__(
         self,
         path: Optional[Union[Path, str]] = None,
         channels: Optional[List[Channel]] = None,
-        common_feed_limit: Optional[int] = None,
+        feed_limit: Optional[int] = None,
         channel_feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
@@ -41,7 +41,7 @@ class Config:
         storage_path: Optional[Path] = None,
     ) -> None:
         self.channels = channels or []
-        self.common_feed_limit = common_feed_limit
+        self.feed_limit = feed_limit
         self.channel_feed_limit = channel_feed_limit
         self.log_level = log_level or 0
         self.log_file = log_file or default_logfile_path()
@@ -66,8 +66,8 @@ class Config:
                     self.log_file = Path(log_file)
                 if log_fmt := config.get("log_fmt"):
                     self.log_fmt = log_fmt
-                if common_feed_limit := config.get("common_feed_limit"):
-                    self.common_feed_limit = common_feed_limit
+                if feed_limit := config.get("feed_limit"):
+                    self.feed_limit = feed_limit
                 if channel_feed_limit := config.get("channel_feed_limit"):
                     self.channel_feed_limit = channel_feed_limit
                 if storage_path := config.get("storage_path"):

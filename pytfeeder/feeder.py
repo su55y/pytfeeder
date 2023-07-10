@@ -27,8 +27,8 @@ class Feeder:
             limit=limit or self.config.channel_feed_limit,
         )
 
-    def common_feed(self, limit: Optional[int] = None) -> List[Entry]:
-        return self.stor.select_entries(limit=limit or self.config.common_feed_limit)
+    def feed(self, limit: Optional[int] = None) -> List[Entry]:
+        return self.stor.select_entries(limit=limit or self.config.feed_limit)
 
     def mark_as_viewed(
         self, id: Optional[str] = None, channel_id: Optional[str] = None

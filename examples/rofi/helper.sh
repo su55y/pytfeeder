@@ -1,10 +1,12 @@
 #!/bin/sh
 
-printf "\000use-hot-keys\037true\n"
 start_menu(){
+    printf "feed\000info\037feed\n"
     pytfeeder-rofi
     printf "\000new-selection\0370\n"
 }
+
+printf "\000use-hot-keys\037true\n"
 
 case $ROFI_RETV in
     # channels list on start
@@ -37,7 +39,7 @@ case $ROFI_RETV in
     10) 
         [ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
         case $ROFI_DATA in
-        common_feed) pytfeeder-rofi -s -f ;;
+        feed) pytfeeder-rofi -s -f ;;
         main)  pytfeeder-rofi -s ;;
         *) [ "${#ROFI_DATA}" -eq 24 ] && pytfeeder-rofi -s -i "$ROFI_DATA" ;;
         esac
@@ -48,7 +50,7 @@ case $ROFI_RETV in
     12)
         [ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
         case $ROFI_DATA in
-        common_feed) pytfeeder-rofi -v "$ROFI_INFO" -f ;;
+        feed) pytfeeder-rofi -v "$ROFI_INFO" -f ;;
         *) [ "${#ROFI_DATA}" -eq 24 ] && pytfeeder-rofi -v "$ROFI_INFO" -i "$ROFI_DATA" ;;
         esac
     ;;
@@ -56,7 +58,7 @@ case $ROFI_RETV in
     13)
         [ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
         case $ROFI_DATA in
-        common_feed) pytfeeder-rofi -v all -f ;;
+        feed) pytfeeder-rofi -v all -f ;;
         main) pytfeeder-rofi -v all ;;
         *) [ "${#ROFI_DATA}" -eq 24 ] && pytfeeder-rofi -v "$ROFI_DATA" -i "$ROFI_DATA" ;;
         esac
