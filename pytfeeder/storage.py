@@ -43,14 +43,16 @@ class Storage:
         channel_id: Optional[str] = None,
         limit: Optional[int] = None,
         timedelta: Optional[str] = None,
+        unviewed_first: Optional[bool] = None,
     ) -> List[Entry]:
         entries: List[Entry] = []
         with self.get_cursor() as cursor:
-            query = "SELECT id, title, updated, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY updated DESC {limit}".format(
+            query = "SELECT id, title, updated, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unviewed_first} updated DESC {limit}".format(
                 where="" if (not channel_id and not timedelta) else "WHERE",
                 channel_id=f"channel_id = '{channel_id}'" if channel_id else "",
-                timedelta=f"updated > '{timedelta}'" if timedelta else "",
                 and_="AND" if (timedelta and channel_id) else "",
+                timedelta=f"updated > '{timedelta}'" if timedelta else "",
+                unviewed_first="is_viewed," if unviewed_first else "",
                 limit=f"LIMIT {limit}" if limit else "",
             )
             self.log.debug(query)

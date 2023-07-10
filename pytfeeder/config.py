@@ -39,6 +39,7 @@ class Config:
         log_file: Optional[Path] = None,
         log_fmt: Optional[str] = None,
         storage_path: Optional[Path] = None,
+        unviewed_first: Optional[bool] = None,
     ) -> None:
         self.channels = channels or []
         self.feed_limit = feed_limit
@@ -47,6 +48,7 @@ class Config:
         self.log_file = log_file or default_logfile_path()
         self.log_fmt = log_fmt or LOG_FMT
         self.storage_path = storage_path or default_storage_path()
+        self.unviewed_first = unviewed_first
         if path:
             self._override_defaults(path)
 
@@ -72,6 +74,8 @@ class Config:
                     self.channel_feed_limit = channel_feed_limit
                 if storage_path := config.get("storage_path"):
                     self.storage_path = Path(storage_path)
+                if unviewed_first := config.get("unviewed_first"):
+                    self.unviewed_first = bool(unviewed_first)
         except Exception as e:
             exit("Can't parse config: %s" % e)
 
