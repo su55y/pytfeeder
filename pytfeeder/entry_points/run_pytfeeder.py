@@ -7,7 +7,7 @@ from pytfeeder import init_feeder
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="package: %s" % __package__)
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c",
         "--config-file",
