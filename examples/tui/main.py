@@ -1,11 +1,11 @@
 import asyncio
 from enum import Enum, auto
 import subprocess as sp
-from typing import List, Union
+from typing import List, Tuple, Union
 
 from prompt_toolkit.application import Application
-from prompt_toolkit.formatted_text import merge_formatted_text
-from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
+from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import (
     Dimension,
     FormattedTextControl,
@@ -72,14 +72,27 @@ class FeederPager:
         )
 
     def _get_toolbar_text(self):
-        return " %s [hjkl]: navigate, [q]: quit" % self.__toolbar_text
+        return "%s [hjkl]: navigate, [q]: quit" % self.__toolbar_text
 
-    def _get_formatted_text(self):
+    def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
+        if entry.is_viewed:
+            classname = "entry"
+            mark = " " * 3
+        else:
+            classname = "new_entry"
+            mark = "[+]"
+
+        return [("class:%s" % classname, "%s %s" % (mark, entry.title))]
+
+    def _get_formatted_text(self) -> AnyFormattedText:
         result = []
         for i, entry in enumerate(self.page_lines):
             if i == self.selected_line:
                 result.append([("[SetCursorPosition]", "")])
-            result.append(" %s" % entry.title)
+            if isinstance(entry, Entry):
+                result.append(self._format_entry(entry))
+            else:
+                result.append(" %s" % entry.title)
             result.append("\n")
 
         return merge_formatted_text(result)
@@ -110,7 +123,7 @@ class FeederPager:
         @kb.add("l")
         @kb.add("enter")
         @kb.add("right")
-        def _choose_line(event) -> None:
+        def _choose_line(event: KeyPressEvent) -> None:
             match self.state:
                 case PageState.CHANNELS:
                     if self.selected_line >= len(self.channels):
@@ -126,7 +139,9 @@ class FeederPager:
                 case PageState.ENTRIES:
                     if self.selected_line >= len(self.entries):
                         return
-                    play_video(self.entries[self.selected_line].id)
+                    entry_id = self.entries[self.selected_line].id
+                    self.feeder.mark_as_viewed(id=entry_id)
+                    play_video(entry_id)
                     event.app.exit()
 
         @kb.add("h")
@@ -158,7 +173,7 @@ if __name__ == "__main__":
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
     feeder = Feeder(config, Storage(config.storage_path))
-    # asyncio.run(feeder.sync_entries())
+    asyncio.run(feeder.sync_entries())
 
     kb = KeyBindings()
 
@@ -172,6 +187,8 @@ if __name__ == "__main__":
         style=Style.from_dict(
             {
                 "select-box cursor-line": "nounderline bg:orange fg:black",
+                "entry": "white",
+                "new_entry": "#ffb71a",
                 "toolbar": "bg:orange fg:black",
                 "toolbar.text": "",
             },
