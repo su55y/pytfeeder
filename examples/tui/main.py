@@ -43,7 +43,7 @@ class FeederPager:
     def __init__(self, feeder: Feeder):
         self.feeder = feeder
         self.state = PageState.CHANNELS
-        self.channels = self.feeder.channels
+        self.channels = [Channel("Feed", "feed"), *self.feeder.channels]
         self.entries: List[Entry] = []
         self.selected_line = 0
 
@@ -116,7 +116,10 @@ class FeederPager:
                     if self.selected_line >= len(self.channels):
                         return
                     channel = self.channels[self.selected_line]
-                    self.entries = self.feeder.channel_feed(channel.channel_id)
+                    if channel.channel_id == "feed":
+                        self.entries = self.feeder.feed()
+                    else:
+                        self.entries = self.feeder.channel_feed(channel.channel_id)
                     self.state = PageState.ENTRIES
                     self.selected_line = 0
                     self.__toolbar_text = channel.title
@@ -155,7 +158,7 @@ if __name__ == "__main__":
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
     feeder = Feeder(config, Storage(config.storage_path))
-    asyncio.run(feeder.sync_entries())
+    # asyncio.run(feeder.sync_entries())
 
     kb = KeyBindings()
 
