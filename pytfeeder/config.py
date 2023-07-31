@@ -2,15 +2,34 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Union
-from os.path import expanduser, expandvars
+from os.path import expandvars
 
 import yaml
 
-from .dirs import default_storage_path, default_logfile_path
+from .dirs import default_cachedir_path
 from .models import Channel
 
 
 LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
+
+log_levels_map = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+}
+
+
+def read_config(file: Path) -> Dict:
+    try:
+        with open(file) as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        exit("invalid config %s: %s" % (file, e))
+
+
+def expand_path(path: Union[Path, str]) -> Path:
+    return Path(expandvars(path)).expanduser()
 
 
 @dataclass
@@ -31,10 +50,11 @@ class Config:
 
     def __init__(
         self,
-        path: Optional[Union[Path, str]] = None,
+        config_file: Optional[Union[Path, str]] = None,
         channels: Optional[List[Channel]] = None,
         feed_limit: Optional[int] = None,
         channel_feed_limit: Optional[int] = None,
+        cache_dir: Optional[Path] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
         log_fmt: Optional[str] = None,
@@ -44,58 +64,34 @@ class Config:
         self.channels = channels or []
         self.feed_limit = feed_limit
         self.channel_feed_limit = channel_feed_limit
-        self.log_level = log_level or 0
-        self.log_file = log_file or default_logfile_path()
+        self.cache_dir = cache_dir or default_cachedir_path()
+        self.log_level = log_level or logging.NOTSET
+        self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or LOG_FMT
-        self.storage_path = storage_path or default_storage_path()
+        self.storage_path = storage_path or self.cache_dir.joinpath("pytfeeder.db")
         self.unviewed_first = unviewed_first
-        if path:
-            self._override_defaults(path)
+        if config_file:
+            config_file = expand_path(config_file)
+            if config_file.exists():
+                self._override_defaults(config_file)
 
-    def _override_defaults(self, config_path: Union[Path, str]) -> None:
-        path = self._check_path(config_path)
-        if not path:
-            exit("Invalid config path '%s'" % config_path)
-        try:
-            with open(path) as f:
-                config = yaml.safe_load(f)
-                if not isinstance(config, Dict):
-                    exit("Invalid config file given")
-                self.channels = [Channel(**c) for c in config.pop("channels", [])]
-                if log_level := config.get("log_level"):
-                    self.log_level = self._choose_log_level(log_level)
-                if log_file := config.get("log_file"):
-                    self.log_file = Path(log_file)
-                if log_fmt := config.get("log_fmt"):
-                    self.log_fmt = log_fmt
-                if feed_limit := config.get("feed_limit"):
-                    self.feed_limit = feed_limit
-                if channel_feed_limit := config.get("channel_feed_limit"):
-                    self.channel_feed_limit = channel_feed_limit
-                if storage_path := config.get("storage_path"):
-                    self.storage_path = Path(storage_path)
-                if unviewed_first := config.get("unviewed_first"):
-                    self.unviewed_first = bool(unviewed_first)
-        except Exception as e:
-            exit("Can't parse config: %s" % e)
-
-    def _check_path(self, path: Union[Path, str]) -> Optional[Path]:
-        if isinstance(path, str):
-            path = Path(expandvars(expanduser(path)))
-        if path.parent.exists() and path.parent.is_dir():
-            if path.suffix == ".yaml" or path.suffix == ".yml":
-                return path
-
-    def _choose_log_level(self, lvl: str) -> int:
-        match lvl:
-            case "debug" | "DEBUG":
-                return logging.DEBUG
-            case "info" | "INFO":
-                return logging.INFO
-            case "warning" | "WARNING":
-                return logging.WARNING
-            case "error" | "ERROR":
-                return logging.ERROR
-            case "none" | "None" | "NONE":
-                return 0
-        return 0
+    def _override_defaults(self, config_path: Path) -> None:
+        config = read_config(config_path)
+        if not isinstance(config, Dict):
+            print("Invalid config file given")
+            exit(1)
+        self.channels = [Channel(**c) for c in config.get("channels", [])]
+        if cache_dir := config.get("cache_dir"):
+            self.cache_dir = expand_path(cache_dir)
+            self.log_file = self.cache_dir.joinpath("pytfeeder.log")
+            self.storage_path = self.cache_dir.joinpath("pytfeeder.db")
+        if log_fmt := config.get("log_fmt"):
+            self.log_fmt = str(log_fmt)
+        if isinstance((log_level := config.get("log_level")), str):
+            self.log_level = log_levels_map.get(log_level.lower(), logging.NOTSET)
+        if feed_limit := config.get("feed_limit"):
+            self.feed_limit = int(feed_limit)
+        if channel_feed_limit := config.get("channel_feed_limit"):
+            self.channel_feed_limit = int(channel_feed_limit)
+        if unviewed_first := config.get("unviewed_first"):
+            self.unviewed_first = bool(unviewed_first)

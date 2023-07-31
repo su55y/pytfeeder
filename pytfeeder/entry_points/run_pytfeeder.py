@@ -21,6 +21,9 @@ def parse_args() -> argparse.Namespace:
         help="Deletes inactive channels and watched entries",
     )
     parser.add_argument(
+        "-p", "--print-config", action="store_true", help="prints config"
+    )
+    parser.add_argument(
         "-s",
         "--sync",
         action="store_true",
@@ -38,6 +41,9 @@ def run():
     config = Config(args.config_file)
     if not config:
         exit(1)
+    if args.print_config:
+        print(config)
+        exit(0)
 
     feeder = init_feeder(config)
     if args.clean_cache:
