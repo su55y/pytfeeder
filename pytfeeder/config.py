@@ -45,6 +45,7 @@ class Config:
     log_level: int
     log_file: Path
     log_fmt: str
+    unviewed_first: bool
     feed_limit: Optional[int] = None
     channel_feed_limit: Optional[int] = None
 
@@ -69,7 +70,7 @@ class Config:
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or LOG_FMT
         self.storage_path = storage_path or self.cache_dir.joinpath("pytfeeder.db")
-        self.unviewed_first = unviewed_first
+        self.unviewed_first = unviewed_first or False
         if config_file:
             config_file = expand_path(config_file)
             if config_file.exists():
