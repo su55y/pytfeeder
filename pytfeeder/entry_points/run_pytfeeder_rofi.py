@@ -3,7 +3,7 @@ import asyncio
 from typing import List
 
 from pytfeeder.config import Config
-import pytfeeder.dirs as dirs
+from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Entry
 from pytfeeder import init_feeder
@@ -15,7 +15,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-c",
         "--config-file",
-        default=dirs.default_config_path(),
+        default=default_config_path(),
         metavar="PATH",
         help="Location of config file (default: %(default)s)",
     )

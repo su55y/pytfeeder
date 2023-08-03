@@ -6,7 +6,7 @@ from os.path import expandvars
 
 import yaml
 
-from .dirs import default_cachedir_path
+from .defaults import default_cachedir_path
 from .models import Channel
 
 
