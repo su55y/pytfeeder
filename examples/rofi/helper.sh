@@ -32,11 +32,11 @@ case $ROFI_RETV in
 		if [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{24}$")" = "$ROFI_INFO" ]; then
 			printf "back\000info\037main\n"
-			pytfeeder-rofi -i "$ROFI_INFO"
+			pytfeeder-rofi -i="$ROFI_INFO"
 			printf "\000new-selection\0370\n"
 		elif [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{11}$")" = "$ROFI_INFO" ]; then
-			pytfeeder-rofi -v "$ROFI_INFO" >/dev/null 2>&1
+			pytfeeder-rofi -v="$ROFI_INFO" >/dev/null 2>&1
 			setsid -f mpv "https://youtu.be/$ROFI_INFO" >/dev/null 2>&1
 		else
 			err_msg "invalid id '$ROFI_INFO'"
@@ -52,7 +52,7 @@ case $ROFI_RETV in
 	main) pytfeeder-rofi -s ;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -s -i "$ROFI_DATA"
+		pytfeeder-rofi -s -i="$ROFI_DATA"
 		;;
 	esac
 	;;
@@ -63,10 +63,10 @@ case $ROFI_RETV in
 	[ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
 	[ "${#ROFI_INFO}" -eq 11 ] || err_msg "invalid id '$ROFI_INFO'"
 	case $ROFI_DATA in
-	feed) pytfeeder-rofi -v "$ROFI_INFO" -f ;;
+	feed) pytfeeder-rofi -v="$ROFI_INFO" -f ;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -v "$ROFI_INFO" -i "$ROFI_DATA"
+		pytfeeder-rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
 		;;
 	esac
 	;;
@@ -78,7 +78,7 @@ case $ROFI_RETV in
 	main) pytfeeder-rofi -v all ;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -v "$ROFI_DATA" -i "$ROFI_DATA"
+		pytfeeder-rofi -v="$ROFI_DATA" -i="$ROFI_DATA"
 		;;
 	esac
 	printf "\000new-selection\0370"
@@ -90,10 +90,10 @@ case $ROFI_RETV in
 	[ "${#ROFI_INFO}" -eq 11 ] || err_msg "invalid id '$ROFI_INFO'"
 	setsid -f "$APPEND_SCRIPT" "https://youtu.be/$ROFI_INFO" >/dev/null 2>&1
 	case $ROFI_DATA in
-	feed) pytfeeder-rofi -v "$ROFI_INFO" -f ;;
+	feed) pytfeeder-rofi -v="$ROFI_INFO" -f ;;
 	*)
-		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "unexpected context, invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -v "$ROFI_INFO" -i "$ROFI_DATA"
+		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
+		pytfeeder-rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
 		;;
 	esac
 	;;
