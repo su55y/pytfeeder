@@ -58,6 +58,12 @@ def parse_args() -> argparse.Namespace:
         metavar="ID",
         help="Mark as viewed (Accepts entry/channel id or keyword 'all')",
     )
+    parser.add_argument(
+        "--active-offset",
+        type=int,
+        default=1,
+        help="index offset to mark entries as active",
+    )
 
     return parser.parse_args()
 
@@ -71,6 +77,7 @@ class RofiPrinter:
         self.channels_fmt = args.channels_fmt
         self.entries_fmt = args.entries_fmt
         self.limit = args.limit
+        self.offset = args.active_offset
 
     def print_channels(self) -> None:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
@@ -105,7 +112,7 @@ class RofiPrinter:
         highlight = []
         for i, entry in enumerate(entries):
             if not entry.is_viewed:
-                highlight.append(str(i + 1))
+                highlight.append(str(i + self.offset))
             print(self.entries_fmt.format(title=entry.title, id=entry.id))
 
         if highlight:
