@@ -1,0 +1,22 @@
+# dir to store db and logs, required
+cache_dir: $XDG_CACHE_HOME/pytfeeder
+
+# channels list, channel example: {channel_id: 'foobar', title: 'Foo Bar'}, required
+channels:
+  - { channel_id: UCI0vQvr9aFn27yR6Ej6n5UA, title: Real Python }
+  - { channel_id: UC7OEbnj75LYjOxj6tjYXVjA, title: Антропологія }
+
+# channel feed select limit, optional, default: None
+# channel_feed_limit: 0
+
+# int, common feed select limit, optional, default: None
+# feed_limit: 0
+
+# log format, optional
+log_fmt: '[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)'
+
+# available logging levels: debug, info, warning, error
+log_level: none
+
+# defines sorting order, boolean
+unviewed_first: False
