@@ -16,7 +16,7 @@ from prompt_toolkit.layout import (
 )
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
-import pytfeeder.dirs as dirs
+from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
@@ -167,7 +167,7 @@ class FeederPager:
 
 
 if __name__ == "__main__":
-    config = Config(dirs.default_config_path())
+    config = Config(default_config_path())
     if not config:
         exit(1)
     if not config.storage_path.parent.exists():
