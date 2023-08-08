@@ -23,7 +23,7 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 
 
-def play_video(id: str):
+def play_video(id: str) -> None:
     sp.Popen(
         ["setsid", "-f", "mpv", "https://youtu.be/%s" % id],
         stdout=sp.DEVNULL,
@@ -40,7 +40,7 @@ Lines = Union[List[Channel], List[Entry]]
 
 
 class FeederPager:
-    def __init__(self, feeder: Feeder):
+    def __init__(self, feeder: Feeder) -> None:
         self.feeder = feeder
         self.state = PageState.CHANNELS
         self.channels = [Channel("Feed", "feed"), *self.feeder.channels]
@@ -71,8 +71,21 @@ class FeederPager:
             ]
         )
 
-    def _get_toolbar_text(self):
-        return "%s [hjkl]: navigate, [q]: quit" % self.__toolbar_text
+    @property
+    def page_lines(self) -> Lines:
+        match self.state:
+            case PageState.CHANNELS:
+                return self.channels
+            case PageState.ENTRIES:
+                return self.entries
+            case _:
+                return []
+
+    def _get_toolbar_text(self) -> str:
+        return (
+            " %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
+            % self.__toolbar_text
+        )
 
     def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
         if entry.is_viewed:
@@ -97,28 +110,20 @@ class FeederPager:
 
         return merge_formatted_text(result)
 
-    @property
-    def page_lines(self) -> Lines:
-        match self.state:
-            case PageState.CHANNELS:
-                return self.channels
-            case PageState.ENTRIES:
-                return self.entries
-            case _:
-                return []
-
-    def _get_key_bindings(self):
+    def _get_key_bindings(self) -> KeyBindings:
         kb = KeyBindings()
 
         @kb.add("k")
         @kb.add("up")
-        def _go_up(event) -> None:
-            self.selected_line = (self.selected_line - 1) % len(self.page_lines)
+        def _go_up(_) -> None:
+            if len(self.page_lines) > 1:
+                self.selected_line = (self.selected_line - 1) % len(self.page_lines)
 
         @kb.add("j")
         @kb.add("down")
-        def _go_down(event) -> None:
-            self.selected_line = (self.selected_line + 1) % len(self.page_lines)
+        def _go_down(_) -> None:
+            if len(self.page_lines) > 1:
+                self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
         @kb.add("l")
         @kb.add("enter")
@@ -156,13 +161,23 @@ class FeederPager:
                     self.selected_line = 0
                     self.__toolbar_text = ""
 
+        @kb.add("g", "g")
+        @kb.add("K")
+        def _go_top(_) -> None:
+            self.selected_line = 0
+
+        @kb.add("G")
+        @kb.add("J")
+        def _go_bottom(_) -> None:
+            self.selected_line = 0 if (l := len(self.page_lines)) <= 1 else l - 1
+
         @kb.add("q")
         def _exit(event) -> None:
             event.app.exit()
 
         return kb
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> HSplit:
         return self.container
 
 
