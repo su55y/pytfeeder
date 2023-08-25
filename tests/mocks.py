@@ -1,9 +1,22 @@
 from datetime import datetime, timedelta, timezone
 from pytfeeder.models import Entry, Channel
 
+
+sample_channel = Channel(channel_id="sample_channel_id1234567", title="Sample Channel")
+sample_entries = [
+    Entry(
+        id=f"video_id_{n:02d}",
+        title=f"Video #{n}",
+        updated=str(datetime.now(timezone.utc) - timedelta(hours=25 * (3 - n))),
+        channel_id="sample_channel_id1234567",
+    )
+    for n in range(3, 0, -1)
+]
+
 entry_fmt = """
 \t<entry>
 \t\t<yt:videoId>{id}</yt:videoId>
+\t\t<yt:channelId>{channel_id}</yt:channelId>
 \t\t<title>{title}</title>
 \t\t<updated>{updated}</updated>
 \t</entry>
@@ -17,21 +30,13 @@ feed_fmt = """
 </feed>
 """
 
-
-sample_channel = Channel(channel_id="sample_channel_id1234567", title="Sample Channel")
-sample_entries = [
-    Entry(
-        id=f"video_id_{n:02d}",
-        title=f"Video #{n}",
-        updated=str(datetime.now(timezone.utc) - timedelta(hours=25 * (3 - n))),
-    )
-    for n in range(3, 0, -1)
-]
 raw_feed = feed_fmt.format(
     channel_title=sample_channel.title,
     channel_id=sample_channel.channel_id,
     entries="".join(
-        entry_fmt.format(id=e.id, title=e.title, updated=e.updated).rstrip()
+        entry_fmt.format(
+            id=e.id, title=e.title, updated=e.updated, channel_id=e.channel_id
+        ).rstrip()
         for e in sample_entries
     ),
 ).strip()

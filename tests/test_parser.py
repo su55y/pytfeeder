@@ -10,4 +10,4 @@ class ParserTest(unittest.TestCase):
         cls.parser = YTFeedParser(raw_feed)
 
     def test_parser(self):
-        self.assertListEqual(self.parser.entries, sample_entries)
+        self.assertEqual(self.parser.entries, sample_entries)
