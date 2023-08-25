@@ -8,6 +8,7 @@ class Entry:
     id: str
     title: str
     updated: str = str(datetime.now(timezone.utc))
+    channel_id: str = "Unknown"
     is_viewed: bool = False
 
 

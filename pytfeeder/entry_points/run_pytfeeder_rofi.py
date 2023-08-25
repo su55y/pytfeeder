@@ -8,9 +8,11 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.models import Entry
 from pytfeeder import init_feeder
 
+DEFAULT_CHANNEL_FMT = "{title}\000info\037{id}"
+DEFAULT_ENTRY_FMT = "{title}\000info\037{id}\037meta\037{channel_title}"
+
 
 def parse_args() -> argparse.Namespace:
-    DEFAULT_FMT = "{title}\000info\037{id}"
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c",
@@ -21,9 +23,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--channels-fmt",
-        default=DEFAULT_FMT,
+        default=DEFAULT_CHANNEL_FMT,
         metavar="STR",
-        help=r"Channels print format (default: '{title}\000info\037{id}')",
+        help=r"Channels print format (default: %(default)r)",
     )
     parser.add_argument(
         "--clean-cache",
@@ -32,9 +34,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--entries-fmt",
-        default=DEFAULT_FMT,
+        default=DEFAULT_ENTRY_FMT,
         metavar="STR",
-        help=r"Entries print format (default: '{title}\000info\037{id}')",
+        help=r"Entries print format (default: %(default)r",
     )
     parser.add_argument(
         "-i",
@@ -87,22 +89,30 @@ class RofiPrinter:
 
     def print_feed(self) -> None:
         print("\000data\037feed")
-        if entries := self.feeder.feed(self.limit or self.config.feed_limit):
-            unviewed = [e for e in entries if not e.is_viewed]
-            if len(unviewed):
-                message = "feed, %d new entries of %d" % (len(unviewed), len(entries))
-            else:
-                message = "feed, %d entries" % len(entries)
-            self.print_message(message)
-            self.print_entries(entries)
+        entries = self.feeder.feed(self.limit or self.config.feed_limit)
+        if not entries:
+            self.print_message("no entries")
+            return
+        unviewed = [e for e in entries if not e.is_viewed]
+        if len(unviewed):
+            message = "feed, %d new entries of %d" % (len(unviewed), len(entries))
+        else:
+            message = "feed, %d entries" % len(entries)
+        self.print_message(message)
+        self.print_entries(entries)
 
     def print_channel_feed(self, channel_id: str) -> None:
         if len(channel_id) != 24:
             self.print_message("invalid channel_id")
             return
 
-        self.print_message(self.channel_feed_message(channel_id))
+        message = self.feeder.channel_title(channel_id)
+        if unviewed_count := self.feeder.unviewed_count(channel_id):
+            message = f"{message}, {unviewed_count} unviewed entries"
+
+        self.print_message(message)
         print("\000data\037%s" % channel_id)
+
         if entries := self.feeder.channel_feed(
             channel_id, self.limit or self.config.channel_feed_limit
         ):
@@ -113,7 +123,15 @@ class RofiPrinter:
         for i, entry in enumerate(entries):
             if not entry.is_viewed:
                 highlight.append(str(i + self.offset))
-            print(self.entries_fmt.format(title=entry.title, id=entry.id))
+            channel_title = self.feeder.channel_title(entry.channel_id)
+            print(
+                self.entries_fmt.format(
+                    title=entry.title,
+                    id=entry.id,
+                    channel_title="%s,%s"
+                    % (channel_title, ",".join(channel_title.split())),
+                )
+            )
 
         if highlight:
             print("\000active\037%s" % ",".join(highlight))
@@ -121,34 +139,27 @@ class RofiPrinter:
     def print_message(self, message: str) -> None:
         print("\000message\037%s" % message)
 
-    def channel_feed_message(self, channel_id: str) -> str:
-        message = ""
-        if filtered_channels := [
-            c for c in self.config.channels if c.channel_id == channel_id
-        ]:
-            message = filtered_channels.pop().title
-        if unviewed_count := self.feeder.unviewed_count(channel_id):
-            unviewed = "%d unviewed entries" % unviewed_count
-            message = f"{message}, {unviewed}" if message else unviewed
-        return message
-
 
 def run():
     args = parse_args()
+
     config = Config(args.config_file)
     if not config:
         exit(1)
 
     feeder = init_feeder(config)
     printer = RofiPrinter(feeder=feeder, config=config, args=args)
+
     if args.clean_cache:
         feeder.clean_cache()
         printer.print_message("cache cleaned")
+
     if args.sync:
         before_update = feeder.unviewed_count()
         asyncio.run(feeder.sync_entries())
         if new_entries := (feeder.unviewed_count() - before_update):
             printer.print_message("%d new entries" % new_entries)
+
     if args.viewed:
         if args.viewed == "all":
             feeder.mark_as_viewed()

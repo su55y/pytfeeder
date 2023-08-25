@@ -24,15 +24,16 @@ class YTFeedParser:
             id = self._read_yt_tag("yt:videoId", entry) or "-"
             title = self._read_tag(self.__schema % "title", entry) or "-"
             updated = self._read_tag(self.__schema % "updated", entry) or "-"
-            self.__entries.append(Entry(id, title, updated))
-        return self.__entries
+            channel_id = self._read_yt_tag("yt:channelId", entry) or "-"
+            self.__entries.append(
+                Entry(id=id, title=title, updated=updated, channel_id=channel_id)
+            )
 
     def _read_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
         tag = self.__tree.find(name) if not el else el.find(name)
         if tag is not None:
             return tag.text
-        else:
-            self.log.error(f"can't read {name} tag")
+        self.log.error(f"can't read {name} tag")
 
     def _read_yt_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
         tag = (
@@ -42,5 +43,4 @@ class YTFeedParser:
         )
         if tag is not None:
             return tag.text
-        else:
-            self.log.error(f"can't read {name} tag")
+        self.log.error(f"can't read {name} tag")

@@ -1,4 +1,4 @@
-from functools import cached_property
+from functools import lru_cache, cached_property
 import logging
 from typing import List, Optional
 
@@ -16,10 +16,19 @@ class Feeder:
         self.stor = storage
         self.config = config
         self.log = logging.getLogger()
+        self.__channels_map = {c.channel_id: c for c in self.config.channels}
 
     @cached_property
     def channels(self) -> List[Channel]:
         return self.config.channels
+
+    @lru_cache
+    def channel(self, channel_id: str) -> Optional[Channel]:
+        return self.__channels_map.get(channel_id)
+
+    @lru_cache
+    def channel_title(self, channel_id: str) -> str:
+        return c.title if (c := self.channel(channel_id)) else "Unknown"
 
     def channel_feed(self, channel_id: str, limit: Optional[int] = None) -> List[Entry]:
         return self.stor.select_entries(

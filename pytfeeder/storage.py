@@ -47,7 +47,7 @@ class Storage:
     ) -> List[Entry]:
         entries: List[Entry] = []
         with self.get_cursor() as cursor:
-            query = "SELECT id, title, updated, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unviewed_first} updated DESC {limit}".format(
+            query = "SELECT id, title, updated, channel_id, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unviewed_first} updated DESC {limit}".format(
                 where="" if (not channel_id and not timedelta) else "WHERE",
                 channel_id=f"channel_id = '{channel_id}'" if channel_id else "",
                 and_="AND" if (timedelta and channel_id) else "",
@@ -58,12 +58,13 @@ class Storage:
             self.log.debug(query)
             rows = cursor.execute(query).fetchall()
             self.log.debug("selected %d entries" % len(rows))
-            for id, title, updated, is_viewed in rows:
+            for id, title, updated, c_id, is_viewed in rows:
                 entries.append(
                     Entry(
                         id=id,
                         title=title,
                         updated=updated,
+                        channel_id=c_id,
                         is_viewed=bool(is_viewed),
                     )
                 )
