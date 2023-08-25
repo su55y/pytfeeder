@@ -123,13 +123,14 @@ class RofiPrinter:
         for i, entry in enumerate(entries):
             if not entry.is_viewed:
                 highlight.append(str(i + self.offset))
-            channel_title = self.feeder.channel_title(entry.channel_id)
+
+            meta = self.feeder.channel_title(entry.channel_id)
+            if len(parts := meta.split()):
+                meta += "%s%s" % (",".join(parts), "".join(parts))
+
             print(
                 self.entries_fmt.format(
-                    title=entry.title,
-                    id=entry.id,
-                    channel_title="%s,%s"
-                    % (channel_title, ",".join(channel_title.split())),
+                    title=entry.title, id=entry.id, channel_title=meta
                 )
             )
 
