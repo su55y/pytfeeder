@@ -49,7 +49,10 @@ case $ROFI_RETV in
 	[ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
 	case $ROFI_DATA in
 	feed) pytfeeder-rofi -s -f ;;
-	main) pytfeeder-rofi -s ;;
+	main)
+		printf "feed\000info\037feed\n"
+		pytfeeder-rofi -s
+		;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
 		pytfeeder-rofi -s -i="$ROFI_DATA"
