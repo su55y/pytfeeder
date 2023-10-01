@@ -2,6 +2,12 @@
 
 # optional for append
 APPEND_SCRIPT="${XDG_DATA_HOME:-$HOME/.local/share}/rofi/playlist_ctl_py/append_video.sh"
+# optional for download
+DOWNLOAD_DIR="$HOME/Videos/YouTube"
+download_vid() {
+	qid="$(tsp yt-dlp "https://youtu.be/$1" -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
+	tsp -D "$qid" notify-send -a "pytfeeder" "$1 download done"
+}
 
 err_msg() {
 	printf '\000message\037error: %s\n' "$1"
@@ -62,7 +68,8 @@ case $ROFI_RETV in
 # kb-custom-2 (Ctrl-c) -- clean cache
 11) pytfeeder-rofi --clean-cache ;;
 # kb-custom-3 (Ctrl-x) -- mark entry as viewed
-12)
+# kb-custom-6 (Ctrl-d) -- download selected entry
+12 | 15)
 	[ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
 	[ "${#ROFI_INFO}" -eq 11 ] || err_msg "invalid id '$ROFI_INFO'"
 	case $ROFI_DATA in
@@ -72,6 +79,7 @@ case $ROFI_RETV in
 		pytfeeder-rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
 		;;
 	esac
+	[ "$ROFI_RETV" -eq 15 ] && download_vid "$ROFI_INFO"
 	;;
 # kb-custom-4 (Ctrl-X) -- mark current feed entries as viewed
 13)

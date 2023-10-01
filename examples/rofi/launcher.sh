@@ -38,5 +38,7 @@ rofi -i -show "pytfeeder-rofi-launcher" \
 	-kb-custom-4 "Ctrl+X" \
 	-kb-move-front "" \
 	-kb-custom-5 "Ctrl+a" \
+	-kb-remove-char-forward "Delete" \
+	-kb-custom-6 "Ctrl+d" \
 	-theme-str "$(theme)" \
 	-normal-window
