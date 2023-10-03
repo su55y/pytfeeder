@@ -5,8 +5,10 @@ APPEND_SCRIPT="${XDG_DATA_HOME:-$HOME/.local/share}/rofi/playlist_ctl_py/append_
 # optional for download
 DOWNLOAD_DIR="$HOME/Videos/YouTube"
 download_vid() {
+	[ "${#1}" -eq 11 ] || return
+	notify-send -a "pytfeeder" "⬇️Start downloading '$2'..."
 	qid="$(tsp yt-dlp "https://youtu.be/$1" -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
-	tsp -D "$qid" notify-send -a "pytfeeder" "$1 download done"
+	tsp -D "$qid" notify-send -a "pytfeeder" "✅Download done: '$2'"
 }
 
 err_msg() {
@@ -79,7 +81,7 @@ case $ROFI_RETV in
 		pytfeeder-rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
 		;;
 	esac
-	[ "$ROFI_RETV" -eq 15 ] && download_vid "$ROFI_INFO"
+	[ "$ROFI_RETV" -eq 15 ] && download_vid "$ROFI_INFO" "$1"
 	;;
 # kb-custom-4 (Ctrl-X) -- mark current feed entries as viewed
 13)
