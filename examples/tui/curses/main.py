@@ -61,6 +61,7 @@ class Picker:
         self.state = PageState.CHANNELS
         self.selected_data = None
         self.lines = list(map(Line, self.channels))
+        self.last_feed_title = ""
 
     def move_up(self) -> None:
         self.gravity = self.Gravity.UP
@@ -89,11 +90,7 @@ class Picker:
 
     @property
     def status(self) -> str:
-        return " index: %d, scroll_top: %d, gravity: %s" % (
-            self.index,
-            self.scroll_top,
-            self.gravity,
-        )
+        return f" {self.last_feed_title} [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
 
     def draw(self, screen: "curses._CursesWindow") -> None:
         screen.clear()
@@ -138,6 +135,7 @@ class Picker:
                 case Key.l | curses.KEY_LEFT:
                     self.selected_data = self.lines[self.index].data
                     if self.state == PageState.CHANNELS:
+                        self.last_feed_title = self.selected_data.title
                         self.state = PageState.ENTRIES
                         if self.selected_data.channel_id == "feed":
                             entries = self.feeder.feed()
@@ -164,6 +162,7 @@ class Picker:
                         self.lines = list(map(Line, self.channels))
                         self.index = 0
                         self.scroll_top = 0
+                        self.last_feed_title = ""
                 case Key.q | Key.ESC:
                     exit(0)
                 case Key.RETURN | curses.KEY_ENTER:
