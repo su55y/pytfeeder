@@ -104,17 +104,27 @@ class Picker:
         self.refresh_active()
 
         for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
+            new_prefix = " "
+            new = isinstance(line.data, Entry) and not line.data.is_viewed
+            if isinstance(line.data, Entry):
+                new_prefix = "[+] " if new else " " * 4
             if line.is_active:
                 screen.attron(curses.color_pair(1))
-                screen.addnstr(y, x, line.data.title, max_x - 2)
+                screen.addnstr(
+                    y, x, f"{new_prefix+line.data.title:<{max_x-2}}", max_x - 2
+                )
                 screen.attroff(curses.color_pair(1))
+            elif new:
+                screen.attron(curses.color_pair(2))
+                screen.addnstr(y, x, new_prefix + line.data.title, max_x - 2)
+                screen.attroff(curses.color_pair(2))
             else:
-                screen.addnstr(y, x, line.data.title, max_x - 2)
+                screen.addnstr(y, x, new_prefix + line.data.title, max_x - 2)
             y += 1
 
-        screen.attron(curses.color_pair(2))
+        screen.attron(curses.color_pair(1))
         screen.addnstr(max_y - 1, x, f"{self.status:<{max_x-2}}", max_x - 2)
-        screen.attroff(curses.color_pair(2))
+        screen.attroff(curses.color_pair(1))
         screen.refresh()
 
     def run_loop(self, screen: "curses._CursesWindow") -> int:
@@ -163,8 +173,8 @@ class Picker:
         try:
             curses.use_default_colors()
             curses.curs_set(0)
-            curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-            curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_GREEN)
+            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+            curses.init_pair(2, curses.COLOR_YELLOW, -1)
         except:
             curses.initscr()
 
