@@ -47,21 +47,23 @@ class Picker:
         DOWN = auto()
         UP = auto()
 
-        def __str__(self) -> str:
-            return str(self.name)
+    class Color(IntEnum):
+        NONE = 0
+        ACTIVE = 1
+        NEW = 2
 
-    def __init__(self, feeder: Feeder) -> None:
-        self.index = 0
-        self.gravity = self.Gravity.DOWN
-        self.lines = []
-        self.scroll_top = 0
-
+    def __init__(self, feeder: Feeder, new_prefix: str = "[+]") -> None:
         self.feeder = feeder
+        self.new_prefix = new_prefix
+
         self.channels = [Channel("Feed", "feed"), *self.feeder.channels]
-        self.state = PageState.CHANNELS
-        self.selected_data = None
-        self.lines = list(map(Line, self.channels))
+        self.gravity = self.Gravity.DOWN
+        self.index = 0
         self.last_feed_index = -1
+        self.lines = list(map(Line, self.channels))
+        self.scroll_top = 0
+        self.selected_data = None
+        self.state = PageState.CHANNELS
 
     def move_up(self) -> None:
         self.gravity = self.Gravity.UP
@@ -91,41 +93,36 @@ class Picker:
     @property
     def status(self) -> str:
         if self.last_feed_index > -1 and len(self.channels) >= self.last_feed_index + 1:
-            title = " %s " % self.channels[self.last_feed_index].title
+            title = "%s " % self.channels[self.last_feed_index].title
         else:
             title = ""
-        return f"{title}[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
+        return f" {title}[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
 
     def draw(self, screen: "curses._CursesWindow") -> None:
         screen.clear()
         x, y = 1, 0
         max_y, max_x = screen.getmaxyx()
         max_rows = max_y - y - 1
+        n = max_x - 2
         self.update_scroll_top(max_rows)
         self.refresh_active()
 
         for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
-            new_prefix = " "
             new = isinstance(line.data, Entry) and not line.data.is_viewed
+            color_pair = self.Color.NEW if new else self.Color.NONE
+            new_prefix = " "
             if isinstance(line.data, Entry):
-                new_prefix = "[+] " if new else " " * 4
+                new_prefix = self.new_prefix if new else " " * len(self.new_prefix)
+            text = f"{new_prefix}{line.data.title}"
             if line.is_active:
-                screen.attron(curses.color_pair(1))
-                screen.addnstr(
-                    y, x, f"{new_prefix+line.data.title:<{max_x-2}}", max_x - 2
-                )
-                screen.attroff(curses.color_pair(1))
-            elif new:
-                screen.attron(curses.color_pair(2))
-                screen.addnstr(y, x, new_prefix + line.data.title, max_x - 2)
-                screen.attroff(curses.color_pair(2))
-            else:
-                screen.addnstr(y, x, new_prefix + line.data.title, max_x - 2)
+                text = f"{new_prefix+line.data.title:<{n}}"
+                color_pair = self.Color.ACTIVE
+            screen.addnstr(y, x, text, n, curses.color_pair(color_pair))
             y += 1
 
-        screen.attron(curses.color_pair(1))
-        screen.addnstr(max_y - 1, x, f"{self.status:<{max_x-2}}", max_x - 2)
-        screen.attroff(curses.color_pair(1))
+        screen.addnstr(
+            max_y - 1, x, f"{self.status:<{n}}", n, curses.color_pair(self.Color.ACTIVE)
+        )
         screen.refresh()
 
     def run_loop(self, screen: "curses._CursesWindow") -> int:
@@ -176,8 +173,8 @@ class Picker:
         try:
             curses.use_default_colors()
             curses.curs_set(0)
-            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-            curses.init_pair(2, curses.COLOR_YELLOW, -1)
+            curses.init_pair(self.Color.ACTIVE, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+            curses.init_pair(self.Color.NEW, curses.COLOR_YELLOW, -1)
         except:
             curses.initscr()
 
