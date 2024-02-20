@@ -1,6 +1,9 @@
+import asyncio
 import curses
 from dataclasses import dataclass
+import datetime as dt
 from enum import Enum, IntEnum, auto
+import os.path
 import subprocess as sp
 from typing import Union
 
@@ -11,12 +14,35 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 
 
+LOCK_FILE = "/tmp/pytfeeder_update.lock"
+UPDATE_INVERVAL_MINS = 30
+
+
 def play_video(id: str) -> None:
     sp.Popen(
         ["setsid", "-f", "mpv", "https://youtu.be/%s" % id],
         stdout=sp.DEVNULL,
         stderr=sp.DEVNULL,
     )
+
+
+def is_update_interval_expired() -> bool:
+    def update_lock_file():
+        with open(LOCK_FILE, "w") as f:
+            f.write(dt.datetime.now().strftime("%s"))
+
+    if not os.path.exists(LOCK_FILE):
+        update_lock_file()
+        return True
+
+    last_update = dt.datetime.now()
+    with open(LOCK_FILE) as f:
+        last_update = dt.datetime.fromtimestamp(float(f.read()))
+    if last_update < (dt.datetime.now() - dt.timedelta(minutes=UPDATE_INVERVAL_MINS)):
+        update_lock_file()
+        return True
+
+    return False
 
 
 @dataclass
@@ -199,8 +225,9 @@ if __name__ == "__main__":
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
     feeder = Feeder(config, Storage(config.storage_path))
-    # TODO
-    # asyncio.run(feeder.sync_entries())
+    if is_update_interval_expired():
+        print("updating...")
+        asyncio.run(feeder.sync_entries())
     try:
         _ = Picker(feeder).start()
     except Exception as e:
