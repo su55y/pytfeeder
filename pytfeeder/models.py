@@ -17,3 +17,4 @@ class Channel:
     title: str = ""
     channel_id: str = ""
     entries: List[Entry] = field(default_factory=list)
+    have_updates: bool = False

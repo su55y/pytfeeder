@@ -20,6 +20,8 @@ class Feeder:
 
     @cached_property
     def channels(self) -> List[Channel]:
+        for i in range(len(self.config.channels)):
+            self.config.channels[i].have_updates = bool(self.stor.select_unviewed(self.config.channels[i].channel_id))
         return self.config.channels
 
     @lru_cache

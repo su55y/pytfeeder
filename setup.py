@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 setup(
     name="pytfeeder",
     author="su55y",
-    version="1.0",
+    version="1.1",
     url="https://github.com/su55y/pytfeeder",
     description="---",
     long_description="---",

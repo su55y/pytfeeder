@@ -84,8 +84,13 @@ class RofiPrinter:
     def print_channels(self) -> None:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
         print("\000data\037main")
-        for channel in self.feeder.channels:
+        highlight = []
+        for i, channel in enumerate(self.feeder.channels):
             print(self.channels_fmt.format(title=channel.title, id=channel.channel_id))
+            if channel.have_updates:
+                highlight.append(str(i + self.offset))
+        if highlight:
+            print("\000active\037%s" % ",".join(highlight))
 
     def print_feed(self) -> None:
         print("\000data\037feed")
