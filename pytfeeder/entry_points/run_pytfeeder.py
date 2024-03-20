@@ -3,11 +3,21 @@ import asyncio
 
 from pytfeeder.config import Config
 from pytfeeder.defaults import default_config_path
+from pytfeeder.rofi import RofiPrinter
 from pytfeeder import init_feeder
+
+DEFAULT_CHANNEL_FMT = "{title}\000info\037{id}"
+DEFAULT_ENTRY_FMT = "{title}\000info\037{id}\037meta\037{channel_title}"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--active-offset",
+        type=int,
+        default=1,
+        help="Index offset to mark entries as active (rofi)",
+    )
     parser.add_argument(
         "-c",
         "--config-file",
@@ -16,13 +26,36 @@ def parse_args() -> argparse.Namespace:
         help="Location of config file (default: %(default)s)",
     )
     parser.add_argument(
+        "-i",
+        "--channel-id",
+        metavar="ID",
+        help="Prints channel feed by given channel_id (rofi)",
+    )
+    parser.add_argument(
+        "--channels-fmt",
+        default=DEFAULT_CHANNEL_FMT,
+        metavar="STR",
+        help=r"Channels print format (default: %(default)r) (rofi)",
+    )
+    parser.add_argument(
         "--clean-cache",
         action="store_true",
         help="Deletes inactive channels and watched entries",
     )
     parser.add_argument(
-        "-p", "--print-config", action="store_true", help="prints config"
+        "--entries-fmt",
+        default=DEFAULT_ENTRY_FMT,
+        metavar="STR",
+        help=r"Entries print format (default: %(default)r (rofi)",
     )
+    parser.add_argument("-f", "--feed", action="store_true", help="Prints feed (rofi)")
+    parser.add_argument(
+        "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit"
+    )
+    parser.add_argument(
+        "-p", "--print-config", action="store_true", help="Prints config"
+    )
+    parser.add_argument("-r", "--rofi", action="store_true", help="Rofi mode")
     parser.add_argument(
         "-s",
         "--sync",
@@ -31,6 +64,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
+    )
+    parser.add_argument(
+        "-v",
+        "--viewed",
+        metavar="ID",
+        help="Mark as viewed (Accepts entry/channel id or keyword 'all')",
     )
 
     return parser.parse_args()
@@ -48,9 +87,36 @@ def run():
     feeder = init_feeder(config)
     if args.clean_cache:
         feeder.clean_cache()
+
+    if args.viewed:
+        if args.viewed == "all":
+            feeder.mark_as_viewed()
+        elif len(args.viewed) == 24:
+            feeder.mark_as_viewed(channel_id=args.viewed)
+        elif len(args.viewed) == 11:
+            feeder.mark_as_viewed(id=args.viewed)
+
+    before_update = 0
     if args.sync:
-        before_updates = feeder.unviewed_count()
+        before_update = feeder.unviewed_count()
         asyncio.run(feeder.sync_entries())
-        print(feeder.unviewed_count() - before_updates)
-    if args.unviewed:
-        print(feeder.unviewed_count())
+        if not args.rofi:
+            print(feeder.unviewed_count() - before_update)
+
+    if args.rofi:
+        printer = RofiPrinter(feeder=feeder, config=config, args=args)
+
+        if args.clean_cache:
+            printer.print_message("cache cleaned")
+        if args.sync:
+            if new_entries := (feeder.unviewed_count() - before_update):
+                printer.print_message("%d new entries" % new_entries)
+        if args.channel_id:
+            printer.print_channel_feed(args.channel_id)
+        elif args.feed:
+            printer.print_feed()
+        else:
+            printer.print_channels()
+    else:
+        if args.unviewed:
+            print(feeder.unviewed_count())
