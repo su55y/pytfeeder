@@ -18,7 +18,7 @@ err_msg() {
 
 start_menu() {
 	printf "feed\000info\037feed\n"
-	pytfeeder-rofi
+	pytfeeder --rofi
 	printf "\000new-selection\0370\n"
 }
 
@@ -32,7 +32,7 @@ case $ROFI_RETV in
 	case "$ROFI_INFO" in
 	feed)
 		printf "back\000info\037main\n"
-		pytfeeder-rofi -f
+		pytfeeder --rofi -f
 		printf "\000new-selection\0370\n"
 		;;
 	main) start_menu ;;
@@ -40,11 +40,11 @@ case $ROFI_RETV in
 		if [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{24}$")" = "$ROFI_INFO" ]; then
 			printf "back\000info\037main\n"
-			pytfeeder-rofi -i="$ROFI_INFO"
+			pytfeeder --rofi -i="$ROFI_INFO"
 			printf "\000new-selection\0370\n"
 		elif [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{11}$")" = "$ROFI_INFO" ]; then
-			pytfeeder-rofi -v="$ROFI_INFO" >/dev/null 2>&1
+			pytfeeder --rofi -v="$ROFI_INFO" >/dev/null 2>&1
 			setsid -f mpv "https://youtu.be/$ROFI_INFO" >/dev/null 2>&1
 		else
 			err_msg "invalid id '$ROFI_INFO'"
@@ -56,29 +56,29 @@ case $ROFI_RETV in
 10)
 	[ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
 	case $ROFI_DATA in
-	feed) pytfeeder-rofi -s -f ;;
+	feed) pytfeeder --rofi -s -f ;;
 	main)
 		printf "feed\000info\037feed\n"
-		pytfeeder-rofi -s
+		pytfeeder --rofi -s
 		;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -s -i="$ROFI_DATA"
+		pytfeeder --rofi -s -i="$ROFI_DATA"
 		;;
 	esac
 	;;
 # kb-custom-2 (Ctrl-c) -- clean cache
-11) pytfeeder-rofi --clean-cache ;;
+11) pytfeeder --rofi --clean-cache ;;
 # kb-custom-3 (Ctrl-x) -- mark entry as viewed
 # kb-custom-6 (Ctrl-d) -- download selected entry
 12 | 15)
 	[ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
 	[ "${#ROFI_INFO}" -eq 11 ] || err_msg "invalid id '$ROFI_INFO'"
 	case $ROFI_DATA in
-	feed) pytfeeder-rofi -v="$ROFI_INFO" -f ;;
+	feed) pytfeeder --rofi -v="$ROFI_INFO" -f ;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
+		pytfeeder --rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
 		;;
 	esac
 	[ "$ROFI_RETV" -eq 15 ] && download_vid "$ROFI_INFO" "$1"
@@ -87,11 +87,11 @@ case $ROFI_RETV in
 13)
 	[ "$ROFI_DATA" = "main" ] || printf "back\000info\037main\n"
 	case $ROFI_DATA in
-	feed) pytfeeder-rofi -v all -f ;;
-	main) pytfeeder-rofi -v all ;;
+	feed) pytfeeder --rofi -v all -f ;;
+	main) pytfeeder --rofi -v all ;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -v="$ROFI_DATA" -i="$ROFI_DATA"
+		pytfeeder --rofi -v="$ROFI_DATA" -i="$ROFI_DATA"
 		;;
 	esac
 	printf "\000new-selection\0370"
@@ -103,10 +103,10 @@ case $ROFI_RETV in
 	[ "${#ROFI_INFO}" -eq 11 ] || err_msg "invalid id '$ROFI_INFO'"
 	setsid -f "$APPEND_SCRIPT" "https://youtu.be/$ROFI_INFO" >/dev/null 2>&1
 	case $ROFI_DATA in
-	feed) pytfeeder-rofi -v="$ROFI_INFO" -f ;;
+	feed) pytfeeder --rofi -v="$ROFI_INFO" -f ;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-		pytfeeder-rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
+		pytfeeder --rofi -v="$ROFI_INFO" -i="$ROFI_DATA"
 		;;
 	esac
 	;;
