@@ -6,9 +6,6 @@ from pytfeeder.defaults import default_config_path
 from pytfeeder.rofi import RofiPrinter
 from pytfeeder import init_feeder
 
-DEFAULT_CHANNEL_FMT = "{title}\000info\037{id}"
-DEFAULT_ENTRY_FMT = "{title}\000info\037{id}\037meta\037{channel_title}"
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -33,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--channels-fmt",
-        default=DEFAULT_CHANNEL_FMT,
+        default=RofiPrinter.DEFAULT_CHANNEL_FMT,
         metavar="STR",
         help=r"Channels print format (default: %(default)r) (rofi)",
     )
@@ -44,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--entries-fmt",
-        default=DEFAULT_ENTRY_FMT,
+        default=RofiPrinter.DEFAULT_ENTRY_FMT,
         metavar="STR",
         help=r"Entries print format (default: %(default)r (rofi)",
     )
