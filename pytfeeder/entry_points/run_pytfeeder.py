@@ -1,10 +1,12 @@
 import argparse
 import asyncio
+import logging
 
 from pytfeeder.config import Config
 from pytfeeder.defaults import default_config_path
+from pytfeeder.feeder import Feeder
 from pytfeeder.rofi import RofiPrinter
-from pytfeeder import init_feeder
+from pytfeeder.storage import Storage
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,6 +74,14 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def init_logger(config: Config):
+    logger = logging.getLogger()
+    logger.setLevel(config.log_level)
+    handler = logging.FileHandler(config.log_file)
+    handler.setFormatter(logging.Formatter(config.log_fmt))
+    logger.addHandler(handler)
+
+
 def run():
     args = parse_args()
     config = Config(args.config_file)
@@ -81,7 +91,13 @@ def run():
         print(config)
         exit(0)
 
-    feeder = init_feeder(config)
+    if not config.cache_dir.exists():
+        config.cache_dir.mkdir(parents=True)
+
+    if config.log_level > 0:
+        init_logger(config)
+
+    feeder = Feeder(config, Storage(config.storage_path))
     if args.clean_cache:
         feeder.clean_cache()
 
