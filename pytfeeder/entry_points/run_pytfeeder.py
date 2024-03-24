@@ -62,6 +62,12 @@ def parse_args() -> argparse.Namespace:
         help="Updates all feeds and prints new entries count",
     )
     parser.add_argument(
+        "--separator",
+        default="\n",
+        metavar="STR",
+        help="Line separator (default: %(default)r) (rofi)",
+    )
+    parser.add_argument(
         "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
     )
     parser.add_argument(

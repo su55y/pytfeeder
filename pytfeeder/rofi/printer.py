@@ -19,20 +19,24 @@ class RofiPrinter:
         self.entries_fmt = args.entries_fmt
         self.limit = args.limit
         self.offset = args.active_offset
+        self.separator = args.separator
 
     def print_channels(self) -> None:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
-        print("\000data\037main")
+        print("\000data\037main", end=self.separator)
         highlight = []
         for i, channel in enumerate(self.feeder.channels):
-            print(self.channels_fmt.format(title=channel.title, id=channel.channel_id))
+            print(
+                self.channels_fmt.format(title=channel.title, id=channel.channel_id),
+                end=self.separator,
+            )
             if channel.have_updates:
                 highlight.append(str(i + self.offset))
         if highlight:
-            print("\000active\037%s" % ",".join(highlight))
+            print("\000active\037%s" % ",".join(highlight), end=self.separator)
 
     def print_feed(self) -> None:
-        print("\000data\037feed")
+        print("\000data\037feed", end=self.separator)
         entries = self.feeder.feed(self.limit or self.config.feed_limit)
         if not entries:
             self.print_message("no entries")
@@ -55,7 +59,7 @@ class RofiPrinter:
             message = f"{message}, {unviewed_count} unviewed entries"
 
         self.print_message(message)
-        print("\000data\037%s" % channel_id)
+        print("\000data\037%s" % channel_id, end=self.separator)
 
         if entries := self.feeder.channel_feed(
             channel_id, self.limit or self.config.channel_feed_limit
@@ -75,11 +79,12 @@ class RofiPrinter:
             print(
                 self.entries_fmt.format(
                     title=entry.title, id=entry.id, channel_title=meta
-                )
+                ),
+                end=self.separator,
             )
 
         if highlight:
-            print("\000active\037%s" % ",".join(highlight))
+            print("\000active\037%s" % ",".join(highlight), end=self.separator)
 
     def print_message(self, message: str) -> None:
-        print("\000message\037%s" % message)
+        print("\000message\037%s" % message, end=self.separator)
