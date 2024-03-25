@@ -96,3 +96,19 @@ class Config:
             self.channel_feed_limit = int(channel_feed_limit)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
+
+    def __repr__(self) -> str:
+        repr_str = ""
+        repr_str += f"cache_dir: {self.cache_dir!s}\n"
+        if self.channels:
+            repr_str += "channels:\n"
+            repr_str += "".join(
+                f"  - {{ channel_id: {c.channel_id}, title: {c.title!r} }}\n"
+                for c in self.channels
+            )
+        repr_str += f"channel_feed_limit: {self.channel_feed_limit}\n"
+        repr_str += f"feed_limit: {self.feed_limit}\n"
+        repr_str += f"log_fmt: {self.log_fmt!r}\n"
+        repr_str += f"log_level: {self.log_level}\n"
+        repr_str += f"unviewed_first: {self.unviewed_first}\n"
+        return repr_str.strip()
