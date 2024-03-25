@@ -15,6 +15,7 @@ def parse_args() -> argparse.Namespace:
         "--active-offset",
         type=int,
         default=1,
+        metavar="INT",
         help="Index offset to mark entries as active (rofi)",
     )
     parser.add_argument(
@@ -34,7 +35,7 @@ def parse_args() -> argparse.Namespace:
         "--channels-fmt",
         default=RofiPrinter.DEFAULT_CHANNEL_FMT,
         metavar="STR",
-        help=r"Channels print format (default: %(default)r) (rofi)",
+        help="Channels print format (default: %(default)r) (rofi)",
     )
     parser.add_argument(
         "--clean-cache",
@@ -45,11 +46,11 @@ def parse_args() -> argparse.Namespace:
         "--entries-fmt",
         default=RofiPrinter.DEFAULT_ENTRY_FMT,
         metavar="STR",
-        help=r"Entries print format (default: %(default)r (rofi)",
+        help="Entries print format (default: %(default)r (rofi)",
     )
     parser.add_argument("-f", "--feed", action="store_true", help="Prints feed (rofi)")
     parser.add_argument(
-        "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit"
+        "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit (rofi)"
     )
     parser.add_argument(
         "-p", "--print-config", action="store_true", help="Prints config"
