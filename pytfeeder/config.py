@@ -8,6 +8,7 @@ import yaml
 
 from .defaults import default_cachedir_path
 from .models import Channel
+from rofi.printer import RofiPrinter
 
 
 LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
@@ -41,6 +42,8 @@ class Config:
     """
 
     channels: List[Channel]
+    channels_fmt: str
+    entries_fmt: str
     log_level: int
     log_file: Path
     log_fmt: str
@@ -54,7 +57,9 @@ class Config:
         config_file: Optional[Union[Path, str]] = None,
         channels: Optional[List[Channel]] = None,
         channel_feed_limit: Optional[int] = None,
+        channels_fmt: Optional[str] = None,
         cache_dir: Optional[Path] = None,
+        entries_fmt: Optional[str] = None,
         feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
@@ -66,6 +71,8 @@ class Config:
         self.feed_limit = feed_limit
         self.channel_feed_limit = channel_feed_limit
         self.cache_dir = cache_dir or default_cachedir_path()
+        self.channels_fmt = channels_fmt or RofiPrinter.DEFAULT_CHANNEL_FMT
+        self.entries_fmt = entries_fmt or RofiPrinter.DEFAULT_ENTRY_FMT
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or LOG_FMT
@@ -94,6 +101,10 @@ class Config:
             self.feed_limit = int(feed_limit)
         if channel_feed_limit := config.get("channel_feed_limit"):
             self.channel_feed_limit = int(channel_feed_limit)
+        if channels_fmt := config.get("channels_fmt"):
+            self.channels_fmt = channels_fmt
+        if entries_fmt := config.get("entries_fmt"):
+            self.entries_fmt = entries_fmt
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
 

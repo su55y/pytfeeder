@@ -33,7 +33,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--channels-fmt",
-        default=RofiPrinter.DEFAULT_CHANNEL_FMT,
         metavar="STR",
         help="Channels print format (default: %(default)r) (rofi)",
     )
@@ -44,7 +43,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--entries-fmt",
-        default=RofiPrinter.DEFAULT_ENTRY_FMT,
         metavar="STR",
         help="Entries print format (default: %(default)r (rofi)",
     )
