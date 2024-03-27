@@ -4,12 +4,10 @@ from typing import List
 from pytfeeder.config import Config
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Entry
+from pytfeeder.consts import DEFAULT_ENTRY_FMT, DEFAULT_CHANNEL_FMT
 
 
 class RofiPrinter:
-    DEFAULT_CHANNEL_FMT = "{title}\000info\037{id}"
-    DEFAULT_ENTRY_FMT = "{title}\000info\037{id}\037meta\037{channel_title}"
-
     def __init__(
         self, feeder: Feeder, config: Config, args: argparse.Namespace
     ) -> None:

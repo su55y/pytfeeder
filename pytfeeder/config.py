@@ -8,7 +8,7 @@ import yaml
 
 from .defaults import default_cachedir_path
 from .models import Channel
-from rofi.printer import RofiPrinter
+from .consts import DEFAULT_CHANNEL_FMT, DEFAULT_ENTRY_FMT
 
 
 LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
@@ -71,8 +71,8 @@ class Config:
         self.feed_limit = feed_limit
         self.channel_feed_limit = channel_feed_limit
         self.cache_dir = cache_dir or default_cachedir_path()
-        self.channels_fmt = channels_fmt or RofiPrinter.DEFAULT_CHANNEL_FMT
-        self.entries_fmt = entries_fmt or RofiPrinter.DEFAULT_ENTRY_FMT
+        self.channels_fmt = channels_fmt or DEFAULT_CHANNEL_FMT
+        self.entries_fmt = entries_fmt or DEFAULT_ENTRY_FMT
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or LOG_FMT
