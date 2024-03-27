@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--channels-fmt",
         metavar="STR",
-        help="Channels print format (default: %(default)r) (rofi)",
+        help=f"Channels print format (default: {RofiPrinter.DEFAULT_CHANNEL_FMT!r}) (rofi)",
     )
     parser.add_argument(
         "--clean-cache",
@@ -44,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--entries-fmt",
         metavar="STR",
-        help="Entries print format (default: %(default)r (rofi)",
+        help=f"Entries print format (default: {RofiPrinter.DEFAULT_ENTRY_FMT!r} (rofi)",
     )
     parser.add_argument("-f", "--feed", action="store_true", help="Prints feed (rofi)")
     parser.add_argument(
