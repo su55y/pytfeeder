@@ -41,21 +41,21 @@ class Config:
     """
 
     channels: List[Channel]
-    storage_path: Path
     log_level: int
     log_file: Path
     log_fmt: str
+    storage_path: Path
     unviewed_first: bool
-    feed_limit: Optional[int] = None
     channel_feed_limit: Optional[int] = None
+    feed_limit: Optional[int] = None
 
     def __init__(
         self,
         config_file: Optional[Union[Path, str]] = None,
         channels: Optional[List[Channel]] = None,
-        feed_limit: Optional[int] = None,
         channel_feed_limit: Optional[int] = None,
         cache_dir: Optional[Path] = None,
+        feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
         log_fmt: Optional[str] = None,
