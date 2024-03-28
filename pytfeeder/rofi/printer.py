@@ -77,7 +77,7 @@ class RofiPrinter:
 
             print(
                 self.entries_fmt.format(
-                    title=entry.title,
+                    title=entry.title.replace("&", "&amp;"),
                     id=entry.id,
                     channel_title=channel_title,
                     meta=meta,
