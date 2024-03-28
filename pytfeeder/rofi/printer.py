@@ -70,13 +70,17 @@ class RofiPrinter:
             if not entry.is_viewed:
                 highlight.append(str(i + self.offset))
 
-            meta = self.feeder.channel_title(entry.channel_id)
+            channel_title = self.feeder.channel_title(entry.channel_id)
+            meta = channel_title
             if len(parts := meta.split()):
                 meta += "%s%s" % (",".join(parts), "".join(parts))
 
             print(
                 self.entries_fmt.format(
-                    title=entry.title, id=entry.id, channel_title=meta
+                    title=entry.title,
+                    id=entry.id,
+                    channel_title=channel_title,
+                    meta=meta,
                 ),
                 end=self.separator,
             )
