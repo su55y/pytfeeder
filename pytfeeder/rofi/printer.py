@@ -4,7 +4,6 @@ from typing import List
 from pytfeeder.config import Config
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Entry
-from pytfeeder.consts import DEFAULT_ENTRY_FMT, DEFAULT_CHANNEL_FMT
 
 
 class RofiPrinter:
