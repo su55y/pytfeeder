@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--channels-fmt",
+        type=lambda s: eval("'%s'" % s),
         metavar="STR",
         help=f"Channels print format (default: {DEFAULT_CHANNEL_FMT!r}) (rofi)",
     )
@@ -44,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--entries-fmt",
+        type=lambda s: eval("'%s'" % s),
         metavar="STR",
         help=f"Entries print format (default: {DEFAULT_ENTRY_FMT!r} (rofi)",
     )
