@@ -8,10 +8,8 @@ import yaml
 
 from .defaults import default_cachedir_path
 from .models import Channel
-from .consts import DEFAULT_CHANNEL_FMT, DEFAULT_ENTRY_FMT
+from .consts import DEFAULT_CHANNEL_FMT, DEFAULT_ENTRY_FMT, DEFAULT_LOG_FMT
 
-
-LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
 
 log_levels_map = {
     "debug": logging.DEBUG,
@@ -75,7 +73,7 @@ class Config:
         self.entries_fmt = entries_fmt or DEFAULT_ENTRY_FMT
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
-        self.log_fmt = log_fmt or LOG_FMT
+        self.log_fmt = log_fmt or DEFAULT_LOG_FMT
         self.storage_path = storage_path or self.cache_dir.joinpath("pytfeeder.db")
         self.unviewed_first = unviewed_first or False
         if config_file:
