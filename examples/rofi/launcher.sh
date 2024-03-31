@@ -30,7 +30,7 @@ textbox-prompt-colon {
 EOF
 }
 
-rofi -i -show "pytfeeder-rofi-launcher" \
+SCRIPTPATH="$SCRIPTPATH" rofi -i -show "pytfeeder-rofi-launcher" \
 	-modi "pytfeeder-rofi-launcher:$SCRIPTPATH/helper.sh" \
 	-no-config -kb-custom-1 "Ctrl+s" \
 	-kb-custom-2 "Ctrl+c" \
@@ -41,4 +41,4 @@ rofi -i -show "pytfeeder-rofi-launcher" \
 	-kb-remove-char-forward "Delete" \
 	-kb-custom-6 "Ctrl+d" \
 	-theme-str "$(theme)" \
-	-normal-window
+	-normal-window -eh 2

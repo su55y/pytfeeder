@@ -32,7 +32,8 @@ case $ROFI_RETV in
 	case "$ROFI_INFO" in
 	feed)
 		printf "back\000info\037main\n"
-		pytfeeder --rofi -f
+		printf "\000markup-rows\037true\n"
+		pytfeeder --rofi -f --entries-fmt '{title}\r<b><i>{channel_title}</i></b>\000info\037{id}\037meta\037{meta}'
 		printf "\000new-selection\0370\n"
 		;;
 	main) start_menu ;;
@@ -45,9 +46,9 @@ case $ROFI_RETV in
 		elif [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{11}$")" = "$ROFI_INFO" ]; then
 			pytfeeder --rofi -v="$ROFI_INFO" >/dev/null 2>&1
-			setsid -f mpv "https://youtu.be/$ROFI_INFO" >/dev/null 2>&1
+			_play "https://youtu.be/$ROFI_INFO"
 		else
-			err_msg "invalid id '$ROFI_INFO'"
+			_err_msg "invalid id '$ROFI_INFO'"
 		fi
 		;;
 	esac
