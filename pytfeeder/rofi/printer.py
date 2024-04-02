@@ -22,9 +22,16 @@ class RofiPrinter:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
         print("\000data\037main", end=self.separator)
         highlight = []
+        unviewed_count = lambda _: 0
+        if "{unviewed_count}" in self.channels_fmt:
+            unviewed_count = lambda channel_id: self.feeder.unviewed_count(channel_id)
         for i, channel in enumerate(self.feeder.channels):
             print(
-                self.channels_fmt.format(title=channel.title, id=channel.channel_id),
+                self.channels_fmt.format(
+                    id=channel.channel_id,
+                    title=channel.title,
+                    unviewed_count=unviewed_count(channel.channel_id),
+                ),
                 end=self.separator,
             )
             if channel.have_updates:
