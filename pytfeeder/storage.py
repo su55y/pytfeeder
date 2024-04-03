@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import datetime as dt
 import logging
 from pathlib import Path
 import sqlite3
@@ -63,7 +64,7 @@ class Storage:
                     Entry(
                         id=id,
                         title=title,
-                        updated=updated,
+                        updated=dt.datetime.fromisoformat(updated),
                         channel_id=c_id,
                         is_viewed=bool(is_viewed),
                     )

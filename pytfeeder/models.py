@@ -7,7 +7,7 @@ from typing import List
 class Entry:
     id: str
     title: str
-    updated: str = str(datetime.now(timezone.utc))
+    updated: datetime = datetime.now(timezone.utc)
     channel_id: str = "Unknown"
     is_viewed: bool = False
 
