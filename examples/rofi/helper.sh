@@ -17,8 +17,9 @@ err_msg() {
 }
 
 start_menu() {
-	printf "feed\000info\037feed\n"
-	pytfeeder --rofi
+	printf "\000markup-rows\037true\n"
+	printf "feed\r%s new entries\000info\037feed\n" "$(pytfeeder -u)"
+	pytfeeder --rofi --channels-fmt '{title}\r{unviewed_count} new entries\000info\037{id}'
 	printf "\000new-selection\0370\n"
 }
 
@@ -41,7 +42,7 @@ case $ROFI_RETV in
 		if [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{24}$")" = "$ROFI_INFO" ]; then
 			printf "back\000info\037main\n"
-			pytfeeder --rofi -i="$ROFI_INFO"
+			pytfeeder --rofi -i="$ROFI_INFO" --entries-fmt '{title}\r<b><i>{updated}</i></b>\000info\037{id}\037meta\037{meta}'
 			printf "\000new-selection\0370\n"
 		elif [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{11}$")" = "$ROFI_INFO" ]; then
