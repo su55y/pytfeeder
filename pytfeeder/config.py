@@ -8,7 +8,12 @@ import yaml
 
 from .defaults import default_cachedir_path
 from .models import Channel
-from .consts import DEFAULT_CHANNEL_FMT, DEFAULT_ENTRY_FMT, DEFAULT_LOG_FMT
+from .consts import (
+    DEFAULT_CHANNEL_FMT,
+    DEFAULT_ENTRY_FMT,
+    DEFAULT_LOG_FMT,
+    DEFAULT_DATETIME_FMT,
+)
 
 
 log_levels_map = {
@@ -57,6 +62,7 @@ class Config:
         channel_feed_limit: Optional[int] = None,
         channels_fmt: Optional[str] = None,
         cache_dir: Optional[Path] = None,
+        datetime_fmt: Optional[str] = None,
         entries_fmt: Optional[str] = None,
         feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
@@ -70,6 +76,7 @@ class Config:
         self.channel_feed_limit = channel_feed_limit
         self.cache_dir = cache_dir or default_cachedir_path()
         self.channels_fmt = channels_fmt or DEFAULT_CHANNEL_FMT
+        self.datetime_fmt = datetime_fmt or DEFAULT_DATETIME_FMT
         self.entries_fmt = entries_fmt or DEFAULT_ENTRY_FMT
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
@@ -103,6 +110,8 @@ class Config:
             self.channels_fmt = channels_fmt
         if entries_fmt := config.get("entries_fmt"):
             self.entries_fmt = entries_fmt
+        if datetime_fmt := config.get("datetime_fmt"):
+            self.datetime_fmt = datetime_fmt
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
 

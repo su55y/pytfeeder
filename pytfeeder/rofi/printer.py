@@ -17,7 +17,6 @@ class RofiPrinter:
         self.limit = args.limit
         self.offset = args.active_offset
         self.separator = args.separator
-        self.datetime_fmt = "%D %T"
 
     def print_channels(self) -> None:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
@@ -88,7 +87,7 @@ class RofiPrinter:
                     id=entry.id,
                     channel_title=channel_title,
                     meta=meta,
-                    updated=entry.updated.strftime(self.datetime_fmt),
+                    updated=entry.updated.strftime(self.config.datetime_fmt),
                 ),
                 end=self.separator,
             )

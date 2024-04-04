@@ -44,6 +44,9 @@ def parse_args() -> argparse.Namespace:
         help="Deletes inactive channels and watched entries",
     )
     parser.add_argument(
+        "--datetime-fmt", metavar="STR", help="Datetime key format (rofi)"
+    )
+    parser.add_argument(
         "--entries-fmt",
         type=lambda s: eval("'%s'" % s),
         metavar="STR",
@@ -92,7 +95,7 @@ def init_logger(config: Config):
 
 def run():
     args = parse_args()
-    config = Config(args.config_file)
+    config = Config(args.config_file, datetime_fmt=args.datetime_fmt)
     if not config:
         exit(1)
     if args.print_config:
