@@ -42,7 +42,7 @@ case $ROFI_RETV in
 		if [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{24}$")" = "$ROFI_INFO" ]; then
 			printf "back\000info\037main\n"
-			pytfeeder --rofi -i="$ROFI_INFO" --entries-fmt '{title}\r<b><i>{updated}</i></b>\000info\037{id}\037meta\037{meta}'
+			pytfeeder --rofi -i="$ROFI_INFO" --entries-fmt '{title}\r<b>{updated}</b>\000info\037{id}\037meta\037{meta}' --datetime-fmt '<i>%d %B</i>'
 			printf "\000new-selection\0370\n"
 		elif [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{11}$")" = "$ROFI_INFO" ]; then
