@@ -7,7 +7,11 @@ from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
 from pytfeeder.rofi import RofiPrinter
 from pytfeeder.storage import Storage
-from pytfeeder.consts import DEFAULT_ENTRY_FMT, DEFAULT_CHANNEL_FMT
+from pytfeeder.consts import (
+    DEFAULT_ENTRY_FMT,
+    DEFAULT_CHANNEL_FMT,
+    DEFAULT_DATETIME_FMT,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,7 +48,9 @@ def parse_args() -> argparse.Namespace:
         help="Deletes inactive channels and watched entries",
     )
     parser.add_argument(
-        "--datetime-fmt", metavar="STR", help="Datetime key format (rofi)"
+        "--datetime-fmt",
+        metavar="STR",
+        help=f"Datetime key format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r}) (rofi)",
     )
     parser.add_argument(
         "--entries-fmt",
@@ -95,9 +101,17 @@ def init_logger(config: Config):
 
 def run():
     args = parse_args()
-    config = Config(args.config_file, datetime_fmt=args.datetime_fmt)
+
+    config_args = {"config_file": args.config_file}
+    if args.rofi:
+        config_args["datetime_fmt"] = args.datetime_fmt
+        config_args["entries_fmt"] = args.entries_fmt
+        config_args["channels_fmt"] = args.channels_fmt
+
+    config = Config(**config_args)
     if not config:
         exit(1)
+
     if args.print_config:
         print(config)
         exit(0)
