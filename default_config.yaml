@@ -20,7 +20,11 @@ channels:
 # -- title         - video title
 # -- channel_title - the title of the channel this video is from
 # -- meta          - the title of channel, splitted and joined by template 'a b' = 'a b,a,b'
+# -- updated       - publication date of entry
 # entries_fmt: "{title}\x00info\x1f{id}\x1fmeta\x1f{meta}"
+
+# datetime format for the updated key of entries_fmt
+# datetime_fmt: '%D %T'
 
 # int, common feed select limit, optional, default: None
 # feed_limit: 0
