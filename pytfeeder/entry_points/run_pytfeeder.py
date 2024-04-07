@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--clean-cache",
         action="store_true",
-        help="Deletes inactive channels and watched entries",
+        help="Deletes inactive channels and watched entries (with -F/--force deletes all entries)",
     )
     parser.add_argument(
         "--datetime-fmt",
@@ -59,6 +59,9 @@ def parse_args() -> argparse.Namespace:
         help=f"Entries print format (default: {DEFAULT_ENTRY_FMT!r} (rofi)",
     )
     parser.add_argument("-f", "--feed", action="store_true", help="Prints feed (rofi)")
+    parser.add_argument(
+        "-F", "--force", action="store_true", help="Force remove all entries"
+    )
     parser.add_argument(
         "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit (rofi)"
     )
@@ -124,7 +127,7 @@ def run():
 
     feeder = Feeder(config, Storage(config.storage_path))
     if args.clean_cache:
-        feeder.clean_cache()
+        feeder.clean_cache(args.force)
 
     if args.viewed:
         if args.viewed == "all":
