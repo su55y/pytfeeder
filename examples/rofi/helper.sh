@@ -6,9 +6,11 @@ APPEND_SCRIPT="${XDG_DATA_HOME:-$HOME/.local/share}/rofi/playlist_ctl_py/append_
 DOWNLOAD_DIR="$HOME/Videos/YouTube"
 download_vid() {
 	[ "${#1}" -eq 11 ] || return
-	notify-send -a "pytfeeder" "⬇️Start downloading '$2'..."
+	title="unknown"
+	[ -n "$2" ] && title="$(echo "$2" | sed 's/\r.*//')"
+	notify-send -a "pytfeeder" "⬇️Start downloading '$title'..."
 	qid="$(tsp yt-dlp "https://youtu.be/$1" -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
-	tsp -D "$qid" notify-send -a "pytfeeder" "✅Download done: '$2'"
+	tsp -D "$qid" notify-send -a "pytfeeder" "✅Download done: '$title'"
 }
 
 err_msg() {
