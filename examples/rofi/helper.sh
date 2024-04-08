@@ -91,7 +91,7 @@ case $ROFI_RETV in
 		print_channel_feed "$ROFI_DATA" "-v=$ROFI_INFO"
 		;;
 	esac
-	[ "$ROFI_RETV" -eq 15 ] && download_vid "$ROFI_INFO" "$1"
+	[ "$ROFI_RETV" -eq 15 ] && download_vid "$ROFI_INFO" "$1" >/dev/null 2>&1
 	;;
 # kb-custom-4 (Ctrl-X) -- mark current feed entries as viewed
 13)
