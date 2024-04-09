@@ -4,10 +4,16 @@
 APPEND_SCRIPT="${XDG_DATA_HOME:-$HOME/.local/share}/rofi/playlist_ctl_py/append_video.sh"
 # optional for download
 DOWNLOAD_DIR="$HOME/Videos/YouTube"
+
+clean_title() {
+	title="unknown"
+	[ -n "$1" ] && title="$(echo "$1" | sed 's/\r.*//')"
+	printf '%s' "$title"
+}
+
 download_vid() {
 	[ "${#1}" -eq 11 ] || return
-	title="unknown"
-	[ -n "$2" ] && title="$(echo "$2" | sed 's/\r.*//')"
+	title="$(clean_title "$2")"
 	notify-send -a "pytfeeder" "⬇️Start downloading '$title'..."
 	qid="$(tsp yt-dlp "https://youtu.be/$1" -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
 	tsp -D "$qid" notify-send -a "pytfeeder" "✅Download done: '$title'"
@@ -40,6 +46,12 @@ print_channel_feed() {
 	pytfeeder --rofi -i="$channel_id" "$@" --entries-fmt '{title}\r<b>{updated}</b>\000info\037{id}\037meta\037{meta}' --datetime-fmt '<i>%d %B</i>'
 }
 
+play() {
+	title="$(clean_title "$2")"
+	notify-send -a "pytfeeder" "Playing '$title'..."
+	setsid -f mpv "$1" >/dev/null 2>&1
+}
+
 printf "\000use-hot-keys\037true\n"
 
 case $ROFI_RETV in
@@ -58,7 +70,7 @@ case $ROFI_RETV in
 		elif [ "$(printf '%s' "$ROFI_INFO" |
 			grep -oP "^[0-9a-zA-Z_\-]{11}$")" = "$ROFI_INFO" ]; then
 			pytfeeder --rofi -v="$ROFI_INFO" >/dev/null 2>&1
-			_play "https://youtu.be/$ROFI_INFO"
+			play "https://youtu.be/$ROFI_INFO" "$@"
 		else
 			_err_msg "invalid id '$ROFI_INFO'"
 		fi
