@@ -27,6 +27,9 @@ textbox-prompt-colon {
   text-color: #f00;
   padding: 0 5px;
 }
+element.selected.urgent {
+  background-color: #00000000;
+}
 EOF
 }
 

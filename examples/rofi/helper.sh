@@ -20,7 +20,7 @@ download_vid() {
 }
 
 err_msg() {
-	printf '\000message\037error: %s\n' "$1"
+	[ -n "$1" ] && printf '\000message\037error: %s\n\000urgent\0370\n \000nonselectable\037true\n' "$1"
 	exit 1
 }
 
