@@ -16,12 +16,13 @@ from pytfeeder.consts import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+    rofi_args = parser.add_argument_group("rofi mode options")
+    rofi_args.add_argument(
         "--active-offset",
         type=int,
         default=1,
         metavar="INT",
-        help="Index offset to mark entries as active (rofi)",
+        help="Index offset to mark entries as active",
     )
     parser.add_argument(
         "-c",
@@ -30,40 +31,40 @@ def parse_args() -> argparse.Namespace:
         metavar="PATH",
         help="Location of config file (default: %(default)s)",
     )
-    parser.add_argument(
+    rofi_args.add_argument(
         "-i",
         "--channel-id",
         metavar="ID",
-        help="Prints channel feed by given channel_id (rofi)",
+        help="Prints channel feed by given channel_id",
     )
-    parser.add_argument(
+    rofi_args.add_argument(
         "--channels-fmt",
         type=lambda s: eval("'%s'" % s),
         metavar="STR",
-        help=f"Channels print format (default: {DEFAULT_CHANNEL_FMT!r}) (rofi)",
+        help=f"Channels print format (default: {DEFAULT_CHANNEL_FMT!r})",
     )
     parser.add_argument(
         "--clean-cache",
         action="store_true",
         help="Deletes inactive channels and watched entries (with -F/--force deletes all entries)",
     )
-    parser.add_argument(
+    rofi_args.add_argument(
         "--datetime-fmt",
         metavar="STR",
-        help=f"Datetime key format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r}) (rofi)",
+        help=f"Datetime key format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
-    parser.add_argument(
+    rofi_args.add_argument(
         "--entries-fmt",
         type=lambda s: eval("'%s'" % s),
         metavar="STR",
-        help=f"Entries print format (default: {DEFAULT_ENTRY_FMT!r} (rofi)",
+        help=f"Entries print format (default: {DEFAULT_ENTRY_FMT!r}",
     )
-    parser.add_argument("-f", "--feed", action="store_true", help="Prints feed (rofi)")
+    rofi_args.add_argument("-f", "--feed", action="store_true", help="Prints feed")
     parser.add_argument(
         "-F", "--force", action="store_true", help="Force remove all entries"
     )
-    parser.add_argument(
-        "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit (rofi)"
+    rofi_args.add_argument(
+        "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit"
     )
     parser.add_argument(
         "-p", "--print-config", action="store_true", help="Prints config"
@@ -75,11 +76,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Updates all feeds and prints new entries count",
     )
-    parser.add_argument(
+    rofi_args.add_argument(
         "--separator",
         default="\n",
         metavar="STR",
-        help="Line separator (default: %(default)r) (rofi)",
+        help="Line separator (default: %(default)r)",
     )
     parser.add_argument(
         "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
