@@ -16,6 +16,41 @@ from pytfeeder.consts import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        default=default_config_path(),
+        metavar="PATH",
+        help="Location of config file (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--clean-cache",
+        action="store_true",
+        help="Deletes inactive channels and watched entries (with -F/--force deletes all entries)",
+    )
+    parser.add_argument(
+        "-F", "--force", action="store_true", help="Force remove all entries"
+    )
+    parser.add_argument(
+        "-p", "--print-config", action="store_true", help="Prints config"
+    )
+    parser.add_argument("-r", "--rofi", action="store_true", help="Rofi mode")
+    parser.add_argument(
+        "-s",
+        "--sync",
+        action="store_true",
+        help="Updates all feeds and prints new entries count",
+    )
+    parser.add_argument(
+        "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
+    )
+    parser.add_argument(
+        "-v",
+        "--viewed",
+        metavar="ID",
+        help="Mark as viewed (Accepts entry/channel id or keyword 'all')",
+    )
+
     rofi_args = parser.add_argument_group("rofi mode options")
     rofi_args.add_argument(
         "--active-offset",
@@ -23,13 +58,6 @@ def parse_args() -> argparse.Namespace:
         default=1,
         metavar="INT",
         help="Index offset to mark entries as active",
-    )
-    parser.add_argument(
-        "-c",
-        "--config-file",
-        default=default_config_path(),
-        metavar="PATH",
-        help="Location of config file (default: %(default)s)",
     )
     rofi_args.add_argument(
         "-i",
@@ -43,11 +71,6 @@ def parse_args() -> argparse.Namespace:
         metavar="STR",
         help=f"Channels print format (default: {DEFAULT_CHANNEL_FMT!r})",
     )
-    parser.add_argument(
-        "--clean-cache",
-        action="store_true",
-        help="Deletes inactive channels and watched entries (with -F/--force deletes all entries)",
-    )
     rofi_args.add_argument(
         "--datetime-fmt",
         metavar="STR",
@@ -60,36 +83,14 @@ def parse_args() -> argparse.Namespace:
         help=f"Entries print format (default: {DEFAULT_ENTRY_FMT!r}",
     )
     rofi_args.add_argument("-f", "--feed", action="store_true", help="Prints feed")
-    parser.add_argument(
-        "-F", "--force", action="store_true", help="Force remove all entries"
-    )
     rofi_args.add_argument(
         "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit"
-    )
-    parser.add_argument(
-        "-p", "--print-config", action="store_true", help="Prints config"
-    )
-    parser.add_argument("-r", "--rofi", action="store_true", help="Rofi mode")
-    parser.add_argument(
-        "-s",
-        "--sync",
-        action="store_true",
-        help="Updates all feeds and prints new entries count",
     )
     rofi_args.add_argument(
         "--separator",
         default="\n",
         metavar="STR",
         help="Line separator (default: %(default)r)",
-    )
-    parser.add_argument(
-        "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
-    )
-    parser.add_argument(
-        "-v",
-        "--viewed",
-        metavar="ID",
-        help="Mark as viewed (Accepts entry/channel id or keyword 'all')",
     )
 
     return parser.parse_args()
