@@ -72,7 +72,7 @@ case $ROFI_RETV in
 			pytfeeder --rofi -v="$ROFI_INFO" >/dev/null 2>&1
 			play "https://youtu.be/$ROFI_INFO" "$@"
 		else
-			_err_msg "invalid id '$ROFI_INFO'"
+			err_msg "invalid id '$ROFI_INFO'"
 		fi
 		;;
 	esac
