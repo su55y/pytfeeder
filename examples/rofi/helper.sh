@@ -81,9 +81,7 @@ case $ROFI_RETV in
 10)
 	case $ROFI_DATA in
 	feed) print_feed "-s" ;;
-	main)
-		start_menu "-s"
-		;;
+	main) start_menu "-s" ;;
 	*)
 		[ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
 		print_channel_feed "$ROFI_DATA" "-s"
