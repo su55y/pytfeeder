@@ -89,7 +89,10 @@ case $ROFI_RETV in
 	esac
 	;;
 # kb-custom-2 (Ctrl-c) -- clean cache
-11) pytfeeder --rofi --clean-cache ;;
+11)
+	pytfeeder --clean-cache
+	start_menu
+	;;
 # kb-custom-3 (Ctrl-x) -- mark entry as viewed
 # kb-custom-6 (Ctrl-d) -- download selected entry
 12 | 15)
