@@ -1,11 +1,12 @@
 import argparse
 import asyncio
 import logging
-import yaml
+from typing import Dict, Optional
 
 from pytfeeder.config import Config
 from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
+from pytfeeder.models import Channel
 from pytfeeder.rofi import RofiPrinter
 from pytfeeder.storage import Storage
 from pytfeeder.consts import (
@@ -106,6 +107,24 @@ def init_logger(config: Config):
     logger.addHandler(handler)
 
 
+def fetch_channel_info(url) -> Optional[Channel]:
+    try:
+        from yt_dlp import YoutubeDL
+    except ImportError as e:
+        print(f"ImportError: {e!s}")
+        return
+
+    with YoutubeDL({"quiet": True}) as ydl:
+        info = ydl.extract_info(url, download=False, process=False)
+        if not info or not isinstance(info, Dict):
+            return
+        title = info.get("title", "Unknown")
+        channel_id = info.get("channel_id")
+        if not channel_id or len(channel_id) != 24:
+            return
+        return Channel(title=title, channel_id=channel_id)
+
+
 def run():
     args = parse_args()
 
@@ -130,8 +149,12 @@ def run():
         init_logger(config)
 
     if args.add_channel:
-        # add new channel
+        new_channel = fetch_channel_info(args.add_channel)
+        if not new_channel:
+            exit(1)
+        config.channels.append(new_channel)
         config.dump(args.config_file)
+        print(f"{new_channel.title!r} just added")
         exit(0)
 
     feeder = Feeder(config, Storage(config.storage_path))
