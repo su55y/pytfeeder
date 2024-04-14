@@ -115,6 +115,22 @@ class Config:
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
 
+    def dump(self, config_file: str) -> None:
+        data = {
+            "cache_dir": str(self.cache_dir),
+            "channels": [c.dump() for c in self.channels],
+            "channels_fmt": self.channels_fmt,
+            "channel_feed_limit": self.channel_feed_limit,
+            "entries_fmt": self.entries_fmt,
+            "datetime_fmt": self.datetime_fmt,
+            "feed_limit": self.feed_limit,
+            "log_fmt": self.log_fmt,
+            "log_level": self.log_level,
+            "unviewed_first": self.unviewed_first,
+        }
+        with open(config_file, "w") as f:
+            yaml.safe_dump(data, f, allow_unicode=True)
+
     def __repr__(self) -> str:
         repr_str = ""
         repr_str += f"cache_dir: {self.cache_dir!s}\n"

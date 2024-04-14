@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+import yaml
 
 from pytfeeder.config import Config
 from pytfeeder.defaults import default_config_path
@@ -16,6 +17,7 @@ from pytfeeder.consts import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
         "--config-file",
@@ -126,6 +128,11 @@ def run():
 
     if config.log_level > 0:
         init_logger(config)
+
+    if args.add_channel:
+        # add new channel
+        config.dump(args.config_file)
+        exit(0)
 
     feeder = Feeder(config, Storage(config.storage_path))
     if args.clean_cache:

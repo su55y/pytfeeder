@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Dict
 
 
 @dataclass
@@ -18,3 +18,6 @@ class Channel:
     channel_id: str = ""
     entries: List[Entry] = field(default_factory=list)
     have_updates: bool = False
+
+    def dump(self) -> Dict:
+        return {"title": self.title, "channel_id": self.channel_id}
