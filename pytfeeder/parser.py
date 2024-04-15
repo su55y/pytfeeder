@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 from typing import List, Optional
 import xml.etree.ElementTree as ET
@@ -23,7 +24,15 @@ class YTFeedParser:
         for entry in self.__tree.findall(self.__schema % "entry"):
             id = self._read_yt_tag("yt:videoId", entry) or "-"
             title = self._read_tag(self.__schema % "title", entry) or "-"
-            updated = self._read_tag(self.__schema % "updated", entry) or "-"
+
+            # FIXME
+            updated_val = self._read_tag(self.__schema % "updated", entry)
+            updated = (
+                dt.datetime.fromisoformat(updated_val)
+                if updated_val
+                else dt.datetime.now()
+            )
+
             channel_id = self._read_yt_tag("yt:channelId", entry) or "-"
             self.__entries.append(
                 Entry(id=id, title=title, updated=updated, channel_id=channel_id)
