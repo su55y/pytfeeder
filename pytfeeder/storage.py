@@ -123,3 +123,13 @@ class Storage:
             self.log.debug(query)
             cursor.execute(query)
             self.log.debug("%d entries removed" % cursor.rowcount)
+
+    def delete_inactive_channels(self, channels_list_str: str) -> None:
+        with self.get_cursor() as cursor:
+            query = (
+                "DELETE FROM tb_entries WHERE channel_id NOT IN (%s)"
+                % channels_list_str
+            )
+            self.log.debug(query)
+            cursor.execute(query)
+            self.log.debug("%d entries removed" % cursor.rowcount)

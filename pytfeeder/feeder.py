@@ -62,6 +62,9 @@ class Feeder:
 
     def clean_cache(self, force=False) -> None:
         self.stor.delete_all_entries(force)
+        self.stor.delete_inactive_channels(
+            ", ".join(f"{c.channel_id!r}" for c in self.config.channels)
+        )
 
     async def sync_entries(self) -> None:
         async with ClientSession() as session:
