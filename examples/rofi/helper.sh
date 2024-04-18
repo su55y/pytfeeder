@@ -35,7 +35,6 @@ print_feed() {
 	printf "back\000info\037main\n"
 	printf "\000markup-rows\037true\n"
 	pytfeeder --rofi -f --entries-fmt '{title}\r<b><i>{channel_title}</i></b>\000info\037{id}\037meta\037{meta}' "$@"
-	printf "\000new-selection\0370\n"
 }
 
 print_channel_feed() {
@@ -60,7 +59,10 @@ case $ROFI_RETV in
 # select line
 1)
 	case "$ROFI_INFO" in
-	feed) print_feed ;;
+	feed)
+		print_feed
+		printf "\000new-selection\0370\n"
+		;;
 	main) start_menu ;;
 	*)
 		if [ "$(printf '%s' "$ROFI_INFO" |
