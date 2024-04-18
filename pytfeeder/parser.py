@@ -20,6 +20,7 @@ class YTFeedParser:
         self.rx_updated = re.compile(
             r"^\d{4}-\d{2}-\d{2}[T\s]\d{2}\:\d{2}\:\d{2}\+\d{2}\:\d{2}$"
         )
+        self.rx_id = re.compile(r"^[A-Za-z0-9\-_]{11}$")
         self.default_updated = dt.datetime.now(dt.timezone.utc)
 
     @property
@@ -28,7 +29,10 @@ class YTFeedParser:
 
     def _read_entries(self):
         for entry in self.__tree.findall(self.__schema % "entry"):
-            id = self._read_yt_tag("yt:videoId", entry) or "-"
+            id = self._read_yt_tag("yt:videoId", entry)
+            if id is None or not self.rx_id.match(id):
+                self.log.error(f"invalid id {id!r} in entry: {entry!r}")
+                continue
             title = self._read_tag(self.__schema % "title", entry) or "-"
             updated = self._read_tag(self.__schema % "updated", entry)
             if updated is not None and self.rx_updated.match(updated):
