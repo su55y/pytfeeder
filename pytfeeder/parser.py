@@ -15,13 +15,13 @@ class YTFeedParser:
 
         self.__entries: List[Entry] = []
         self.log = logging.getLogger()
-        self._read_entries()
-
+        self.rx_id = re.compile(r"^[A-Za-z0-9\-_]{11}$")
         self.rx_updated = re.compile(
             r"^\d{4}-\d{2}-\d{2}[T\s]\d{2}\:\d{2}\:\d{2}\+\d{2}\:\d{2}$"
         )
-        self.rx_id = re.compile(r"^[A-Za-z0-9\-_]{11}$")
         self.default_updated = dt.datetime.now(dt.timezone.utc)
+
+        self._read_entries()
 
     @property
     def entries(self) -> List[Entry]:
