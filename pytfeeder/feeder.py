@@ -6,6 +6,7 @@ import asyncio
 from aiohttp import ClientSession
 
 from .config import Config
+from .consts import YT_FEED_URL
 from .models import Channel, Entry
 from .parser import YTFeedParser
 from .storage import Storage
@@ -93,7 +94,7 @@ class Feeder:
     async def _fetch_feed(
         self, session: ClientSession, channel_id: str
     ) -> Optional[str]:
-        url = "https://www.youtube.com/feeds/videos.xml?channel_id=%s" % channel_id
+        url = YT_FEED_URL % channel_id
         async with session.get(url) as resp:
             self.log.debug(f"{resp.status} {resp.reason} {resp.url}")
             if resp.status == 200:
