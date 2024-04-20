@@ -50,7 +50,13 @@ def is_update_interval_expired() -> bool:
 
 def play_video(id: str) -> None:
     sp.Popen(
-        ["setsid", "-f", "mpv", "https://youtu.be/%s" % id],
+        [
+            "setsid",
+            "-f",
+            "mpv",
+            "https://youtu.be/%s" % id,
+            "--ytdl-raw-options=retries=infinite",
+        ],
         stdout=sp.DEVNULL,
         stderr=sp.DEVNULL,
     )

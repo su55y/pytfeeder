@@ -20,7 +20,13 @@ UPDATE_INVERVAL_MINS = 30
 
 def play_video(id: str) -> None:
     sp.Popen(
-        ["setsid", "-f", "mpv", "https://youtu.be/%s" % id],
+        [
+            "setsid",
+            "-f",
+            "mpv",
+            "https://youtu.be/%s" % id,
+            "--ytdl-raw-options=retries=infinite",
+        ],
         stdout=sp.DEVNULL,
         stderr=sp.DEVNULL,
     )
