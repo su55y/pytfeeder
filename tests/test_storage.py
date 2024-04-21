@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 from pytfeeder.storage import Storage
-from .mocks import sample_channel, sample_entries
+from .mocks import sample_channel, sample_entries, another_sample_entries
 
 logging.basicConfig(level=logging.DEBUG, filename="/tmp/test_storage.log")
 
@@ -50,6 +50,14 @@ class StorageTest(unittest.TestCase):
         self.stor.mark_entry_as_viewed(id=sample_entries[0].id)
         self.assertTrue(self.stor.select_entries()[0])
 
-    def test4_delete(self):
+    def test4_delete_inactive(self):
+        count = self.stor.add_entries(another_sample_entries)
+        self.assertEqual(count, len(another_sample_entries))
+        self.stor.delete_inactive_channels(
+            ", ".join(f"{c.channel_id!r}" for c in sample_entries)
+        )
+        self.assertEqual(self.stor.select_entries(), sample_entries)
+
+    def test5_delete(self):
         self.stor.delete_all_entries(force=True)
         self.assertEqual(len(self.stor.select_entries()), 0)

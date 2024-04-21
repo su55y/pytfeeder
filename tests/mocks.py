@@ -13,6 +13,16 @@ sample_entries = [
     for i in range(3, 0, -1)
 ]
 
+another_sample_entries = [
+    Entry(
+        id=f"video_id_{i:02d}",
+        title=f"Video #{i}",
+        updated=datetime.now(timezone.utc) - timedelta(hours=25 * (3 - i)),
+        channel_id=f"another_sample_channel_{i}",
+    )
+    for i in range(6, 3, -1)
+]
+
 entry_fmt = """\t<entry>
 \t\t<yt:videoId>{id}</yt:videoId>
 \t\t<yt:channelId>{channel_id}</yt:channelId>
