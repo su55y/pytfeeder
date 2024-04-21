@@ -100,13 +100,14 @@ class Storage:
             self.log.debug(query)
             cursor.execute(query)
 
-    def add_entries(self, entries: List[Entry], channel_id: str) -> int:
+    def add_entries(self, entries: List[Entry]) -> int:
         if not entries:
             return 0
         with self.get_cursor() as cursor:
             query = "INSERT OR IGNORE INTO tb_entries (id, title, updated, channel_id) VALUES (?, ?, ?, ?)"
             new_entries = [
-                (entry.id, entry.title, entry.updated, channel_id) for entry in entries
+                (entry.id, entry.title, entry.updated, entry.channel_id)
+                for entry in entries
             ]
             self.log.debug(f"{query}, entries count: {len(new_entries)}")
             return cursor.executemany(query, new_entries).rowcount

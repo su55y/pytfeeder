@@ -88,7 +88,7 @@ class Feeder:
         except:
             self.log.error("can't parse feed for '%s'" % channel.title)
         else:
-            if count := self.stor.add_entries(parser.entries, channel.channel_id):
+            if count := self.stor.add_entries(parser.entries):
                 self.log.info("%d new entries for '%s'" % (count, channel.title))
 
     async def _fetch_feed(
