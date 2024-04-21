@@ -16,6 +16,7 @@ class YTFeedParser:
         self.__entries: List[Entry] = []
         self.log = logging.getLogger()
         self.rx_id = re.compile(r"^[A-Za-z0-9\-_]{11}$")
+        self.rx_channel_id = re.compile(r"^[A-Za-z0-9\-_]{24}$")
         self.rx_updated = re.compile(
             r"^\d{4}-\d{2}-\d{2}[T\s]\d{2}\:\d{2}\:\d{2}\+\d{2}\:\d{2}$"
         )
@@ -33,13 +34,16 @@ class YTFeedParser:
             if id is None or not self.rx_id.match(id):
                 self.log.error(f"invalid id {id!r} in entry: {entry!r}")
                 continue
+            channel_id = self._read_yt_tag("yt:channelId", entry)
+            if channel_id is None or not self.rx_channel_id.match(channel_id):
+                self.log.error(f"invalid channel_id {channel_id!r} in entry: {entry!r}")
+                continue
             title = self._read_tag(self.__schema % "title", entry) or "-"
             updated = self._read_tag(self.__schema % "updated", entry)
             if updated is not None and self.rx_updated.match(updated):
                 updated = dt.datetime.fromisoformat(updated)
             else:
                 updated = self.default_updated
-            channel_id = self._read_yt_tag("yt:channelId", entry) or "-"
             self.__entries.append(
                 Entry(id=id, title=title, updated=updated, channel_id=channel_id)
             )
