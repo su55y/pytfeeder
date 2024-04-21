@@ -37,7 +37,9 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(len(entries), 0)
 
     def test3_select_by_timedelta(self):
-        td = str(datetime.now(timezone.utc) - timedelta(hours=24))
+        td = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat(
+            sep="T", timespec="seconds"
+        )
         self.assertEqual(len(self.stor.select_entries(timedelta=td)), 1)
 
     def test3_insert_duplicate(self):
