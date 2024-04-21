@@ -11,6 +11,13 @@ class Entry:
     channel_id: str = "Unknown"
     is_viewed: bool = False
 
+    def __eq__(self, obj: "Entry") -> bool:
+        return (
+            obj.id == self.id
+            and obj.title == self.title
+            and obj.channel_id == self.channel_id
+        )
+
 
 @dataclass
 class Channel:
