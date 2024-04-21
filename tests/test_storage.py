@@ -24,7 +24,7 @@ class StorageTest(unittest.TestCase):
 
     def test1_insert(self):
         self.assertEqual(
-            self.stor.add_entries(sample_entries, sample_channel.channel_id),
+            self.stor.add_entries(sample_entries),
             len(sample_entries),
         )
 
@@ -43,7 +43,7 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(len(self.stor.select_entries(timedelta=td)), 1)
 
     def test3_insert_duplicate(self):
-        count = self.stor.add_entries(sample_entries, sample_channel.channel_id)
+        count = self.stor.add_entries(sample_entries)
         self.assertEqual(count, 0)
 
     def test3_mark_as_viewed(self):
