@@ -1,13 +1,10 @@
 import unittest
 
 from pytfeeder.parser import YTFeedParser
-from .mocks import raw_feed, sample_entries
+from . import mocks
 
 
 class ParserTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.parser = YTFeedParser(raw_feed)
-
     def test_parser(self):
-        self.assertEqual(self.parser.entries, sample_entries)
+        parser = YTFeedParser(mocks.raw_feed)
+        self.assertEqual(parser.entries, mocks.sample_entries)

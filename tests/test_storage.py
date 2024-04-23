@@ -4,7 +4,7 @@ from pathlib import Path
 import unittest
 
 from pytfeeder.storage import Storage
-from .mocks import sample_channel, sample_entries, another_sample_entries
+from . import mocks
 
 logging.basicConfig(level=logging.DEBUG, filename="/tmp/test_storage.log")
 
@@ -24,13 +24,13 @@ class StorageTest(unittest.TestCase):
 
     def test1_insert(self):
         self.assertEqual(
-            self.stor.add_entries(sample_entries),
-            len(sample_entries),
+            self.stor.add_entries(mocks.sample_entries),
+            len(mocks.sample_entries),
         )
 
     def test2_select_entries(self):
-        entries = self.stor.select_entries(sample_channel.channel_id)
-        self.assertEqual(entries, sample_entries)
+        entries = self.stor.select_entries(mocks.sample_channel.channel_id)
+        self.assertEqual(entries, mocks.sample_entries)
 
     def test2_select_not_found(self):
         entries = self.stor.select_entries(channel_id="-")
@@ -43,20 +43,20 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(len(self.stor.select_entries(timedelta=td)), 1)
 
     def test3_insert_duplicate(self):
-        count = self.stor.add_entries(sample_entries)
+        count = self.stor.add_entries(mocks.sample_entries)
         self.assertEqual(count, 0)
 
     def test3_mark_as_viewed(self):
-        self.stor.mark_entry_as_viewed(id=sample_entries[0].id)
+        self.stor.mark_entry_as_viewed(id=mocks.sample_entries[0].id)
         self.assertTrue(self.stor.select_entries()[0])
 
     def test4_delete_inactive(self):
-        count = self.stor.add_entries(another_sample_entries)
-        self.assertEqual(count, len(another_sample_entries))
+        count = self.stor.add_entries(mocks.another_sample_entries)
+        self.assertEqual(count, len(mocks.another_sample_entries))
         self.stor.delete_inactive_channels(
-            ", ".join(f"{c.channel_id!r}" for c in sample_entries)
+            ", ".join(f"{c.channel_id!r}" for c in mocks.sample_entries)
         )
-        self.assertEqual(self.stor.select_entries(), sample_entries)
+        self.assertEqual(self.stor.select_entries(), mocks.sample_entries)
 
     def test5_delete(self):
         self.stor.delete_all_entries(force=True)
