@@ -86,9 +86,9 @@ class PageState(Enum):
 
 
 class Picker:
-    def __init__(self, feeder: Feeder, new_prefix: str = "[+]") -> None:
+    def __init__(self, feeder: Feeder, new_mark: str = "[+]") -> None:
         self.feeder = feeder
-        self.new_prefix = new_prefix
+        self.new_mark = new_mark
 
         self.channels = [Channel("Feed", "feed"), *self.feeder.channels]
         self.gravity = Gravity.DOWN
@@ -145,12 +145,12 @@ class Picker:
         for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
             new = isinstance(line.data, Entry) and not line.data.is_viewed
             color_pair = Color.NEW if new else Color.NONE
-            new_prefix = " "
+            new_mark = " "
             if isinstance(line.data, Entry):
-                new_prefix = self.new_prefix if new else " " * len(self.new_prefix)
-            text = f"{new_prefix}{line.data.title}"
+                new_mark = self.new_mark if new else " " * len(self.new_mark)
+            text = f"{new_mark}{line.data.title}"
             if line.is_active:
-                text = f"{new_prefix+line.data.title:<{n}}"
+                text = f"{new_mark+line.data.title:<{n}}"
                 color_pair = Color.ACTIVE
             screen.addnstr(y, x, text, n, curses.color_pair(color_pair))
             y += 1
