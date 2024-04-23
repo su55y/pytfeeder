@@ -3,7 +3,7 @@ import datetime as dt
 from enum import Enum, auto
 import os.path
 import subprocess as sp
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
@@ -71,12 +71,13 @@ Lines = Union[List[Channel], List[Entry]]
 
 
 class FeederPager:
-    def __init__(self, feeder: Feeder) -> None:
+    def __init__(self, feeder: Feeder, new_mark: str = "[+]") -> None:
         self.feeder = feeder
         self.state = PageState.CHANNELS
         self.channels = [Channel("Feed", "feed"), *self.feeder.channels]
         self.entries: List[Entry] = []
         self.selected_line = 0
+        self.new_mark = new_mark
 
         self.__toolbar_text = ""
         self.bottom_toolbar = FormattedTextControl(
@@ -121,10 +122,10 @@ class FeederPager:
     def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
         if entry.is_viewed:
             classname = "entry"
-            mark = " " * 3
+            mark = " " * len(self.new_mark)
         else:
             classname = "new_entry"
-            mark = "[+]"
+            mark = self.new_mark
 
         return [("class:%s" % classname, "%s %s" % (mark, entry.title))]
 
