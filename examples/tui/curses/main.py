@@ -86,11 +86,22 @@ class PageState(Enum):
 
 
 class Picker:
-    def __init__(self, feeder: Feeder, new_mark: str = "[+]") -> None:
+    def __init__(
+        self,
+        feeder: Feeder,
+        channel_fmt: str = "{new_mark} | {title}",
+        entry_fmt: str = "{new_mark} | {updated} | {title}",
+        new_mark: str = "[+]",
+    ) -> None:
         self.feeder = feeder
+        self.channel_fmt = channel_fmt
+        self.entry_fmt = entry_fmt
         self.new_mark = new_mark
 
-        self.channels = [Channel("Feed", "feed"), *self.feeder.channels]
+        self.channels = [
+            Channel("Feed", "feed", have_updates=bool(self.feeder.unviewed_count())),
+            *self.feeder.channels,
+        ]
         self.gravity = Gravity.DOWN
         self.index = 0
         self.last_feed_index = -1
@@ -141,16 +152,26 @@ class Picker:
         n = max_x - 2
         self.update_scroll_top(max_rows)
         self.update_active()
-
         for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
-            new = isinstance(line.data, Entry) and not line.data.is_viewed
-            color_pair = Color.NEW if new else Color.NONE
-            new_mark = " "
+            color_pair = Color.NONE
+            new_mark = " " * len(self.new_mark)
+            text = "-"
+
             if isinstance(line.data, Entry):
-                new_mark = self.new_mark if new else " " * len(self.new_mark)
-            text = f"{new_mark}{line.data.title}"
+                if line.data.is_viewed is False:
+                    new_mark = self.new_mark
+                    color_pair = Color.NEW
+                updated = line.data.updated.strftime("%b %d")
+                text = self.entry_fmt.format(
+                    new_mark=new_mark, updated=updated, title=line.data.title
+                )
+            elif isinstance(line.data, Channel):
+                if line.data.have_updates:
+                    new_mark = self.new_mark
+                    color_pair = Color.NEW
+                text = self.channel_fmt.format(new_mark=new_mark, title=line.data.title)
             if line.is_active:
-                text = f"{new_mark+line.data.title:<{n}}"
+                text = f"{text:<{n}}"
                 color_pair = Color.ACTIVE
             screen.addnstr(y, x, text, n, curses.color_pair(color_pair))
             y += 1
