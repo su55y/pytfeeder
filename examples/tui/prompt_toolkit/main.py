@@ -3,7 +3,7 @@ import datetime as dt
 from enum import Enum, auto
 import os.path
 import subprocess as sp
-from typing import List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
@@ -71,12 +71,24 @@ Lines = Union[List[Channel], List[Entry]]
 
 
 class FeederPager:
-    def __init__(self, feeder: Feeder, new_mark: str = "[+]") -> None:
+    def __init__(
+        self,
+        feeder: Feeder,
+        channel_fmt: str = "{new_mark} | {title}",
+        entry_fmt: str = "{new_mark} | {updated} | {title}",
+        new_mark: str = "[+]",
+    ) -> None:
         self.feeder = feeder
         self.state = PageState.CHANNELS
-        self.channels = [Channel("Feed", "feed"), *self.feeder.channels]
+        self.channels = [
+            Channel("Feed", "feed", have_updates=bool(self.feeder.unviewed_count())),
+            *self.feeder.channels,
+        ]
         self.entries: List[Entry] = []
         self.selected_line = 0
+
+        self.channel_fmt = channel_fmt
+        self.entry_fmt = entry_fmt
         self.new_mark = new_mark
 
         self.__toolbar_text = ""
@@ -126,8 +138,18 @@ class FeederPager:
         else:
             classname = "new_entry"
             mark = self.new_mark
+        updated = entry.updated.strftime("%b %d")
+        line = self.entry_fmt.format(new_mark=mark, updated=updated, title=entry.title)
+        return [(f"class:{classname}", line)]
 
-        return [("class:%s" % classname, "%s %s" % (mark, entry.title))]
+    def _format_channel(self, channel: Channel) -> List[Tuple[str, str]]:
+        classname = "entry"
+        mark = " " * len(self.new_mark)
+        if channel.have_updates:
+            classname = "new_entry"
+            mark = self.new_mark
+        line = self.channel_fmt.format(new_mark=mark, title=channel.title)
+        return [(f"class:{classname}", line)]
 
     def _get_formatted_text(self) -> AnyFormattedText:
         result = []
@@ -136,8 +158,8 @@ class FeederPager:
                 result.append([("[SetCursorPosition]", "")])
             if isinstance(entry, Entry):
                 result.append(self._format_entry(entry))
-            else:
-                result.append(" %s" % entry.title)
+            elif isinstance(entry, Channel):
+                result.append(self._format_channel(entry))
             result.append("\n")
 
         return merge_formatted_text(result)
