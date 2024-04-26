@@ -86,6 +86,7 @@ class FeederPager:
         ]
         self.entries: List[Entry] = []
         self.selected_line = 0
+        self.last_index = -1
 
         self.channel_fmt = channel_fmt
         self.entry_fmt = entry_fmt
@@ -187,6 +188,7 @@ class FeederPager:
                 case PageState.CHANNELS:
                     if self.selected_line >= len(self.channels):
                         return
+                    self.last_index = self.selected_line
                     channel = self.channels[self.selected_line]
                     if channel.channel_id == "feed":
                         self.entries = self.feeder.feed()
@@ -212,7 +214,8 @@ class FeederPager:
                 case PageState.ENTRIES:
                     self.state = PageState.CHANNELS
                     self.entries = []
-                    self.selected_line = 0
+                    self.selected_line = self.last_index
+                    self.last_index = -1
                     self.__toolbar_text = ""
 
         @kb.add("g", "g")
