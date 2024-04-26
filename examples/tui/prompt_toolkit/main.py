@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import datetime as dt
 from enum import Enum, auto
@@ -27,6 +28,32 @@ from pytfeeder.storage import Storage
 
 LOCK_FILE = "/tmp/pytfeeder_update.lock"
 UPDATE_INVERVAL_MINS = 30
+DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
+DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
+DEFAULT_NEW_MARK = "[+]"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--channels-fmt",
+        default=DEFAULT_CHANNELS_FMT,
+        metavar="STR",
+        help="channels format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--entries-fmt",
+        default=DEFAULT_ENTRIES_FMT,
+        metavar="STR",
+        help="entries format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--new-mark",
+        default=DEFAULT_NEW_MARK,
+        metavar="STR",
+        help="new mark format (default: %(default)r)",
+    )
+    return parser.parse_args()
 
 
 def is_update_interval_expired() -> bool:
@@ -74,9 +101,9 @@ class FeederPager:
     def __init__(
         self,
         feeder: Feeder,
-        channel_fmt: str = "{new_mark} | {title}",
-        entry_fmt: str = "{new_mark} | {updated} | {title}",
-        new_mark: str = "[+]",
+        channels_fmt: str = DEFAULT_CHANNELS_FMT,
+        entries_fmt: str = DEFAULT_ENTRIES_FMT,
+        new_mark: str = DEFAULT_NEW_MARK,
     ) -> None:
         self.feeder = feeder
         self.state = PageState.CHANNELS
@@ -88,8 +115,8 @@ class FeederPager:
         self.selected_line = 0
         self.last_index = -1
 
-        self.channel_fmt = channel_fmt
-        self.entry_fmt = entry_fmt
+        self.channels_fmt = channels_fmt
+        self.entries_fmt = entries_fmt
         self.new_mark = new_mark
 
         self.__toolbar_text = ""
@@ -140,7 +167,9 @@ class FeederPager:
             classname = "new_entry"
             mark = self.new_mark
         updated = entry.updated.strftime("%b %d")
-        line = self.entry_fmt.format(new_mark=mark, updated=updated, title=entry.title)
+        line = self.entries_fmt.format(
+            new_mark=mark, updated=updated, title=entry.title
+        )
         return [(f"class:{classname}", line)]
 
     def _format_channel(self, channel: Channel) -> List[Tuple[str, str]]:
@@ -149,7 +178,7 @@ class FeederPager:
         if channel.have_updates:
             classname = "new_entry"
             mark = self.new_mark
-        line = self.channel_fmt.format(new_mark=mark, title=channel.title)
+        line = self.channels_fmt.format(new_mark=mark, title=channel.title)
         return [(f"class:{classname}", line)]
 
     def _get_formatted_text(self) -> AnyFormattedText:
@@ -244,7 +273,11 @@ if __name__ == "__main__":
         exit(1)
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
+
+    args = parse_args()
     feeder = Feeder(config, Storage(config.storage_path))
+    pager = FeederPager(feeder, **dict(vars(args)))
+
     if is_update_interval_expired():
         print("updating...")
         asyncio.run(feeder.sync_entries())
@@ -256,7 +289,7 @@ if __name__ == "__main__":
         event.app.exit()
 
     Application(
-        layout=Layout(VSplit([Label("", width=1), FeederPager(feeder)])),
+        layout=Layout(VSplit([Label("", width=1), pager])),
         full_screen=True,
         style=Style.from_dict(
             {
