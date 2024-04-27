@@ -119,6 +119,7 @@ class FeederPager:
         self.entries_fmt = entries_fmt
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
+        self.max_len_chan_title = max(len(c.title) for c in self.channels)
 
         self.__toolbar_text = ""
         self.bottom_toolbar = FormattedTextControl(
@@ -180,6 +181,7 @@ class FeederPager:
             new_mark=self.new_marks[not entry.is_viewed],
             updated=entry.updated.strftime("%b %d"),
             title=entry.title,
+            channel_title=f"{self.feeder.channel_title(entry.channel_id):^{self.max_len_chan_title}s}",
         )
         return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
 
