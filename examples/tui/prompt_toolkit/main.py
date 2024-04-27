@@ -117,7 +117,8 @@ class FeederPager:
 
         self.channels_fmt = channels_fmt
         self.entries_fmt = entries_fmt
-        self.new_mark = new_mark
+        self.new_marks = {0: " " * len(new_mark), 1: new_mark}
+        self.classnames = {0: "entry", 1: "new_entry"}
 
         self.__toolbar_text = ""
         self.bottom_toolbar = FormattedTextControl(
@@ -127,6 +128,7 @@ class FeederPager:
         self.container = HSplit(
             [
                 Window(
+                    always_hide_cursor=True,
                     content=FormattedTextControl(
                         text=self._get_formatted_text,
                         focusable=True,
@@ -136,6 +138,7 @@ class FeederPager:
                     cursorline=True,
                 ),
                 Window(
+                    always_hide_cursor=True,
                     height=Dimension.exact(1),
                     content=self.bottom_toolbar,
                     style="class:toolbar",
@@ -153,34 +156,6 @@ class FeederPager:
             case _:
                 return []
 
-    def _get_toolbar_text(self) -> str:
-        return (
-            " %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
-            % self.__toolbar_text
-        )
-
-    def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
-        if entry.is_viewed:
-            classname = "entry"
-            mark = " " * len(self.new_mark)
-        else:
-            classname = "new_entry"
-            mark = self.new_mark
-        updated = entry.updated.strftime("%b %d")
-        line = self.entries_fmt.format(
-            new_mark=mark, updated=updated, title=entry.title
-        )
-        return [(f"class:{classname}", line)]
-
-    def _format_channel(self, channel: Channel) -> List[Tuple[str, str]]:
-        classname = "entry"
-        mark = " " * len(self.new_mark)
-        if channel.have_updates:
-            classname = "new_entry"
-            mark = self.new_mark
-        line = self.channels_fmt.format(new_mark=mark, title=channel.title)
-        return [(f"class:{classname}", line)]
-
     def _get_formatted_text(self) -> AnyFormattedText:
         result = []
         for i, entry in enumerate(self.page_lines):
@@ -193,6 +168,26 @@ class FeederPager:
             result.append("\n")
 
         return merge_formatted_text(result)
+
+    def _get_toolbar_text(self) -> str:
+        return (
+            " %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
+            % self.__toolbar_text
+        )
+
+    def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
+        line = self.entries_fmt.format(
+            new_mark=self.new_marks[not entry.is_viewed],
+            updated=entry.updated.strftime("%b %d"),
+            title=entry.title,
+        )
+        return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
+
+    def _format_channel(self, channel: Channel) -> List[Tuple[str, str]]:
+        line = self.channels_fmt.format(
+            new_mark=self.new_marks[channel.have_updates], title=channel.title
+        )
+        return [(f"class:{self.classnames[channel.have_updates]}", line)]
 
     def _get_key_bindings(self) -> KeyBindings:
         kb = KeyBindings()
