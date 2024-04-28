@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import curses
 from dataclasses import dataclass
@@ -16,6 +17,32 @@ from pytfeeder.storage import Storage
 
 LOCK_FILE = "/tmp/pytfeeder_update.lock"
 UPDATE_INVERVAL_MINS = 30
+DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
+DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
+DEFAULT_NEW_MARK = "[+]"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--channels-fmt",
+        default=DEFAULT_CHANNELS_FMT,
+        metavar="STR",
+        help="channels format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--entries-fmt",
+        default=DEFAULT_ENTRIES_FMT,
+        metavar="STR",
+        help="entries format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--new-mark",
+        default=DEFAULT_NEW_MARK,
+        metavar="STR",
+        help="new mark format (default: %(default)r)",
+    )
+    return parser.parse_args()
 
 
 def play_video(id: str) -> None:
@@ -89,13 +116,13 @@ class Picker:
     def __init__(
         self,
         feeder: Feeder,
-        channel_fmt: str = "{new_mark} | {title}",
-        entry_fmt: str = "{new_mark} | {updated} | {title}",
+        channels_fmt: str = "{new_mark} | {title}",
+        entries_fmt: str = "{new_mark} | {updated} | {title}",
         new_mark: str = "[+]",
     ) -> None:
         self.feeder = feeder
-        self.channel_fmt = channel_fmt
-        self.entry_fmt = entry_fmt
+        self.channels_fmt = channels_fmt
+        self.entries_fmt = entries_fmt
         self.new_mark = new_mark
 
         self.channels = [
@@ -162,14 +189,14 @@ class Picker:
                     new_mark = self.new_mark
                     color_pair = Color.NEW
                 updated = line.data.updated.strftime("%b %d")
-                text = self.entry_fmt.format(
+                text = self.entries_fmt.format(
                     new_mark=new_mark, updated=updated, title=line.data.title
                 )
             elif isinstance(line.data, Channel):
                 if line.data.have_updates:
                     new_mark = self.new_mark
                     color_pair = Color.NEW
-                text = self.channel_fmt.format(new_mark=new_mark, title=line.data.title)
+                text = self.channels_fmt.format(new_mark=new_mark, title=line.data.title)
             if line.is_active:
                 text = f"{text:<{n}}"
                 color_pair = Color.ACTIVE
@@ -251,12 +278,16 @@ if __name__ == "__main__":
         exit(1)
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
+
+    args = parse_args()
     feeder = Feeder(config, Storage(config.storage_path))
+
     if is_update_interval_expired():
         print("updating...")
         asyncio.run(feeder.sync_entries())
+
     try:
-        _ = Picker(feeder).start()
+        _ = Picker(feeder, **dict(vars(args))).start()
     except Exception as e:
         print(e)
         exit(1)
