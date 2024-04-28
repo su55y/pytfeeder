@@ -285,17 +285,21 @@ if __name__ == "__main__":
     def _(event):
         event.app.exit()
 
-    Application(
-        layout=Layout(VSplit([Label("", width=1), pager])),
-        full_screen=True,
-        style=Style.from_dict(
-            {
-                "select-box cursor-line": "nounderline bg:orange fg:black",
-                "entry": "white",
-                "new_entry": "#ffb71a",
-                "toolbar": "bg:orange fg:black",
-                "toolbar.text": "",
-            },
-        ),
-        key_bindings=kb,
-    ).run()
+    try:
+        Application(
+            layout=Layout(VSplit([Label("", width=1), pager])),
+            full_screen=True,
+            style=Style.from_dict(
+                {
+                    "select-box cursor-line": "nounderline bg:orange fg:black",
+                    "entry": "white",
+                    "new_entry": "#ffb71a",
+                    "toolbar": "bg:orange fg:black",
+                    "toolbar.text": "",
+                },
+            ),
+            key_bindings=kb,
+        ).run()
+    except Exception as e:
+        print(e)
+        exit(1)
