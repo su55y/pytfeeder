@@ -136,6 +136,7 @@ class Picker:
         self.scroll_top = 0
         self.selected_data = None
         self.state = PageState.CHANNELS
+        self.max_len_chan_title = max(len(c.title) for c in self.channels)
 
     def start(self):
         curses.wrapper(self._start)
@@ -190,7 +191,10 @@ class Picker:
                     color_pair = Color.NEW
                 updated = line.data.updated.strftime("%b %d")
                 text = self.entries_fmt.format(
-                    new_mark=new_mark, updated=updated, title=line.data.title
+                    new_mark=new_mark,
+                    updated=updated,
+                    title=line.data.title,
+                    channel_title=f"{self.feeder.channel_title(line.data.channel_id):^{self.max_len_chan_title}s}",
                 )
             elif isinstance(line.data, Channel):
                 if line.data.have_updates:
