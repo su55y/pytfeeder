@@ -86,7 +86,9 @@ class Line:
 
 class Key(IntEnum):
     j = ord("j")
+    J = ord("J")
     k = ord("k")
+    K = ord("K")
     g = ord("g")
     G = ord("G")
     q = ord("q")
@@ -137,6 +139,7 @@ class Picker:
         self.selected_data = None
         self.state = PageState.CHANNELS
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
+        self._g_pressed = False
 
     def start(self):
         curses.wrapper(self._start)
@@ -169,6 +172,16 @@ class Picker:
                     self.move_left()
                 case Key.h | curses.KEY_RIGHT:
                     self.move_right()
+                case Key.K:
+                    self.move_top()
+                case Key.g:
+                    if self._g_pressed:
+                        self.move_top()
+                        self._g_pressed = False
+                    else:
+                        self._g_pressed = True
+                case Key.G | Key.J:
+                    self.move_bottom()
                 case Key.q | Key.ESC:
                     exit(0)
 
@@ -233,9 +246,17 @@ class Picker:
         self.gravity = Gravity.UP
         self.index = (self.index - 1) % len(self.lines)
 
+    def move_top(self) -> None:
+        self.gravity = Gravity.DOWN
+        self.index = 0
+
     def move_down(self) -> None:
         self.gravity = Gravity.DOWN
         self.index = (self.index + 1) % len(self.lines)
+
+    def move_bottom(self) -> None:
+        self.gravity = Gravity.DOWN
+        self.index = len(self.lines) - 1
 
     def move_left(self) -> None:
         self.selected_data = self.lines[self.index].data
