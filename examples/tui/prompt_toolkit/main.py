@@ -4,12 +4,17 @@ import datetime as dt
 from enum import Enum, auto
 import os.path
 import subprocess as sp
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
+from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
+from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
+from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.layout import (
+    BufferControl,
+    ConditionalContainer,
     Dimension,
     FormattedTextControl,
     HSplit,
@@ -17,6 +22,7 @@ from prompt_toolkit.layout import (
     VSplit,
     Window,
 )
+from prompt_toolkit.layout.processors import BeforeInput
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
 from pytfeeder.defaults import default_config_path
@@ -96,6 +102,15 @@ class PageState(Enum):
 
 Lines = Union[List[Channel], List[Entry]]
 
+class CommandLine(ConditionalContainer):
+    def __init__(self, pager: "FeederPager"):
+        super(CommandLine, self).__init__(
+            Window(
+                BufferControl(
+                    buffer=pager.command_buffer,
+                    input_processors=[BeforeInput('/')]),
+                height=1),
+            filter=has_focus(pager.command_buffer))
 
 class FeederPager:
     def __init__(
@@ -121,38 +136,53 @@ class FeederPager:
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
 
+        self._command_line_app_link: Optional[Application] = None
+        self._filter: Optional[str] = None
+
         self.__toolbar_text = ""
         self.bottom_toolbar = FormattedTextControl(
             text=self._get_toolbar_text,
             focusable=False,
         )
-        self.container = HSplit(
-            [
-                Window(
-                    always_hide_cursor=True,
-                    content=FormattedTextControl(
-                        text=self._get_formatted_text,
-                        focusable=True,
-                        key_bindings=self._get_key_bindings(),
-                    ),
-                    style="class:select-box",
-                    cursorline=True,
-                ),
-                Window(
+        self.toolbar_window = Window(
                     always_hide_cursor=True,
                     height=Dimension.exact(1),
                     content=self.bottom_toolbar,
                     style="class:toolbar",
-                ),
-            ]
+                )
+
+        self.main_window = Window(
+            always_hide_cursor=True,
+            content=FormattedTextControl(
+                text=self._get_formatted_text,
+                focusable=True,
+                key_bindings=self._get_key_bindings(),
+            ),
+            style="class:select-box",
+            cursorline=True,
         )
+        def command_line_handler(buf: Buffer) -> bool:
+            if self._command_line_app_link:
+                self._command_line_app_link.layout.focus(self.main_window)
+                self._command_line_app_link.vi_state.input_mode = InputMode.NAVIGATION
+                self._command_line_app_link = None
+                self._filter = buf.text
+            buf.text = ""
+            return True
+
+        self.command_buffer = Buffer(multiline=False, accept_handler=command_line_handler)
+        self.container = HSplit([self.main_window, self.toolbar_window, CommandLine(self)])
 
     @property
     def page_lines(self) -> Lines:
         match self.state:
             case PageState.CHANNELS:
+                if self._filter:
+                    return [c for c in self.channels if self._filter.lower() in c.title.lower()]
                 return self.channels
             case PageState.ENTRIES:
+                if self._filter:
+                    return [e for e in self.entries if self._filter.lower() in e.title.lower()]
                 return self.entries
             case _:
                 return []
@@ -234,6 +264,9 @@ class FeederPager:
         @kb.add("h")
         @kb.add("left")
         def _back(event) -> None:
+            if self._filter:
+                self._filter = None
+                return
             match self.state:
                 case PageState.CHANNELS:
                     event.app.exit()
@@ -257,6 +290,13 @@ class FeederPager:
         @kb.add("q")
         def _exit(event) -> None:
             event.app.exit()
+
+        @kb.add("/")
+        def _prompt_search(event: KeyPressEvent) -> None:
+            event.app.layout.focus(self.command_buffer)
+            event.app.vi_state.input_mode = InputMode.INSERT
+            self._command_line_app_link = event.app
+            
 
         return kb
 
