@@ -94,6 +94,7 @@ class Key(IntEnum):
     q = ord("q")
     l = ord("l")
     h = ord("h")
+    SLASH = ord("/")
     ESC = 27
     RETURN = ord("\n")
 
@@ -140,6 +141,7 @@ class Picker:
         self.selected_data = None
         self.state = PageState.CHANNELS
         self._g_pressed = False
+        self.filtered = False
 
     def start(self):
         curses.wrapper(self._start)
@@ -182,6 +184,8 @@ class Picker:
                         self._g_pressed = True
                 case Key.G | Key.J:
                     self.move_bottom()
+                case Key.SLASH:
+                    self.handle_slash(screen)
                 case Key.q | Key.ESC:
                     exit(0)
 
@@ -282,6 +286,13 @@ class Picker:
             exit(0)
 
     def move_right(self) -> None:
+        if self.filtered:
+            self.state = PageState.CHANNELS
+            self.lines = list(map(Line, self.channels))
+            self.filtered = False
+            self.index = self.last_feed_index
+            self.scroll_top = 0
+            return
         if self.state == PageState.CHANNELS:
             exit(0)
         if self.state == PageState.ENTRIES:
@@ -290,6 +301,47 @@ class Picker:
             self.index = self.last_feed_index
             self.last_feed_index = -1
             self.scroll_top = 0
+
+    def filter_lines(self, sfilter: str) -> None:
+        if not sfilter:
+            return
+        sfilter = sfilter.lower()
+        self.lines = list(filter(lambda v: sfilter in v.data.title.lower(), self.lines))
+        self.filtered = True
+
+    def handle_slash(self, screen: "curses._CursesWindow") -> None:
+        curses.curs_set(1)
+        max_y, max_x = screen.getmaxyx()
+        screen.move(max_y - 2, 2)
+        screen.addch("/")
+        screen.refresh()
+        sfilter = ""
+        try:
+            while ch := screen.getch():
+                screen.refresh()
+                max_y, max_x = screen.getmaxyx()
+                if ch == 10:
+                    if not sfilter:
+                        return
+                    self.filter_lines(sfilter)
+                    return
+                if ch in (47, curses.KEY_ENTER, 27):
+                    return
+                if ch == curses.KEY_BACKSPACE:
+                    sfilter = sfilter[:len(sfilter) - 1]
+                    width = len(sfilter)
+                    if width > max_x - 2:
+                        width = max_x - 2
+                    space = " " * (max_x - 3 - width)
+                    screen.addnstr(max_y - 2, 3, space, len(space))
+                    screen.refresh()
+                else:
+                    sfilter += chr(ch)
+                width = len(sfilter) if len(sfilter) < (max_x - 3) else max_x - 3
+                screen.addnstr(max_y - 2, 3, sfilter, width)
+        except KeyboardInterrupt:
+            return
+        screen.getkey()
 
     @property
     def status(self) -> str:
