@@ -118,27 +118,27 @@ class Picker:
     def __init__(
         self,
         feeder: Feeder,
-        channels_fmt: str = "{new_mark} | {title}",
-        entries_fmt: str = "{new_mark} | {updated} | {title}",
-        new_mark: str = "[+]",
+        channels_fmt: str = DEFAULT_CHANNELS_FMT,
+        entries_fmt: str = DEFAULT_ENTRIES_FMT,
+        new_mark: str = DEFAULT_NEW_MARK,
     ) -> None:
         self.feeder = feeder
-        self.channels_fmt = channels_fmt
-        self.entries_fmt = entries_fmt
-        self.new_mark = new_mark
-
         self.channels = [
             Channel("Feed", "feed", have_updates=bool(self.feeder.unviewed_count())),
             *self.feeder.channels,
         ]
+
+        self.channels_fmt = channels_fmt
+        self.entries_fmt = entries_fmt
         self.gravity = Gravity.DOWN
         self.index = 0
         self.last_feed_index = -1
         self.lines = list(map(Line, self.channels))
+        self.max_len_chan_title = max(len(c.title) for c in self.channels)
+        self.new_mark = new_mark
         self.scroll_top = 0
         self.selected_data = None
         self.state = PageState.CHANNELS
-        self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self._g_pressed = False
 
     def start(self):
@@ -214,9 +214,11 @@ class Picker:
                     new_mark = self.new_mark
                     color_pair = Color.NEW
                 text = self.channels_fmt.format(new_mark=new_mark, title=line.data.title)
+                
             if line.is_active:
                 text = f"{text:<{n}}"
                 color_pair = Color.ACTIVE
+
             screen.addnstr(y, x, text, n, curses.color_pair(color_pair))
             y += 1
 
