@@ -37,10 +37,20 @@ UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
+OPTIONS_DESCRIPTION = """
+channels-fmt keys:
+    {new_mark} - new-mark if have updates, otherwise ' '*len(new_mark)
+    {title}    - title of the channel
+entries-fmt keys:
+    {new_mark}      - new-mark if have updates, otherwise ' '*len(new_mark)
+    {title}         - title of the entry
+    {updated}       - updated in format %b %d
+    {channel_title} - title of the channel
+"""
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(epilog=OPTIONS_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "--channels-fmt",
         default=DEFAULT_CHANNELS_FMT,
