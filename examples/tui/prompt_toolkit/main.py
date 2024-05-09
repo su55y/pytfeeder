@@ -50,7 +50,9 @@ entries-fmt keys:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(epilog=OPTIONS_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        epilog=OPTIONS_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "--channels-fmt",
         default=DEFAULT_CHANNELS_FMT,
@@ -112,15 +114,19 @@ class PageState(Enum):
 
 Lines = Union[List[Channel], List[Entry]]
 
+
 class CommandLine(ConditionalContainer):
     def __init__(self, pager: "FeederPager"):
         super(CommandLine, self).__init__(
             Window(
                 BufferControl(
-                    buffer=pager.command_buffer,
-                    input_processors=[BeforeInput('/')]),
-                height=1),
-            filter=has_focus(pager.command_buffer))
+                    buffer=pager.command_buffer, input_processors=[BeforeInput("/")]
+                ),
+                height=1,
+            ),
+            filter=has_focus(pager.command_buffer),
+        )
+
 
 class FeederPager:
     def __init__(
@@ -155,11 +161,11 @@ class FeederPager:
             focusable=False,
         )
         self.toolbar_window = Window(
-                    always_hide_cursor=True,
-                    height=Dimension.exact(1),
-                    content=self.bottom_toolbar,
-                    style="class:toolbar",
-                )
+            always_hide_cursor=True,
+            height=Dimension.exact(1),
+            content=self.bottom_toolbar,
+            style="class:toolbar",
+        )
 
         self.main_window = Window(
             always_hide_cursor=True,
@@ -171,6 +177,7 @@ class FeederPager:
             style="class:select-box",
             cursorline=True,
         )
+
         def command_line_handler(buf: Buffer) -> bool:
             if self._command_line_app_link:
                 self._command_line_app_link.layout.focus(self.main_window)
@@ -180,19 +187,31 @@ class FeederPager:
             buf.text = ""
             return True
 
-        self.command_buffer = Buffer(multiline=False, accept_handler=command_line_handler)
-        self.container = HSplit([self.main_window, self.toolbar_window, CommandLine(self)])
+        self.command_buffer = Buffer(
+            multiline=False, accept_handler=command_line_handler
+        )
+        self.container = HSplit(
+            [self.main_window, self.toolbar_window, CommandLine(self)]
+        )
 
     @property
     def page_lines(self) -> Lines:
         match self.state:
             case PageState.CHANNELS:
                 if self._filter:
-                    return [c for c in self.channels if self._filter.lower() in c.title.lower()]
+                    return [
+                        c
+                        for c in self.channels
+                        if self._filter.lower() in c.title.lower()
+                    ]
                 return self.channels
             case PageState.ENTRIES:
                 if self._filter:
-                    return [e for e in self.entries if self._filter.lower() in e.title.lower()]
+                    return [
+                        e
+                        for e in self.entries
+                        if self._filter.lower() in e.title.lower()
+                    ]
                 return self.entries
             case _:
                 return []
@@ -306,7 +325,6 @@ class FeederPager:
             event.app.layout.focus(self.command_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
             self._command_line_app_link = event.app
-            
 
         return kb
 
