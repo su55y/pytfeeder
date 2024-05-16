@@ -312,7 +312,11 @@ class Picker:
     def handle_slash(self, screen: "curses._CursesWindow") -> None:
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
-        screen.move(max_y - 2, 2)
+        n = max_x - 2
+        screen.addnstr(max_y - 2, 1, f"{self.status:<{n}}", n, curses.color_pair(Color.ACTIVE))
+        screen.move(max_y - 1, 0)
+        screen.clrtoeol()
+        screen.move(max_y - 1, 2)
         screen.addch("/")
         screen.refresh()
         sfilter = ""
@@ -333,12 +337,12 @@ class Picker:
                     if width > max_x - 2:
                         width = max_x - 2
                     space = " " * (max_x - 3 - width)
-                    screen.addnstr(max_y - 2, 3, space, len(space))
+                    screen.addnstr(max_y - 1, 3, space, len(space))
                     screen.refresh()
                 else:
                     sfilter += chr(ch)
                 width = len(sfilter) if len(sfilter) < (max_x - 3) else max_x - 3
-                screen.addnstr(max_y - 2, 3, sfilter, width)
+                screen.addnstr(max_y - 1, 3, sfilter, width)
         except KeyboardInterrupt:
             return
         screen.getkey()
