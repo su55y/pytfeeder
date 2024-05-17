@@ -367,7 +367,10 @@ if __name__ == "__main__":
 
     if is_update_interval_expired():
         print("updating...")
-        asyncio.run(feeder.sync_entries())
+        try:
+            asyncio.run(feeder.sync_entries())
+        except Exception as e:
+            print("Update failed: %s" % e)
 
     try:
         _ = Picker(feeder, **dict(vars(args))).start()
