@@ -332,17 +332,15 @@ class Picker:
                 if ch in (47, curses.KEY_ENTER, 27):
                     return
                 if ch == curses.KEY_BACKSPACE:
+                    if not len(sfilter):
+                        continue
                     sfilter = sfilter[:len(sfilter) - 1]
-                    width = len(sfilter)
-                    if width > max_x - 2:
-                        width = max_x - 2
-                    space = " " * (max_x - 3 - width)
-                    screen.addnstr(max_y - 1, 3, space, len(space))
+                    screen.addnstr(max_y - 1, 3, " " * max_x, max_x - 4)
                     screen.refresh()
                 else:
                     sfilter += chr(ch)
-                width = len(sfilter) if len(sfilter) < (max_x - 3) else max_x - 3
-                screen.addnstr(max_y - 1, 3, sfilter, width)
+                width = min(len(sfilter), max_x - 3)
+                screen.addnstr(max_y - 1, 3, sfilter, width or 1)
         except KeyboardInterrupt:
             return
         screen.getkey()
