@@ -171,9 +171,9 @@ class Picker:
                 case Key.k | curses.KEY_UP:
                     self.move_up()
                 case Key.l | curses.KEY_LEFT:
-                    self.move_left()
-                case Key.h | curses.KEY_RIGHT:
                     self.move_right()
+                case Key.h | curses.KEY_RIGHT:
+                    self.move_left()
                 case Key.K:
                     self.move_top()
                 case Key.g:
@@ -264,7 +264,7 @@ class Picker:
         self.gravity = Gravity.DOWN
         self.index = len(self.lines) - 1
 
-    def move_left(self) -> None:
+    def move_right(self) -> None:
         self.selected_data = self.lines[self.index].data
         if self.state == PageState.CHANNELS:
             self.last_feed_index = self.index
@@ -285,22 +285,25 @@ class Picker:
             play_video(self.selected_data.id)
             exit(0)
 
-    def move_right(self) -> None:
-        if self.filtered:
-            self.state = PageState.CHANNELS
-            self.lines = list(map(Line, self.channels))
-            self.filtered = False
-            self.index = self.last_feed_index
-            self.scroll_top = 0
-            return
+    def move_left(self) -> None:
         if self.state == PageState.CHANNELS:
-            exit(0)
-        if self.state == PageState.ENTRIES:
-            self.state = PageState.CHANNELS
+            if not self.filtered:
+                exit(0)
             self.lines = list(map(Line, self.channels))
             self.index = self.last_feed_index
             self.last_feed_index = -1
             self.scroll_top = 0
+        if self.state == PageState.ENTRIES:
+            self.state = PageState.CHANNELS
+            if not self.filtered:
+                self.lines = list(map(Line, self.channels))
+                self.index = self.last_feed_index
+                self.last_feed_index = -1
+                self.scroll_top = 0
+            else:
+                self.move_right()
+        if self.filtered:
+            self.filtered = False
 
     def filter_lines(self, sfilter: str) -> None:
         if not sfilter:
