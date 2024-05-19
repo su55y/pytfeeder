@@ -142,6 +142,7 @@ class Picker:
         self.state = PageState.CHANNELS
         self._g_pressed = False
         self.filtered = False
+        self.last_channel_index = -1
 
     def start(self):
         curses.wrapper(self._start)
@@ -264,8 +265,11 @@ class Picker:
         self.gravity = Gravity.DOWN
         self.index = len(self.lines) - 1
 
-    def move_right(self) -> None:
-        self.selected_data = self.lines[self.index].data
+    def move_right(self, last_channel_index: int = -1) -> None:
+        if last_channel_index > -1:
+            self.selected_data = self.channels[last_channel_index]
+        else:
+            self.selected_data = self.lines[self.index].data
         if self.state == PageState.CHANNELS:
             self.last_feed_index = self.index
             self.state = PageState.ENTRIES
@@ -274,6 +278,7 @@ class Picker:
             else:
                 entries = self.feeder.channel_feed(self.selected_data.channel_id)
             self.lines = list(map(Line, entries))
+            self.last_channel_index = self.index
             self.index = 0
             self.scroll_top = 0
         elif self.state == PageState.ENTRIES:
@@ -290,18 +295,19 @@ class Picker:
             if not self.filtered:
                 exit(0)
             self.lines = list(map(Line, self.channels))
-            self.index = self.last_feed_index
+            self.index = min(self.last_feed_index, len(self.lines) - 1)
             self.last_feed_index = -1
             self.scroll_top = 0
         if self.state == PageState.ENTRIES:
             self.state = PageState.CHANNELS
             if not self.filtered:
                 self.lines = list(map(Line, self.channels))
-                self.index = self.last_feed_index
+                self.index = min(self.last_feed_index, len(self.lines) - 1)
                 self.last_feed_index = -1
                 self.scroll_top = 0
             else:
-                self.move_right()
+                self.move_right(self.last_channel_index)
+                self.last_channel_index = -1
         if self.filtered:
             self.filtered = False
 
