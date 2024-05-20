@@ -239,6 +239,8 @@ class Picker:
                     self.scroll_top = (self.index + 1) - max_rows
                 if self.index + 1 < self.scroll_top:
                     self.scroll_top = self.index
+                if self.index == 0:
+                    self.scroll_top = self.index
             case Gravity.UP:
                 if self.index + 1 == self.scroll_top:
                     self.scroll_top = max(self.scroll_top - 1, 0)
