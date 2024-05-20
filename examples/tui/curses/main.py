@@ -318,6 +318,7 @@ class Picker:
             return
         sfilter = sfilter.lower()
         self.lines = list(filter(lambda v: sfilter in v.data.title.lower(), self.lines))
+        self.index = 0
         self.filtered = True
 
     def handle_slash(self, screen: "curses._CursesWindow") -> None:
