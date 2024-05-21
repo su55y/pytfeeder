@@ -168,9 +168,11 @@ class Picker:
             self.draw(screen)
             match screen.getch():
                 case Key.j | curses.KEY_DOWN:
-                    self.move_down()
+                    if len(self.lines) > 0:
+                        self.move_down()
                 case Key.k | curses.KEY_UP:
-                    self.move_up()
+                    if len(self.lines) > 0:
+                        self.move_up()
                 case Key.l | curses.KEY_LEFT:
                     self.move_right()
                 case Key.h | curses.KEY_RIGHT:
