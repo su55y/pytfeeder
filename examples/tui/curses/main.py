@@ -173,10 +173,10 @@ class Picker:
                 case Key.k | curses.KEY_UP:
                     if len(self.lines) > 0:
                         self.move_up()
-                case Key.l | curses.KEY_LEFT:
+                case Key.l | curses.KEY_RIGHT:
                     if len(self.lines) > 0:
                         self.move_right()
-                case Key.h | curses.KEY_RIGHT:
+                case Key.h | curses.KEY_LEFT:
                     self.move_left()
                 case Key.K:
                     self.move_top()
