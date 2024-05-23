@@ -275,9 +275,10 @@ class Picker:
             self.selected_data = self.channels[last_channel_index]
         else:
             self.selected_data = self.lines[self.index].data
+
         if self.state == PageState.CHANNELS:
-            self.last_feed_index = self.index
             self.state = PageState.ENTRIES
+            self.last_feed_index = self.index
             if self.selected_data.channel_id == "feed":
                 entries = self.feeder.feed()
             else:
@@ -303,7 +304,7 @@ class Picker:
             self.index = min(self.last_feed_index, len(self.lines) - 1)
             self.last_feed_index = -1
             self.scroll_top = 0
-        if self.state == PageState.ENTRIES:
+        elif self.state == PageState.ENTRIES:
             self.state = PageState.CHANNELS
             if not self.filtered:
                 self.lines = list(map(Line, self.channels))
