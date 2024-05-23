@@ -368,6 +368,8 @@ class Picker:
         title = ""
         if self.last_feed_index > -1 and len(self.channels) >= self.last_feed_index + 1:
             title = "%s " % self.channels[self.last_feed_index].title
+        if self.filtered:
+            title = "%d found [h]: cancel filter, " % len(self.lines)
         return f" {title}[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
 
 
