@@ -184,6 +184,7 @@ class FeederPager:
                 self._command_line_app_link.vi_state.input_mode = InputMode.NAVIGATION
                 self._command_line_app_link = None
                 self._filter = buf.text
+                self.__toolbar_text = "%d found [h]: cancel filter," % len(self.page_lines)
             buf.text = ""
             return True
 
@@ -295,6 +296,10 @@ class FeederPager:
         def _back(event) -> None:
             if self._filter:
                 self._filter = None
+                if self.state is PageState.ENTRIES:
+                    self.__toolbar_text = self.channels[self.last_index].title
+                elif self.state is PageState.CHANNELS:
+                    self.__toolbar_text = ""
                 return
             match self.state:
                 case PageState.CHANNELS:
