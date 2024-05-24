@@ -319,7 +319,7 @@ class FeederPager:
         @kb.add("G")
         @kb.add("J")
         def _go_bottom(_) -> None:
-            self.selected_line = 0 if (l := len(self.page_lines)) <= 1 else l - 1
+            self.selected_line = max(0, len(self.page_lines) - 1)
 
         @kb.add("q")
         def _exit(event) -> None:
