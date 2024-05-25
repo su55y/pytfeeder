@@ -370,6 +370,7 @@ class Picker:
             title = "%s " % self.channels[self.last_feed_index].title
         if self.filtered:
             title = "%d found [h]: cancel filter, " % len(self.lines)
+        title = "[%d / %d] %s" % (self.index+1, len(self.lines), title)
         return f" {title}[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
 
 
