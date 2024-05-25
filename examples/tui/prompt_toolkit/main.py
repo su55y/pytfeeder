@@ -232,8 +232,8 @@ class FeederPager:
 
     def _get_toolbar_text(self) -> str:
         return (
-            " %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
-            % self.__toolbar_text
+            "[%d / %d] %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
+            % (1+self.selected_line, len(self.page_lines), self.__toolbar_text)
         )
 
     def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
