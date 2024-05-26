@@ -361,7 +361,6 @@ class Picker:
                 screen.addnstr(max_y - 1, 3, sfilter, width or 1)
         except KeyboardInterrupt:
             return
-        screen.getkey()
 
     @property
     def status(self) -> str:
