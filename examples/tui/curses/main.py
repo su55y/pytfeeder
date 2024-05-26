@@ -278,7 +278,8 @@ class Picker:
 
         if self.state == PageState.CHANNELS:
             self.state = PageState.ENTRIES
-            self.last_feed_index = self.index
+            if last_channel_index == -1:
+                self.last_feed_index = self.index
             if self.selected_data.channel_id == "feed":
                 entries = self.feeder.feed()
             else:
@@ -313,7 +314,7 @@ class Picker:
                 self.scroll_top = 0
             else:
                 self.move_right(self.last_channel_index)
-                self.last_channel_index = -1
+                self.last_channel_index = self.last_feed_index
         if self.filtered:
             self.filtered = False
 
