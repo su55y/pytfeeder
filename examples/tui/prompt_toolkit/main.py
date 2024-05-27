@@ -231,9 +231,11 @@ class FeederPager:
         return merge_formatted_text(result)
 
     def _get_toolbar_text(self) -> str:
+        num_fmt = f"%{len(str(len(self.page_lines)))}d"
+        index_prefix = "[%s/%s]" % ((num_fmt % (self.selected_line+1)), (num_fmt % len(self.page_lines)))
         return (
-            "[%d / %d] %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
-            % (1+self.selected_line, len(self.page_lines), self.__toolbar_text)
+            " %s %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
+            % (index_prefix, self.__toolbar_text)
         )
 
     def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
