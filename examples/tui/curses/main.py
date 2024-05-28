@@ -365,18 +365,29 @@ class Picker:
 
     @property
     def status(self) -> str:
+        return self._format_status()
+    
+    def _format_status(self) -> str:
         title = ""
         if self.last_feed_index > -1 and len(self.channels) >= self.last_feed_index + 1:
             title = "%s " % self.channels[self.last_feed_index].title
         if self.filtered:
-            title = "%d found [h]: cancel filter, " % len(self.lines)
-        title = "%s %s" % (self.index_format, title)
-        return f" {title}[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
+            title = "%d found " % len(self.lines)
+        status_fmt = "{index}{title}{keybinds}"
+        status = status_fmt.format(index=self._status_index, title=title, keybinds=self._status_keybinds)
+        return status
+
+    @property
+    def _status_keybinds(self) -> str:
+        keybinds_str = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
+        if self.filtered:
+            keybinds_str = f"[h]: cancel filter, {keybinds_str}"
+        return keybinds_str
     
     @property
-    def index_format(self) -> str:
+    def _status_index(self) -> str:
         num_fmt = f"%{len(str(len(self.lines)))}d"
-        return "[%s/%s]" % ((num_fmt % (self.index+1)), (num_fmt % len(self.lines)))
+        return "[%s/%s] " % ((num_fmt % (self.index+1)), (num_fmt % len(self.lines)))
 
 
 if __name__ == "__main__":
