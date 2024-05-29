@@ -20,6 +20,7 @@ UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
+DEFAULT_STATUS_FMT = "{index}{title}{keybinds}"
 
 
 def parse_args() -> argparse.Namespace:
@@ -41,6 +42,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_NEW_MARK,
         metavar="STR",
         help="new mark format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--status-fmt",
+        default=DEFAULT_STATUS_FMT,
+        metavar="STR",
+        help="status bar format (default: %(default)r)",
     )
     return parser.parse_args()
 
@@ -122,6 +129,7 @@ class Picker:
         channels_fmt: str = DEFAULT_CHANNELS_FMT,
         entries_fmt: str = DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
+        status_fmt: str = DEFAULT_STATUS_FMT,
     ) -> None:
         self.feeder = feeder
         self.channels = [
@@ -131,6 +139,7 @@ class Picker:
 
         self.channels_fmt = channels_fmt
         self.entries_fmt = entries_fmt
+        self.status_fmt = status_fmt
         self.gravity = Gravity.DOWN
         self.index = 0
         self.last_feed_index = -1
@@ -373,9 +382,7 @@ class Picker:
             title = "%s " % self.channels[self.last_feed_index].title
         if self.filtered:
             title = "%d found " % len(self.lines)
-        status_fmt = "{index}{title}{keybinds}"
-        status = status_fmt.format(index=self._status_index, title=title, keybinds=self._status_keybinds)
-        return status
+        return self.status_fmt.format(index=self._status_index, title=title, keybinds=self._status_keybinds)
 
     @property
     def _status_keybinds(self) -> str:
