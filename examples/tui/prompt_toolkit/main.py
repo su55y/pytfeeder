@@ -37,6 +37,7 @@ UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
+DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
     {new_mark} - new-mark if have updates, otherwise ' '*len(new_mark)
@@ -155,7 +156,9 @@ class FeederPager:
         self._command_line_app_link: Optional[Application] = None
         self._filter: Optional[str] = None
 
-        self.__toolbar_text = ""
+        self._keybinds_fmt = DEFAULT_KEYBINDS
+        self._title_fmt = ""
+
         self.bottom_toolbar = FormattedTextControl(
             text=self._get_toolbar_text,
             focusable=False,
@@ -184,7 +187,8 @@ class FeederPager:
                 self._command_line_app_link.vi_state.input_mode = InputMode.NAVIGATION
                 self._command_line_app_link = None
                 self._filter = buf.text
-                self.__toolbar_text = "%d found [h]: cancel filter," % len(self.page_lines)
+                self._title_fmt = "%d found" % len(self.page_lines)
+                self._keybinds_fmt = f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
             buf.text = ""
             return True
 
@@ -231,11 +235,16 @@ class FeederPager:
         return merge_formatted_text(result)
 
     def _get_toolbar_text(self) -> str:
+        return "{index} {title} {keybinds}".format(
+            index=self._index_fmt, title=self._title_fmt, keybinds=self._keybinds_fmt
+        )
+
+    @property
+    def _index_fmt(self) -> str:
         num_fmt = f"%{len(str(len(self.page_lines)))}d"
-        index_prefix = "[%s/%s]" % ((num_fmt % (self.selected_line+1)), (num_fmt % len(self.page_lines)))
-        return (
-            " %s %s [h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit "
-            % (index_prefix, self.__toolbar_text)
+        return "[%s/%s]" % (
+            (num_fmt % (self.selected_line + 1)),
+            (num_fmt % len(self.page_lines)),
         )
 
     def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
@@ -284,7 +293,7 @@ class FeederPager:
                         self.entries = self.feeder.channel_feed(channel.channel_id)
                     self.state = PageState.ENTRIES
                     self.selected_line = 0
-                    self.__toolbar_text = channel.title
+                    self._title_fmt = channel.title
                 case PageState.ENTRIES:
                     if self.selected_line >= len(self.entries):
                         return
@@ -298,10 +307,11 @@ class FeederPager:
         def _back(event) -> None:
             if self._filter:
                 self._filter = None
+                self._keybinds_fmt = DEFAULT_KEYBINDS
                 if self.state is PageState.ENTRIES:
-                    self.__toolbar_text = self.channels[self.last_index].title
+                    self._title_fmt = self.channels[self.last_index].title
                 elif self.state is PageState.CHANNELS:
-                    self.__toolbar_text = ""
+                    self._title_fmt = ""
                 return
             match self.state:
                 case PageState.CHANNELS:
@@ -311,7 +321,7 @@ class FeederPager:
                     self.entries = []
                     self.selected_line = self.last_index
                     self.last_index = -1
-                    self.__toolbar_text = ""
+                    self._title_fmt = ""
 
         @kb.add("g", "g")
         @kb.add("K")
