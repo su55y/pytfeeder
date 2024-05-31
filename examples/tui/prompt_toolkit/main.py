@@ -38,6 +38,7 @@ DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
+DEFAULT_STATUS_FMT = "{index} {title} {keybinds}"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
     {new_mark} - new-mark if have updates, otherwise ' '*len(new_mark)
@@ -71,6 +72,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_NEW_MARK,
         metavar="STR",
         help="new mark format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--status-fmt",
+        default=DEFAULT_STATUS_FMT,
+        metavar="STR",
+        help="status bar format (default: %(default)r)",
     )
     return parser.parse_args()
 
@@ -136,6 +143,7 @@ class FeederPager:
         channels_fmt: str = DEFAULT_CHANNELS_FMT,
         entries_fmt: str = DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
+        status_fmt: str = DEFAULT_STATUS_FMT,
     ) -> None:
         self.feeder = feeder
         self.state = PageState.CHANNELS
@@ -156,6 +164,7 @@ class FeederPager:
         self._command_line_app_link: Optional[Application] = None
         self._filter: Optional[str] = None
 
+        self._status_fmt = status_fmt
         self._keybinds_fmt = DEFAULT_KEYBINDS
         self._title_fmt = ""
 
@@ -235,7 +244,7 @@ class FeederPager:
         return merge_formatted_text(result)
 
     def _get_toolbar_text(self) -> str:
-        return "{index} {title} {keybinds}".format(
+        return self._status_fmt.format(
             index=self._index_fmt, title=self._title_fmt, keybinds=self._keybinds_fmt
         )
 
