@@ -47,7 +47,7 @@ channels-fmt keys:
 entries-fmt keys:
     {new_mark}      - new-mark if have updates, otherwise ' '*len(new_mark)
     {title}         - title of the entry
-    {updated}       - updated in `--datetime-fmt` format
+    {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
     {channel_title} - title of the channel
 """
 
@@ -84,7 +84,7 @@ def parse_args() -> argparse.Namespace:
         "--datetime-fmt",
         default=DEFAULT_DATETIME_FMT,
         metavar="STR",
-        help="datetime format (default: %(default)r)",
+        help="entries `{updated}` datetime format (default: %(default)r)",
     )
     return parser.parse_args()
 
