@@ -39,6 +39,7 @@ DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
 DEFAULT_STATUS_FMT = "{index} {title} {keybinds}"
+DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
     {new_mark} - new-mark if have updates, otherwise ' '*len(new_mark)
@@ -46,7 +47,7 @@ channels-fmt keys:
 entries-fmt keys:
     {new_mark}      - new-mark if have updates, otherwise ' '*len(new_mark)
     {title}         - title of the entry
-    {updated}       - updated in format %b %d
+    {updated}       - updated in `--datetime-fmt` format
     {channel_title} - title of the channel
 """
 
@@ -78,6 +79,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_STATUS_FMT,
         metavar="STR",
         help="status bar format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--datetime-fmt",
+        default=DEFAULT_DATETIME_FMT,
+        metavar="STR",
+        help="datetime format (default: %(default)r)",
     )
     return parser.parse_args()
 
@@ -144,6 +151,7 @@ class FeederPager:
         entries_fmt: str = DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
+        datetime_fmt: str = DEFAULT_DATETIME_FMT,
     ) -> None:
         self.feeder = feeder
         self.state = PageState.CHANNELS
@@ -157,6 +165,7 @@ class FeederPager:
 
         self.channels_fmt = channels_fmt
         self.entries_fmt = entries_fmt
+        self.datetime_fmt = datetime_fmt
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
@@ -259,7 +268,7 @@ class FeederPager:
     def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
         line = self.entries_fmt.format(
             new_mark=self.new_marks[not entry.is_viewed],
-            updated=entry.updated.strftime("%b %d"),
+            updated=entry.updated.strftime(self.datetime_fmt),
             title=entry.title,
             channel_title=f"{self.feeder.channel_title(entry.channel_id):^{self.max_len_chan_title}s}",
         )
