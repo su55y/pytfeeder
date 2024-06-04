@@ -21,6 +21,7 @@ DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = "{index}{title}{keybinds}"
+DEFAULT_DATETIME_FMT = "%b %d"
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,6 +49,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_STATUS_FMT,
         metavar="STR",
         help="status bar format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--datetime-fmt",
+        default=DEFAULT_DATETIME_FMT,
+        metavar="STR",
+        help="datetime format (default %(default)r)",
     )
     return parser.parse_args()
 
@@ -130,6 +137,7 @@ class Picker:
         entries_fmt: str = DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
+        datetime_fmt: str = DEFAULT_DATETIME_FMT,
     ) -> None:
         self.feeder = feeder
         self.channels = [
@@ -140,6 +148,7 @@ class Picker:
         self.channels_fmt = channels_fmt
         self.entries_fmt = entries_fmt
         self.status_fmt = status_fmt
+        self.datetime_fmt = datetime_fmt
         self.gravity = Gravity.DOWN
         self.index = 0
         self.last_feed_index = -1
@@ -219,7 +228,7 @@ class Picker:
                 if line.data.is_viewed is False:
                     new_mark = self.new_mark
                     color_pair = Color.NEW
-                updated = line.data.updated.strftime("%b %d")
+                updated = line.data.updated.strftime(self.datetime_fmt)
                 text = self.entries_fmt.format(
                     new_mark=new_mark,
                     updated=updated,
@@ -230,8 +239,10 @@ class Picker:
                 if line.data.have_updates:
                     new_mark = self.new_mark
                     color_pair = Color.NEW
-                text = self.channels_fmt.format(new_mark=new_mark, title=line.data.title)
-                
+                text = self.channels_fmt.format(
+                    new_mark=new_mark, title=line.data.title
+                )
+
             if line.is_active:
                 text = f"{text:<{n}}"
                 color_pair = Color.ACTIVE
@@ -341,7 +352,9 @@ class Picker:
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
         n = max_x - 2
-        screen.addnstr(max_y - 2, 1, f"{self.status:<{n}}", n, curses.color_pair(Color.ACTIVE))
+        screen.addnstr(
+            max_y - 2, 1, f"{self.status:<{n}}", n, curses.color_pair(Color.ACTIVE)
+        )
         screen.move(max_y - 1, 0)
         screen.clrtoeol()
         screen.move(max_y - 1, 2)
@@ -362,7 +375,7 @@ class Picker:
                 if ch == curses.KEY_BACKSPACE:
                     if not len(sfilter):
                         continue
-                    sfilter = sfilter[:len(sfilter) - 1]
+                    sfilter = sfilter[: len(sfilter) - 1]
                     screen.addnstr(max_y - 1, 3, " " * max_x, max_x - 4)
                     screen.refresh()
                 else:
@@ -375,14 +388,16 @@ class Picker:
     @property
     def status(self) -> str:
         return self._format_status()
-    
+
     def _format_status(self) -> str:
         title = ""
         if self.last_feed_index > -1 and len(self.channels) >= self.last_feed_index + 1:
             title = "%s " % self.channels[self.last_feed_index].title
         if self.filtered:
             title = "%d found " % len(self.lines)
-        return self.status_fmt.format(index=self._status_index, title=title, keybinds=self._status_keybinds)
+        return self.status_fmt.format(
+            index=self._status_index, title=title, keybinds=self._status_keybinds
+        )
 
     @property
     def _status_keybinds(self) -> str:
@@ -390,11 +405,11 @@ class Picker:
         if self.filtered:
             keybinds_str = f"[h]: cancel filter, {keybinds_str}"
         return keybinds_str
-    
+
     @property
     def _status_index(self) -> str:
         num_fmt = f"%{len(str(len(self.lines)))}d"
-        return "[%s/%s] " % ((num_fmt % (self.index+1)), (num_fmt % len(self.lines)))
+        return "[%s/%s] " % ((num_fmt % (self.index + 1)), (num_fmt % len(self.lines)))
 
 
 if __name__ == "__main__":
