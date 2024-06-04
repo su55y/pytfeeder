@@ -54,7 +54,7 @@ def parse_args() -> argparse.Namespace:
         "--datetime-fmt",
         default=DEFAULT_DATETIME_FMT,
         metavar="STR",
-        help="datetime format (default %(default)r)",
+        help="entries `{updated}` datetime format (default: %(default)r)",
     )
     return parser.parse_args()
 
