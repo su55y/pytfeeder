@@ -42,10 +42,10 @@ DEFAULT_STATUS_FMT = "{index} {title} {keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
-    {new_mark} - new-mark if have updates, otherwise ' '*len(new_mark)
+    {new_mark} - new-mark if have updates, otherwise `' '*len(new_mark)`
     {title}    - title of the channel
 entries-fmt keys:
-    {new_mark}      - new-mark if have updates, otherwise ' '*len(new_mark)
+    {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
     {channel_title} - title of the channel
