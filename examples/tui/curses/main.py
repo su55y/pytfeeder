@@ -204,8 +204,10 @@ class Picker:
                         self.move_up()
                 case Key.l | curses.KEY_RIGHT:
                     if len(self.lines) > 0:
+                        screen.clear()
                         self.move_right()
                 case Key.h | curses.KEY_LEFT:
+                    screen.clear()
                     self.move_left()
                 case Key.K:
                     self.move_top()
@@ -223,8 +225,8 @@ class Picker:
                     exit(0)
 
     def draw(self, screen: "curses._CursesWindow") -> None:
-        screen.clear()
-        x, y = 1, 0
+        # screen.clear()
+        x, y = 0, 0
         max_y, max_x = screen.getmaxyx()
         max_rows = max_y - y - 1
         n = max_x - 2
@@ -255,10 +257,10 @@ class Picker:
                 )
 
             if line.is_active:
-                text = f"{text:<{n}}"
                 color_pair = Color.ACTIVE
 
-            screen.addnstr(y, x, text, n, curses.color_pair(color_pair))
+            text = f"{text:<{max_x}}"
+            screen.addnstr(y, x, text, max_x, curses.color_pair(color_pair))
             y += 1
 
         screen.addnstr(
@@ -358,6 +360,7 @@ class Picker:
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
         self.filtered = True
+        curses.curs_set(0)
 
     def handle_slash(self, screen: "curses._CursesWindow") -> None:
         curses.curs_set(1)
@@ -379,9 +382,10 @@ class Picker:
                 if ch == 10:
                     if not sfilter:
                         return
+                    screen.clear()
                     self.filter_lines(sfilter)
                     return
-                if ch in (47, curses.KEY_ENTER, 27):
+                if ch in (47, 27):
                     return
                 if ch == curses.KEY_BACKSPACE:
                     if not len(sfilter):
