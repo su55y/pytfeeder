@@ -20,7 +20,7 @@ UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
-DEFAULT_STATUS_FMT = "{index}{title}{keybinds}"
+DEFAULT_STATUS_FMT = " {index}{title}{keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
@@ -263,9 +263,12 @@ class Picker:
             screen.addnstr(y, x, text, max_x, curses.color_pair(color_pair))
             y += 1
 
-        screen.addnstr(
-            max_y - 1, x, f"{self.status:<{n}}", n, curses.color_pair(Color.ACTIVE)
-        )
+        try:
+            screen.addnstr(
+                max_y - 1, x, f"{self.status:<{max_x}}", max_x, curses.color_pair(Color.ACTIVE)
+            )
+        except:
+            pass
         screen.refresh()
 
     def update_scroll_top(self, max_rows: int) -> None:
