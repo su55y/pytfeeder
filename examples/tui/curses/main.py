@@ -33,6 +33,7 @@ entries-fmt keys:
     {channel_title} - title of the channel
 """
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         epilog=OPTIONS_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -225,11 +226,9 @@ class Picker:
                     exit(0)
 
     def draw(self, screen: "curses._CursesWindow") -> None:
-        # screen.clear()
         x, y = 0, 0
         max_y, max_x = screen.getmaxyx()
         max_rows = max_y - y - 1
-        n = max_x - 2
         self.update_scroll_top(max_rows)
         self.update_active()
         for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
@@ -265,7 +264,11 @@ class Picker:
 
         try:
             screen.addnstr(
-                max_y - 1, x, f"{self.status:<{max_x}}", max_x, curses.color_pair(Color.ACTIVE)
+                max_y - 1,
+                x,
+                f"{self.status:<{max_x}}",
+                max_x,
+                curses.color_pair(Color.ACTIVE),
             )
         except:
             pass
