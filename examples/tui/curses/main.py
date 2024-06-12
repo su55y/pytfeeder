@@ -120,6 +120,8 @@ class Key(IntEnum):
     q = ord("q")
     l = ord("l")
     h = ord("h")
+    a = ord("a")
+    A = ord("A")
     SLASH = ord("/")
     ESC = 27
     RETURN = ord("\n")
@@ -222,6 +224,10 @@ class Picker:
                     self.move_bottom()
                 case Key.SLASH:
                     self.handle_slash(screen)
+                case Key.a:
+                    self.mark_viewed()
+                case Key.A:
+                    self.mark_viewed(mark_all=True)
                 case Key.q | Key.ESC:
                     exit(0)
 
@@ -356,6 +362,35 @@ class Picker:
                 self.last_channel_index = self.last_feed_index
         if self.filtered:
             self.filtered = False
+
+    def mark_viewed(self, mark_all: bool = False) -> None:
+        self.selected_data = self.lines[self.index].data
+
+        if self.state == PageState.CHANNELS:
+            if not isinstance(self.selected_data, Channel):
+                return
+            if self.selected_data.channel_id == "feed":
+                self.feeder.mark_as_viewed()
+                for i in range(len(self.channels)):
+                    self.channels[i].have_updates = False
+            else:
+                self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
+                self.selected_data.have_updates = False
+        elif self.state == PageState.ENTRIES:
+            if not isinstance(self.selected_data, Entry):
+                return
+            if mark_all:
+                channel = self.channels[self.last_feed_index]
+                if channel.channel_id == "feed":
+                    self.feeder.mark_as_viewed()
+                    for i in range(len(self.channels)):
+                        self.channels[i].have_updates = False
+                else:
+                    self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
+                    self.channels[self.last_feed_index].have_updates = False
+            else:
+                self.feeder.mark_as_viewed(id=self.selected_data.id)
+                self.selected_data.is_viewed = True
 
     def filter_lines(self, sfilter: str) -> None:
         if not sfilter:
