@@ -66,7 +66,7 @@ def parse_args() -> argparse.Namespace:
         "--datetime-fmt",
         default=DEFAULT_DATETIME_FMT,
         metavar="STR",
-        help="entries `{updated}` datetime format (default: %(default)r)",
+        help="`{updated}` datetime format of entry (default: %(default)r)",
     )
     return parser.parse_args()
 
@@ -163,8 +163,10 @@ class Picker:
         self.entries_fmt = entries_fmt
         self.status_fmt = status_fmt
         self.datetime_fmt = datetime_fmt
+        self.filtered = False
         self.gravity = Gravity.DOWN
         self.index = 0
+        self.last_channel_index = -1
         self.last_feed_index = -1
         self.lines = list(map(Line, self.channels))
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
@@ -173,13 +175,11 @@ class Picker:
         self.selected_data = None
         self.state = PageState.CHANNELS
         self._g_pressed = False
-        self.filtered = False
-        self.last_channel_index = -1
 
-    def start(self):
+    def start(self) -> None:
         curses.wrapper(self._start)
 
-    def _start(self, screen: "curses._CursesWindow"):
+    def _start(self, screen: "curses._CursesWindow") -> None:
         self.config_curses()
         try:
             self.run_loop(screen)
@@ -217,9 +217,7 @@ class Picker:
                 case Key.g:
                     if self._g_pressed:
                         self.move_top()
-                        self._g_pressed = False
-                    else:
-                        self._g_pressed = True
+                    self._g_pressed = not self._g_pressed
                 case Key.G | Key.J:
                     self.move_bottom()
                 case Key.SLASH:
@@ -228,7 +226,7 @@ class Picker:
                     self.mark_viewed()
                 case Key.A:
                     self.mark_viewed(mark_all=True)
-                case Key.q | Key.ESC:
+                case Key.q:
                     exit(0)
 
     def draw(self, screen: "curses._CursesWindow") -> None:
@@ -392,11 +390,11 @@ class Picker:
                 self.feeder.mark_as_viewed(id=self.selected_data.id)
                 self.selected_data.is_viewed = True
 
-    def filter_lines(self, sfilter: str) -> None:
-        if not sfilter:
+    def filter_lines(self, keyword: str) -> None:
+        if not keyword:
             return
-        sfilter = sfilter.lower()
-        self.lines = list(filter(lambda v: sfilter in v.data.title.lower(), self.lines))
+        keyword = keyword.lower()
+        self.lines = list(filter(lambda v: keyword in v.data.title.lower(), self.lines))
         self.index = 0
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
@@ -415,29 +413,29 @@ class Picker:
         screen.move(max_y - 1, 2)
         screen.addch("/")
         screen.refresh()
-        sfilter = ""
+        keyword = ""
         try:
             while ch := screen.getch():
                 screen.refresh()
                 max_y, max_x = screen.getmaxyx()
                 if ch == 10:
-                    if not sfilter:
+                    if not keyword:
                         return
                     screen.clear()
-                    self.filter_lines(sfilter)
+                    self.filter_lines(keyword)
                     return
-                if ch in (47, 27):
+                if ch in (Key.SLASH, Key.ESC):
                     return
                 if ch == curses.KEY_BACKSPACE:
-                    if not len(sfilter):
+                    if not len(keyword):
                         continue
-                    sfilter = sfilter[: len(sfilter) - 1]
+                    keyword = keyword[: len(keyword) - 1]
                     screen.addnstr(max_y - 1, 3, " " * max_x, max_x - 4)
                     screen.refresh()
                 else:
-                    sfilter += chr(ch)
-                width = min(len(sfilter), max_x - 3)
-                screen.addnstr(max_y - 1, 3, sfilter, width or 1)
+                    keyword += chr(ch)
+                width = min(len(keyword), max_x - 3)
+                screen.addnstr(max_y - 1, 3, keyword, width or 1)
         except KeyboardInterrupt:
             return
 
