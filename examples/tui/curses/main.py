@@ -404,9 +404,12 @@ class Picker:
     def handle_slash(self, screen: "curses._CursesWindow") -> None:
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
-        n = max_x - 2
         screen.addnstr(
-            max_y - 2, 1, f"{self.status:<{n}}", n, curses.color_pair(Color.ACTIVE)
+            max_y - 2,
+            0,
+            f"{self.status:<{max_x}}",
+            max_x,
+            curses.color_pair(Color.ACTIVE),
         )
         screen.move(max_y - 1, 0)
         screen.clrtoeol()
@@ -425,6 +428,7 @@ class Picker:
                     self.filter_lines(keyword)
                     return
                 if ch in (Key.SLASH, Key.ESC):
+                    screen.refresh()
                     return
                 if ch == curses.KEY_BACKSPACE:
                     if not len(keyword):
