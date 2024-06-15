@@ -68,6 +68,9 @@ def parse_args() -> argparse.Namespace:
         metavar="STR",
         help="`{updated}` datetime format of entry (default: %(default)r)",
     )
+    parser.add_argument(
+        "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
+    )
     return parser.parse_args()
 
 
@@ -152,12 +155,19 @@ class Picker:
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
+        hide_feed: bool = False,
     ) -> None:
         self.feeder = feeder
-        self.channels = [
-            Channel("Feed", "feed", have_updates=bool(self.feeder.unviewed_count())),
-            *self.feeder.channels,
-        ]
+
+        if hide_feed:
+            self.channels = self.feeder.channels
+        else:
+            feed_channel = Channel(
+                title="Feed",
+                channel_id="feed",
+                have_updates=bool(self.feeder.unviewed_count()),
+            )
+            self.channels = [feed_channel, *self.feeder.channels]
 
         self.channels_fmt = channels_fmt
         self.entries_fmt = entries_fmt
@@ -374,8 +384,7 @@ class Picker:
             if not isinstance(self.selected_data, Entry):
                 return
             if mark_all:
-                channel = self.channels[self.last_feed_index]
-                if channel.channel_id == "feed":
+                if self.channels[self.last_feed_index].channel_id == "feed":
                     self.feeder.mark_as_viewed()
                     for i in range(len(self.channels)):
                         self.channels[i].have_updates = False
