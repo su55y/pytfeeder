@@ -86,6 +86,9 @@ def parse_args() -> argparse.Namespace:
         metavar="STR",
         help="entries `{updated}` datetime format (default: %(default)r)",
     )
+    parser.add_argument(
+        "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
+    )
     return parser.parse_args()
 
 
@@ -152,14 +155,22 @@ class FeederPager:
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
+        hide_feed: bool = False,
     ) -> None:
         self.feeder = feeder
-        self.state = PageState.CHANNELS
-        self.channels = [
-            Channel("Feed", "feed", have_updates=bool(self.feeder.unviewed_count())),
-            *self.feeder.channels,
-        ]
+
+        if hide_feed:
+            self.channels = self.feeder.channels
+        else:
+            feed_channel = Channel(
+                title="Feed",
+                channel_id="feed",
+                have_updates=bool(self.feeder.unviewed_count()),
+            )
+            self.channels = [feed_channel, *self.feeder.channels]
+
         self.entries: List[Entry] = []
+        self.state = PageState.CHANNELS
         self.selected_line = 0
         self.last_index = -1
 
