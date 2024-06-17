@@ -125,6 +125,9 @@ class Key(IntEnum):
     h = ord("h")
     a = ord("a")
     A = ord("A")
+    p = ord("p")
+    n = ord("n")
+    TAB = 9
     SLASH = ord("/")
     ESC = 27
     RETURN = ord("\n")
@@ -209,26 +212,26 @@ class Picker:
         while True:
             self.draw(screen)
             match screen.getch():
-                case Key.j | curses.KEY_DOWN:
+                case Key.j | curses.KEY_DOWN | Key.TAB | Key.n:
                     if len(self.lines) > 0:
                         self.move_down()
-                case Key.k | curses.KEY_UP:
+                case Key.k | curses.KEY_UP | curses.KEY_BTAB | Key.p:
                     if len(self.lines) > 0:
                         self.move_up()
-                case Key.l | curses.KEY_RIGHT:
+                case Key.l | curses.KEY_RIGHT | Key.RETURN:
                     if len(self.lines) > 0:
                         screen.clear()
                         self.move_right()
                 case Key.h | curses.KEY_LEFT:
                     screen.clear()
                     self.move_left()
-                case Key.K:
+                case Key.K | curses.KEY_HOME:
                     self.move_top()
                 case Key.g:
                     if self._g_pressed:
                         self.move_top()
                     self._g_pressed = not self._g_pressed
-                case Key.G | Key.J:
+                case Key.G | Key.J | curses.KEY_END:
                     self.move_bottom()
                 case Key.SLASH:
                     self.handle_slash(screen)
