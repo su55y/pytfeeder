@@ -380,7 +380,13 @@ class Picker:
         if self.state == PageState.CHANNELS:
             if not isinstance(self.selected_data, Channel):
                 return
-            if self.selected_data.channel_id != "feed":
+            if self.selected_data.channel_id == "feed":
+                return
+            if mark_all:
+                self.feeder.mark_as_viewed()
+                for i in range(len(self.channels)):
+                    self.channels[i].have_updates = False
+            else:
                 self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
                 self.selected_data.have_updates = False
         elif self.state == PageState.ENTRIES:
@@ -393,20 +399,11 @@ class Picker:
                         self.channels[i].have_updates = False
                     for i in range(len(self.lines)):
                         self.lines[i].data.is_viewed = True  # type: ignore
-                    # entries = self.feeder.feed()
                 else:
                     self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
                     self.channels[self.last_feed_index].have_updates = False
-                    # entries = self.feeder.channel_feed(
-                    #     self.channels[self.last_feed_index].channel_id
-                    # )
-                    # self.lines = list(map(Line, entries))
-                    # self.filtered = False
-
                     for i in range(len(self.lines)):
                         self.lines[i].data.is_viewed = True  # type: ignore
-                # self.lines = list(map(Line, entries))
-                # self.filtered = False
             else:
                 self.feeder.mark_as_viewed(id=self.selected_data.id)
                 self.selected_data.is_viewed = True
