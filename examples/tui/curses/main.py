@@ -238,7 +238,7 @@ class Picker:
                 case Key.a:
                     self.mark_viewed()
                 case Key.A:
-                    self.mark_viewed(mark_all=True)
+                    self.mark_viewed_all()
                 case Key.q:
                     exit(0)
 
@@ -374,40 +374,6 @@ class Picker:
         if self.filtered:
             self.filtered = False
 
-    def mark_viewed(self, mark_all: bool = False) -> None:
-        self.selected_data = self.lines[self.index].data
-
-        if self.state == PageState.CHANNELS:
-            if not isinstance(self.selected_data, Channel):
-                return
-            if mark_all:
-                self.feeder.mark_as_viewed()
-                for i in range(len(self.channels)):
-                    self.channels[i].have_updates = False
-            else:
-                if self.selected_data.channel_id == "feed":
-                    return
-                self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
-                self.selected_data.have_updates = False
-        elif self.state == PageState.ENTRIES:
-            if not isinstance(self.selected_data, Entry):
-                return
-            if mark_all:
-                if self.channels[self.last_feed_index].channel_id == "feed":
-                    self.feeder.mark_as_viewed()
-                    for i in range(len(self.channels)):
-                        self.channels[i].have_updates = False
-                    for i in range(len(self.lines)):
-                        self.lines[i].data.is_viewed = True  # type: ignore
-                else:
-                    self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
-                    self.channels[self.last_feed_index].have_updates = False
-                    for i in range(len(self.lines)):
-                        self.lines[i].data.is_viewed = True  # type: ignore
-            else:
-                self.feeder.mark_as_viewed(id=self.selected_data.id)
-                self.selected_data.is_viewed = True
-
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
             return
@@ -460,6 +426,37 @@ class Picker:
                 screen.addnstr(max_y - 1, 3, keyword, width or 1)
         except KeyboardInterrupt:
             return
+
+    def mark_viewed_all(self) -> None:
+        self.selected_data = self.lines[self.index].data
+
+        if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
+            self.feeder.mark_as_viewed()
+            for i in range(len(self.channels)):
+                self.channels[i].have_updates = False
+        elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
+            if self.channels[self.last_feed_index].channel_id == "feed":
+                self.feeder.mark_as_viewed()
+                for i in range(len(self.channels)):
+                    self.channels[i].have_updates = False
+                for i in range(len(self.lines)):
+                    self.lines[i].data.is_viewed = True  # type: ignore
+            else:
+                self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
+                self.channels[self.last_feed_index].have_updates = False
+                for i in range(len(self.lines)):
+                    self.lines[i].data.is_viewed = True  # type: ignore
+
+    def mark_viewed(self) -> None:
+        self.selected_data = self.lines[self.index].data
+        if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
+            if self.selected_data.channel_id == "feed":
+                return
+            self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
+            self.selected_data.have_updates = False
+        elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
+            self.feeder.mark_as_viewed(id=self.selected_data.id)
+            self.selected_data.is_viewed = True
 
     @property
     def status(self) -> str:
