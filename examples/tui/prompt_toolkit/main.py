@@ -228,6 +228,43 @@ class FeederPager:
             [self.main_window, self.toolbar_window, CommandLine(self)]
         )
 
+    def mark_viewed_all(self) -> None:
+        self.selected_data = self.page_lines[self.selected_line]
+        if self.state == PageState.CHANNELS:
+            if not isinstance(self.selected_data, Channel):
+                return
+            for i in range(len(self.channels)):
+                self.channels[i].have_updates = False
+        elif self.state == PageState.ENTRIES:
+            if not isinstance(self.selected_data, Entry):
+                return
+            if self.channels[self.last_index].channel_id == "feed":
+                self.feeder.mark_as_viewed()
+                for i in range(len(self.channels)):
+                    self.channels[i].have_updates = False
+                for i in range(len(self.page_lines)):
+                    self.page_lines[i].is_viewed = True  # type: ignore
+            else:
+                self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
+                self.channels[self.last_index].have_updates = False
+                for i in range(len(self.page_lines)):
+                    self.page_lines[i].is_viewed = True  # type: ignore
+
+    def mark_viewed(self) -> None:
+        self.selected_data = self.page_lines[self.selected_line]
+        if self.state == PageState.CHANNELS:
+            if not isinstance(self.selected_data, Channel):
+                return
+            if self.selected_data.channel_id == "feed":
+                return
+            self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
+            self.selected_data.have_updates = False
+        elif self.state == PageState.ENTRIES:
+            if not isinstance(self.selected_data, Entry):
+                return
+            self.feeder.mark_as_viewed(id=self.selected_data.id)
+            self.selected_data.is_viewed = True
+
     @property
     def page_lines(self) -> Lines:
         match self.state:
@@ -371,6 +408,14 @@ class FeederPager:
             event.app.layout.focus(self.command_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
             self._command_line_app_link = event.app
+
+        @kb.add("a")
+        def _mark_viewed(_) -> None:
+            self.mark_viewed()
+
+        @kb.add("A")
+        def _mark_viewed_all(_) -> None:
+            self.mark_viewed_all()
 
         return kb
 
