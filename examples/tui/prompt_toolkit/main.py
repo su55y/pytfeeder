@@ -333,12 +333,16 @@ class FeederPager:
 
         @kb.add("k")
         @kb.add("up")
+        @kb.add("p")
+        @kb.add("s-tab")
         def _go_up(_) -> None:
             if len(self.page_lines) > 1:
                 self.selected_line = (self.selected_line - 1) % len(self.page_lines)
 
         @kb.add("j")
         @kb.add("down")
+        @kb.add("n")
+        @kb.add("tab")
         def _go_down(_) -> None:
             if len(self.page_lines) > 1:
                 self.selected_line = (self.selected_line + 1) % len(self.page_lines)
@@ -391,11 +395,13 @@ class FeederPager:
 
         @kb.add("g", "g")
         @kb.add("K")
+        @kb.add("home")
         def _go_top(_) -> None:
             self.selected_line = 0
 
         @kb.add("G")
         @kb.add("J")
+        @kb.add("end")
         def _go_bottom(_) -> None:
             self.selected_line = max(0, len(self.page_lines) - 1)
 
