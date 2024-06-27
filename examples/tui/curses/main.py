@@ -474,7 +474,7 @@ class Picker:
 
     @property
     def _status_keybinds(self) -> str:
-        keybinds_str = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit"
+        keybinds_str = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit, [a]: mark viewed, [A]: mark viewed all"
         if self.filtered:
             keybinds_str = f"[h]: cancel filter, {keybinds_str}"
         return keybinds_str
