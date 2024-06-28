@@ -127,6 +127,7 @@ class Key(IntEnum):
     A = ord("A")
     p = ord("p")
     n = ord("n")
+    c = ord("c")
     TAB = 9
     SLASH = ord("/")
     ESC = 27
@@ -225,13 +226,13 @@ class Picker:
                 case Key.h | curses.KEY_LEFT:
                     screen.clear()
                     self.move_left()
-                case Key.K | curses.KEY_HOME:
+                case curses.KEY_HOME:
                     self.move_top()
                 case Key.g:
                     if self._g_pressed:
                         self.move_top()
                     self._g_pressed = not self._g_pressed
-                case Key.G | Key.J | curses.KEY_END:
+                case Key.G | curses.KEY_END:
                     self.move_bottom()
                 case Key.SLASH:
                     self.handle_slash(screen)
@@ -239,6 +240,14 @@ class Picker:
                     self.mark_viewed()
                 case Key.A:
                     self.mark_viewed_all()
+                case Key.J:
+                    self.move_next()
+                    screen.clear()
+                case Key.K:
+                    self.move_prev()
+                    screen.clear()
+                case Key.c:
+                    screen.clear()
                 case Key.q:
                     exit(0)
 
@@ -325,6 +334,28 @@ class Picker:
     def move_bottom(self) -> None:
         self.gravity = Gravity.DOWN
         self.index = len(self.lines) - 1
+
+    def move_next(self) -> None:
+        if self.state != PageState.ENTRIES:
+            return
+        index = min(len(self.channels) - 1, self.last_channel_index + 1)
+        self.last_channel_index = index
+        self.lines = list(
+            map(Line, self.feeder.channel_feed(self.channels[index].channel_id))
+        )
+        self.index = 0
+        self.scroll_top = 0
+
+    def move_prev(self) -> None:
+        if self.state != PageState.ENTRIES:
+            return
+        index = max(0, self.last_channel_index - 1)
+        self.last_channel_index = index
+        self.lines = list(
+            map(Line, self.feeder.channel_feed(self.channels[index].channel_id))
+        )
+        self.index = 0
+        self.scroll_top = 0
 
     def move_right(self, last_channel_index: int = -1) -> None:
         if last_channel_index > -1:
