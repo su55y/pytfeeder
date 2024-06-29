@@ -241,11 +241,13 @@ class Picker:
                 case Key.A:
                     self.mark_viewed_all()
                 case Key.J:
-                    self.move_next()
-                    screen.clear()
+                    if self.state == PageState.ENTRIES and not self.filtered:
+                        self.move_next()
+                        screen.clear()
                 case Key.K:
-                    self.move_prev()
-                    screen.clear()
+                    if self.state == PageState.ENTRIES and not self.filtered:
+                        self.move_prev()
+                        screen.clear()
                 case Key.c:
                     screen.clear()
                 case Key.q:
@@ -336,25 +338,23 @@ class Picker:
         self.index = len(self.lines) - 1
 
     def move_next(self) -> None:
-        if self.state != PageState.ENTRIES:
-            return
         if self.last_channel_index == len(self.channels) - 1:
             index = 0
         else:
             index = min(len(self.channels) - 1, self.last_channel_index + 1)
         self.last_channel_index = index
+        self.last_feed_index = index
         self.lines = self.lines_by_id(self.channels[index].channel_id)
         self.index = 0
         self.scroll_top = 0
 
     def move_prev(self) -> None:
-        if self.state != PageState.ENTRIES:
-            return
         if self.last_channel_index == 0:
             index = len(self.channels) - 1
         else:
             index = max(0, self.last_channel_index - 1)
         self.last_channel_index = index
+        self.last_feed_index = index
         self.lines = self.lines_by_id(self.channels[index].channel_id)
         self.index = 0
         self.scroll_top = 0
@@ -369,11 +369,7 @@ class Picker:
             self.state = PageState.ENTRIES
             if last_channel_index == -1:
                 self.last_feed_index = self.index
-            if self.selected_data.channel_id == "feed":
-                entries = self.feeder.feed()
-            else:
-                entries = self.feeder.channel_feed(self.selected_data.channel_id)
-            self.lines = list(map(Line, entries))
+            self.lines = self.lines_by_id(self.selected_data.channel_id)
             self.last_channel_index = self.index
             self.index = 0
             self.scroll_top = 0
