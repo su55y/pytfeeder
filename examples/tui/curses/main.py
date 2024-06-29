@@ -6,7 +6,7 @@ import datetime as dt
 from enum import Enum, IntEnum, auto
 import os.path
 import subprocess as sp
-from typing import Union
+from typing import List, Union
 
 from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
@@ -338,22 +338,24 @@ class Picker:
     def move_next(self) -> None:
         if self.state != PageState.ENTRIES:
             return
-        index = min(len(self.channels) - 1, self.last_channel_index + 1)
+        if self.last_channel_index == len(self.channels) - 1:
+            index = 0
+        else:
+            index = min(len(self.channels) - 1, self.last_channel_index + 1)
         self.last_channel_index = index
-        self.lines = list(
-            map(Line, self.feeder.channel_feed(self.channels[index].channel_id))
-        )
+        self.lines = self.lines_by_id(self.channels[index].channel_id)
         self.index = 0
         self.scroll_top = 0
 
     def move_prev(self) -> None:
         if self.state != PageState.ENTRIES:
             return
-        index = max(0, self.last_channel_index - 1)
+        if self.last_channel_index == 0:
+            index = len(self.channels) - 1
+        else:
+            index = max(0, self.last_channel_index - 1)
         self.last_channel_index = index
-        self.lines = list(
-            map(Line, self.feeder.channel_feed(self.channels[index].channel_id))
-        )
+        self.lines = self.lines_by_id(self.channels[index].channel_id)
         self.index = 0
         self.scroll_top = 0
 
@@ -514,6 +516,11 @@ class Picker:
     def _status_index(self) -> str:
         num_fmt = f"%{len(str(len(self.lines)))}d"
         return "[%s/%s] " % ((num_fmt % (self.index + 1)), (num_fmt % len(self.lines)))
+
+    def lines_by_id(self, channel_id: str) -> List[Line]:
+        if channel_id == "feed":
+            return list(map(Line, self.feeder.feed()))
+        return list(map(Line, self.feeder.channel_feed(channel_id)))
 
 
 if __name__ == "__main__":
