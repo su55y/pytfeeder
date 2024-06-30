@@ -227,7 +227,11 @@ class Picker:
                     screen.clear()
                     match self.state:
                         case PageState.CHANNELS:
+                            if not self.filtered:
+                                exit(0)
                             self.move_left_channels()
+                            self.draw(screen)
+                            screen.refresh()
                         case PageState.ENTRIES:
                             self.move_left_entries()
                         case _:
@@ -391,10 +395,8 @@ class Picker:
             exit(0)
 
     def move_left_channels(self) -> None:
-        if not self.filtered:
-            exit(0)
         self.lines = list(map(Line, self.channels))
-        self.index = min(self.last_feed_index, len(self.lines) - 1)
+        self.index = max(0, self.last_feed_index)
         self.last_feed_index = -1
         self.scroll_top = 0
 
@@ -414,6 +416,8 @@ class Picker:
             return
         keyword = keyword.lower()
         self.lines = list(filter(lambda v: keyword in v.data.title.lower(), self.lines))
+        if self.state == PageState.CHANNELS:
+            self.last_feed_index = self.index
         self.index = 0
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
