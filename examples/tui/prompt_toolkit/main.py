@@ -394,16 +394,48 @@ class FeederPager:
                     self._title_fmt = ""
 
         @kb.add("g", "g")
-        @kb.add("K")
         @kb.add("home")
         def _go_top(_) -> None:
             self.selected_line = 0
 
         @kb.add("G")
-        @kb.add("J")
         @kb.add("end")
         def _go_bottom(_) -> None:
             self.selected_line = max(0, len(self.page_lines) - 1)
+
+        @kb.add("J")
+        def _go_next(_) -> None:
+            if not (self.state == PageState.ENTRIES and self._filter is None):
+                return
+            if self.last_index == len(self.channels) - 1:
+                index = 0
+            else:
+                index = min(len(self.channels) - 1, self.last_index + 1)
+            self.last_index = index
+            channel_id = self.channels[index].channel_id
+            if channel_id == "feed":
+                self.entries = self.feeder.feed()
+            else:
+                self.entries = self.feeder.channel_feed(channel_id)
+            self.selected_line = 0
+            self._title_fmt = self.channels[index].title
+
+        @kb.add("K")
+        def _go_prev(_) -> None:
+            if not (self.state == PageState.ENTRIES and self._filter is None):
+                return
+            if self.last_index == 0:
+                index = len(self.channels) - 1
+            else:
+                index = max(0, self.last_index - 1)
+            channel_id = self.channels[index].channel_id
+            if channel_id == "feed":
+                self.entries = self.feeder.feed()
+            else:
+                self.entries = self.feeder.channel_feed(channel_id)
+            self.last_index = index
+            self.selected_line = 0
+            self._title_fmt = self.channels[index].title
 
         @kb.add("q")
         def _exit(event) -> None:
