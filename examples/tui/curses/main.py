@@ -181,7 +181,7 @@ class Picker:
         self.gravity = Gravity.DOWN
         self.index = 0
         self.last_channel_index = -1
-        self.last_feed_index = -1
+        self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.new_mark = new_mark
@@ -351,23 +351,23 @@ class Picker:
 
     def move_next(self) -> None:
         if self.last_channel_index == len(self.channels) - 1:
-            index = 0
+            channel_index = 0
         else:
-            index = min(len(self.channels) - 1, self.last_channel_index + 1)
-        self.last_channel_index = index
-        self.last_feed_index = index
-        self.lines = self.lines_by_id(self.channels[index].channel_id)
+            channel_index = min(len(self.channels) - 1, self.last_channel_index + 1)
+        self.last_channel_index = channel_index
+        self.last_page_index = channel_index
+        self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
         self.index = 0
         self.scroll_top = 0
 
     def move_prev(self) -> None:
         if self.last_channel_index == 0:
-            index = len(self.channels) - 1
+            channel_index = len(self.channels) - 1
         else:
-            index = max(0, self.last_channel_index - 1)
-        self.last_channel_index = index
-        self.last_feed_index = index
-        self.lines = self.lines_by_id(self.channels[index].channel_id)
+            channel_index = max(0, self.last_channel_index - 1)
+        self.last_channel_index = channel_index
+        self.last_page_index = channel_index
+        self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
         self.index = 0
         self.scroll_top = 0
 
@@ -380,7 +380,7 @@ class Picker:
         if self.state == PageState.CHANNELS:
             self.state = PageState.ENTRIES
             if last_channel_index == -1:
-                self.last_feed_index = self.index
+                self.last_page_index = self.index
             self.lines = self.lines_by_id(self.selected_data.channel_id)
             self.last_channel_index = self.index
             self.index = 0
@@ -396,20 +396,20 @@ class Picker:
 
     def move_left_channels(self) -> None:
         self.lines = list(map(Line, self.channels))
-        self.index = max(0, self.last_feed_index)
-        self.last_feed_index = -1
+        self.index = max(0, self.last_page_index)
+        self.last_page_index = -1
         self.scroll_top = 0
 
     def move_left_entries(self) -> None:
         self.state = PageState.CHANNELS
         if not self.filtered:
             self.lines = list(map(Line, self.channels))
-            self.index = min(self.last_feed_index, len(self.lines) - 1)
-            self.last_feed_index = -1
+            self.index = min(self.last_page_index, len(self.lines) - 1)
+            self.last_page_index = -1
             self.scroll_top = 0
         else:
             self.move_right(self.last_channel_index)
-            self.last_channel_index = self.last_feed_index
+            self.last_channel_index = self.last_page_index
 
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
@@ -417,7 +417,7 @@ class Picker:
         keyword = keyword.lower()
         self.lines = list(filter(lambda v: keyword in v.data.title.lower(), self.lines))
         if self.state == PageState.CHANNELS:
-            self.last_feed_index = self.index
+            self.last_page_index = self.index
         self.index = 0
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
@@ -474,7 +474,7 @@ class Picker:
             for i in range(len(self.channels)):
                 self.channels[i].have_updates = False
         elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
-            if self.channels[self.last_feed_index].channel_id == "feed":
+            if self.channels[self.last_page_index].channel_id == "feed":
                 self.feeder.mark_as_viewed()
                 for i in range(len(self.channels)):
                     self.channels[i].have_updates = False
@@ -482,7 +482,7 @@ class Picker:
                     self.lines[i].data.is_viewed = True  # type: ignore
             else:
                 self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
-                self.channels[self.last_feed_index].have_updates = False
+                self.channels[self.last_page_index].have_updates = False
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = True  # type: ignore
 
@@ -503,8 +503,8 @@ class Picker:
 
     def _format_status(self) -> str:
         title = ""
-        if self.last_feed_index > -1 and len(self.channels) >= self.last_feed_index + 1:
-            title = "%s " % self.channels[self.last_feed_index].title
+        if self.last_page_index > -1 and len(self.channels) >= self.last_page_index + 1:
+            title = "%s " % self.channels[self.last_page_index].title
         if self.filtered:
             title = "%d found " % len(self.lines)
         return self.status_fmt.format(
