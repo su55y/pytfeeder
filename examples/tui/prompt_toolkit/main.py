@@ -265,6 +265,12 @@ class FeederPager:
             self.feeder.mark_as_viewed(id=self.selected_data.id)
             self.selected_data.is_viewed = True
 
+    def set_entries_by_id(self, channel_id: str) -> None:
+        if channel_id == "feed":
+            self.entries = self.feeder.feed()
+        else:
+            self.entries = self.feeder.channel_feed(channel_id)
+
     @property
     def page_lines(self) -> Lines:
         match self.state:
@@ -357,10 +363,7 @@ class FeederPager:
                         return
                     self.last_index = self.selected_line
                     channel = self.channels[self.selected_line]
-                    if channel.channel_id == "feed":
-                        self.entries = self.feeder.feed()
-                    else:
-                        self.entries = self.feeder.channel_feed(channel.channel_id)
+                    self.set_entries_by_id(channel.channel_id)
                     self.state = PageState.ENTRIES
                     self.selected_line = 0
                     self._title_fmt = channel.title
@@ -412,11 +415,7 @@ class FeederPager:
             else:
                 index = min(len(self.channels) - 1, self.last_index + 1)
             self.last_index = index
-            channel_id = self.channels[index].channel_id
-            if channel_id == "feed":
-                self.entries = self.feeder.feed()
-            else:
-                self.entries = self.feeder.channel_feed(channel_id)
+            self.set_entries_by_id(self.channels[index].channel_id)
             self.selected_line = 0
             self._title_fmt = self.channels[index].title
 
@@ -428,11 +427,7 @@ class FeederPager:
                 index = len(self.channels) - 1
             else:
                 index = max(0, self.last_index - 1)
-            channel_id = self.channels[index].channel_id
-            if channel_id == "feed":
-                self.entries = self.feeder.feed()
-            else:
-                self.entries = self.feeder.channel_feed(channel_id)
+            self.set_entries_by_id(self.channels[index].channel_id)
             self.last_index = index
             self.selected_line = 0
             self._title_fmt = self.channels[index].title
