@@ -357,6 +357,8 @@ class FeederPager:
         @kb.add("enter")
         @kb.add("right")
         def _choose_line(event: KeyPressEvent) -> None:
+            if len(self.page_lines) == 0:
+                return
             match self.state:
                 case PageState.CHANNELS:
                     if self.selected_line >= len(self.channels):

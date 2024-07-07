@@ -224,7 +224,8 @@ class Picker:
                         screen.clear()
                         self.move_right()
                 case Key.h | curses.KEY_LEFT:
-                    screen.clear()
+                    if len(self.lines) > 0:
+                        screen.clear()
                     match self.state:
                         case PageState.CHANNELS:
                             if not self.filtered:
