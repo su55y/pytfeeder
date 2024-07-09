@@ -68,20 +68,19 @@ HELP_KEYBINDINGS = [
 ]
 
 
-def format_keybindings() -> str:
+def format_keybindings() -> list[str]:
     max_keys_w = max(len(keys) for keys, _ in HELP_KEYBINDINGS)
     tab = " " * 4
-    return "\n".join(
-        f"{tab}{keys:<{max_keys_w}}{tab}{desc}" for keys, desc in HELP_KEYBINDINGS
-    )
+    return [f"{tab}{keys:<{max_keys_w}}{tab}{desc}" for keys, desc in HELP_KEYBINDINGS]
 
 
 def parse_args() -> argparse.Namespace:
     def format_epilog() -> str:
-        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{format_keybindings()}\n"
+        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{'\n'.join(format_keybindings())}\n"
 
     parser = argparse.ArgumentParser(
-        epilog=format_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter
+        epilog=format_epilog(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--channels-fmt",
