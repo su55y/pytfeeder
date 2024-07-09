@@ -24,19 +24,43 @@ DEFAULT_STATUS_FMT = " {index}{title}{keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
-    {new_mark} - new-mark if have updates, otherwise `' '*len(new_mark)`
-    {title}    - title of the channel
+    {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
+    {title}         - title of the channel
+
 entries-fmt keys:
     {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
     {channel_title} - title of the channel
 """
+HELP_KEYBINDINGS = [
+    ("h, Left", "Return to previous screen/Quit"),
+    ("j, Down, Tab, n", "Move to the next entry"),
+    ("k, Up, S-Tab, p", "Move to the previous entry"),
+    ("l, Right, Enter", "Open feed/entry"),
+    ("g, Home", "Move to the top of list"),
+    ("G, End", "Move to the bottom of list"),
+    ("J", "Move to the next feed"),
+    ("K", "Move to the prev feed"),
+    ("a", "Mark entry/feed viewed"),
+    ("A", "Mark all enties/feeds viewed"),
+    ("q", "Quit"),
+]
+
+
+def format_keybindings() -> str:
+    max_keys_w = max(len(keys) for keys, _ in HELP_KEYBINDINGS)
+    return "\n".join(
+        f"  {keys:<{max_keys_w}}\t{desc}" for keys, desc in HELP_KEYBINDINGS
+    )
 
 
 def parse_args() -> argparse.Namespace:
+    def format_epilog() -> str:
+        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{format_keybindings()}\n"
+
     parser = argparse.ArgumentParser(
-        epilog=OPTIONS_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter
+        epilog=format_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         "--channels-fmt",
