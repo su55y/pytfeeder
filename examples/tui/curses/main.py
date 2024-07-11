@@ -44,6 +44,7 @@ HELP_KEYBINDINGS = [
     ("K", "Move to the prev feed"),
     ("a", "Mark entry/feed viewed"),
     ("A", "Mark all enties/feeds viewed"),
+    ("c", "Clear screen"),
     ("q", "Quit"),
 ]
 
@@ -587,7 +588,7 @@ class Picker:
 
     @property
     def _status_keybinds(self) -> str:
-        keybinds_str = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit, [a]: mark viewed, [A]: mark viewed all"
+        keybinds_str = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
         if self.filtered:
             keybinds_str = f"[h]: cancel filter, {keybinds_str}"
         return keybinds_str
