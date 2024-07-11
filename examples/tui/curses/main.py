@@ -48,19 +48,19 @@ HELP_KEYBINDINGS = [
 ]
 
 
-def format_keybindings() -> str:
+def format_keybindings() -> list[str]:
     max_keys_w = max(len(keys) for keys, _ in HELP_KEYBINDINGS)
-    return "\n".join(
-        f"  {keys:<{max_keys_w}}\t{desc}" for keys, desc in HELP_KEYBINDINGS
-    )
+    tab = " " * 4
+    return [f"{tab}{keys:<{max_keys_w}}{tab}{desc}" for keys, desc in HELP_KEYBINDINGS]
 
 
 def parse_args() -> argparse.Namespace:
     def format_epilog() -> str:
-        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{format_keybindings()}\n"
+        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{'\n'.join(format_keybindings())}\n"
 
     parser = argparse.ArgumentParser(
-        epilog=format_epilog(), formatter_class=argparse.RawDescriptionHelpFormatter
+        epilog=format_epilog(),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--channels-fmt",
@@ -156,6 +156,7 @@ class Key(IntEnum):
     SLASH = ord("/")
     ESC = 27
     RETURN = ord("\n")
+    QUESTION_MARK = ord("?")
 
 
 class Gravity(Enum):
@@ -204,6 +205,7 @@ class Picker:
         self.filtered = False
         self.gravity = Gravity.DOWN
         self.index = 0
+        self.is_pad_active = False
         self.last_channel_index = -1
         self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
@@ -213,6 +215,7 @@ class Picker:
         self.selected_data = None
         self.state = PageState.CHANNELS
         self._g_pressed = False
+        self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -285,6 +288,8 @@ class Picker:
                     if self.state == PageState.ENTRIES and not self.filtered:
                         self.move_prev()
                         screen.clear()
+                case Key.QUESTION_MARK:
+                    self.switch_to_pad(screen)
                 case Key.c:
                     screen.clear()
                 case Key.q:
@@ -357,6 +362,50 @@ class Picker:
     def update_active(self) -> None:
         for i in range(len(self.lines)):
             self.lines[i].is_active = i == self.index
+
+    def switch_to_pad(self, screen: "curses._CursesWindow") -> None:
+        screen.clear()
+        max_y, max_x = screen.getmaxyx()
+        pad_pos = 0
+        pad = curses.newpad(len(self.help_lines) + 1, max_x)
+
+        def draw_pad():
+            for i, line in enumerate(self.help_lines):
+                text = f"{line}"
+                pad.addnstr(i, 0, text, min(len(text), max_x), curses.color_pair(2))
+            pad.addnstr(len(self.help_lines), 0, "~", 1, curses.color_pair(2))
+
+        draw_pad()
+        pad.refresh(pad_pos, 0, 0, 0, max_y - 2, max_x - 1)
+        screen.refresh()
+
+        while True:
+            max_y, max_x = screen.getmaxyx()
+            pad.refresh(pad_pos, 0, 0, 0, max_y - 2, max_x - 1)
+            try:
+                screen.addnstr(
+                    max_y - 1,
+                    0,
+                    f"{self.status:<{max_x}}",
+                    max_x,
+                    curses.color_pair(Color.ACTIVE),
+                )
+            except:
+                pass
+
+            match screen.getch():
+                case Key.h | curses.KEY_LEFT | Key.q:
+                    screen.clear()
+                    self.gravity = Gravity.DOWN
+                    break
+                case Key.j | curses.KEY_DOWN:
+                    pad_pos = min(pad_pos + 1, pad.getyx()[0] - (max_y - 1))
+                case Key.k | curses.KEY_UP:
+                    pad_pos = max(0, pad_pos - 1)
+                case Key.g | curses.KEY_HOME:
+                    pad_pos = 0
+                case Key.G | curses.KEY_END:
+                    pad_pos = (len(self.help_lines) + 1) - max_y
 
     def move_up(self) -> None:
         self.gravity = Gravity.UP
