@@ -38,12 +38,14 @@ HELP_KEYBINDINGS = [
     ("j, Down, Tab, n", "Move to the next entry"),
     ("k, Up, S-Tab, p", "Move to the previous entry"),
     ("l, Right, Enter", "Open feed/entry"),
-    ("g, Home", "Move to the top of list"),
+    ("gg, Home", "Move to the top of list"),
     ("G, End", "Move to the bottom of list"),
     ("J", "Move to the next feed"),
     ("K", "Move to the prev feed"),
     ("a", "Mark entry/feed viewed"),
     ("A", "Mark all enties/feeds viewed"),
+    ("/", "Open filter"),
+    ("h", "Cancel filter"),
     ("c", "Clear screen"),
     ("q", "Quit"),
 ]
@@ -520,13 +522,13 @@ class Picker:
                 screen.refresh()
                 max_y, max_x = screen.getmaxyx()
                 if ch == 10:
+                    screen.clear()
                     if not keyword:
                         return
-                    screen.clear()
                     self.filter_lines(keyword)
                     return
                 if ch in (Key.SLASH, Key.ESC):
-                    screen.refresh()
+                    screen.clear()
                     return
                 if ch == curses.KEY_BACKSPACE:
                     if not len(keyword):
