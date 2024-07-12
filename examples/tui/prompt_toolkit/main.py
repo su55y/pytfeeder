@@ -196,8 +196,11 @@ class FeederPager:
             self.channels = [feed_channel, *self.feeder.channels]
 
         self.entries: List[Entry] = []
+        self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
+        self.is_help_opened = False
         self.state = PageState.CHANNELS
         self.selected_line = 0
+        self.help_index = 0
         self.last_index = -1
 
         self.channels_fmt = channels_fmt
@@ -234,6 +237,7 @@ class FeederPager:
             ),
             style="class:select-box",
             cursorline=True,
+            z_index=1,
         )
 
         def command_line_handler(buf: Buffer) -> bool:
@@ -250,8 +254,25 @@ class FeederPager:
         self.command_buffer = Buffer(
             multiline=False, accept_handler=command_line_handler
         )
+
+        self.help_window = Window(
+            always_hide_cursor=True,
+            content=FormattedTextControl(
+                text=self._get_formatted_help_text,
+                focusable=True,
+                key_bindings=self._get_help_bindings(),
+            ),
+            height=0,
+            style="class:entry",
+            z_index=0,
+        )
         self.container = HSplit(
-            [self.main_window, self.toolbar_window, CommandLine(self)]
+            [
+                self.main_window,
+                self.help_window,
+                self.toolbar_window,
+                CommandLine(self),
+            ]
         )
 
     def mark_viewed_all(self) -> None:
@@ -332,6 +353,16 @@ class FeederPager:
 
         return merge_formatted_text(result)
 
+    def _get_formatted_help_text(self) -> AnyFormattedText:
+        result = []
+        for i, line in enumerate(self.help_lines):
+            if i == self.help_index:
+                result.append([("[SetCursorPosition]", "")])
+            result.append([(f"class:{self.classnames[0]}", line)])
+            result.append("\n")
+
+        return merge_formatted_text(result)
+
     def _get_toolbar_text(self) -> str:
         return self._status_fmt.format(
             index=self._index_fmt, title=self._title_fmt, keybinds=self._keybinds_fmt
@@ -359,6 +390,39 @@ class FeederPager:
             new_mark=self.new_marks[channel.have_updates], title=channel.title
         )
         return [(f"class:{self.classnames[channel.have_updates]}", line)]
+
+    def _get_help_bindings(self) -> KeyBindings:
+        kb = KeyBindings()
+
+        @kb.add("k")
+        @kb.add("up")
+        @kb.add("p")
+        @kb.add("s-tab")
+        def _go_up(_) -> None:
+            if len(self.help_lines) > 1:
+                self.help_index = (self.help_index - 1) % len(self.help_lines)
+
+        @kb.add("j")
+        @kb.add("down")
+        @kb.add("n")
+        @kb.add("tab")
+        def _go_down(_) -> None:
+            if len(self.help_lines) > 1:
+                self.help_index = (self.help_index + 1) % len(self.help_lines)
+
+        @kb.add("b")
+        @kb.add("h")
+        @kb.add("left")
+        @kb.add("q")
+        @kb.add("?")
+        def _back(event: KeyPressEvent) -> None:
+            self.is_help_opened = False
+            self.help_window.height = 0
+            self.main_window.height = self.container.height
+            event.app.layout.reset()
+            event.app.layout.focus(self.main_window)
+
+        return kb
 
     def _get_key_bindings(self) -> KeyBindings:
         kb = KeyBindings()
@@ -406,6 +470,10 @@ class FeederPager:
         @kb.add("h")
         @kb.add("left")
         def _back(event) -> None:
+            if self.is_help_opened:
+                self.is_help_opened = False
+                return
+
             if self._filter:
                 self._filter = None
                 self._keybinds_fmt = DEFAULT_KEYBINDS
@@ -477,6 +545,19 @@ class FeederPager:
         @kb.add("A")
         def _mark_viewed_all(_) -> None:
             self.mark_viewed_all()
+
+        @kb.add("?")
+        def _open_help(event: KeyPressEvent) -> None:
+            if not self.is_help_opened:
+                self.is_help_opened = True
+                event.app.layout.reset()
+                self.main_window.height = 0
+                self.help_window.reset()
+                self.help_window.height = self.container.height
+                event.app.layout.focus(self.help_window)
+            else:
+                self.is_help_opened = False
+                event.app.layout.focus(self.main_window)
 
         return kb
 
