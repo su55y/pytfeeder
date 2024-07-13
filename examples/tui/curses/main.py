@@ -209,6 +209,7 @@ class Picker:
         self.gravity = Gravity.DOWN
         self.index = 0
         self.is_pad_active = False
+        self.keybinds_str = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
         self.last_channel_index = -1
         self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
@@ -371,6 +372,7 @@ class Picker:
         max_y, max_x = screen.getmaxyx()
         pad_pos = 0
         pad = curses.newpad(len(self.help_lines) + 1, max_x)
+        help_status = " [j,Down,k,Up]: navigate, [h,q,Left]: close help"
 
         def draw_pad():
             for i, line in enumerate(self.help_lines):
@@ -389,7 +391,7 @@ class Picker:
                 screen.addnstr(
                     max_y - 1,
                     0,
-                    f"{self.status:<{max_x}}",
+                    f"{help_status:<{max_x}}",
                     max_x,
                     curses.color_pair(Color.ACTIVE),
                 )
@@ -590,7 +592,7 @@ class Picker:
 
     @property
     def _status_keybinds(self) -> str:
-        keybinds_str = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
+        keybinds_str = self.keybinds_str
         if self.filtered:
             keybinds_str = f"[h]: cancel filter, {keybinds_str}"
         return keybinds_str
@@ -598,7 +600,10 @@ class Picker:
     @property
     def _status_index(self) -> str:
         num_fmt = f"%{len(str(len(self.lines)))}d"
-        return "[%s/%s] " % ((num_fmt % (self.index + 1)), (num_fmt % len(self.lines)))
+        index = self.index + 1
+        if self.filtered and len(self.lines) == 0:
+            index = 0
+        return "[%s/%s] " % ((num_fmt % index), (num_fmt % len(self.lines)))
 
     def lines_by_id(self, channel_id: str) -> List[Line]:
         if channel_id == "feed":
