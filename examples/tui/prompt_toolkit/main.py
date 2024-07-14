@@ -371,9 +371,12 @@ class FeederPager:
 
     @property
     def _index_fmt(self) -> str:
+        index = self.selected_line + 1
+        if len(self.page_lines) == 0:
+            index = 0
         num_fmt = f"%{len(str(len(self.page_lines)))}d"
         return "[%s/%s]" % (
-            (num_fmt % (self.selected_line + 1)),
+            (num_fmt % index),
             (num_fmt % len(self.page_lines)),
         )
 
