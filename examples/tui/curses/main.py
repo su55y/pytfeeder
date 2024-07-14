@@ -372,7 +372,7 @@ class Picker:
         max_y, max_x = screen.getmaxyx()
         pad_pos = 0
         pad = curses.newpad(len(self.help_lines) + 1, max_x)
-        help_status = " [j,Down,k,Up]: navigate, [h,q,Left]: close help"
+        help_status = " Help [j,Down,k,Up]: navigate, [h,q,Left]: close help"
 
         def draw_pad():
             for i, line in enumerate(self.help_lines):
