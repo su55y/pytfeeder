@@ -37,7 +37,7 @@ UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
-DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [gg,K]: top, [G,J]: bottom, [q]: quit, [a]: mark viewed, [A]: mark viewed all"
+DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 DEFAULT_STATUS_FMT = "{index} {title} {keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
@@ -215,6 +215,7 @@ class FeederPager:
         self._filter: Optional[str] = None
 
         self._status_fmt = status_fmt
+        self._default_keybinds_fmt = DEFAULT_KEYBINDS
         self._keybinds_fmt = DEFAULT_KEYBINDS
         self._title_fmt = ""
 
@@ -365,12 +366,22 @@ class FeederPager:
         return merge_formatted_text(result)
 
     def _get_toolbar_text(self) -> str:
-        return self._status_fmt.format(
-            index=self._index_fmt, title=self._title_fmt, keybinds=self._keybinds_fmt
+        if self.is_help_opened:
+            self._title_fmt = "Help"
+            self._keybinds_fmt = "[j,Down,k,Up]: navigate, [h,q,Left]: close help"
+        return " ".join(
+            self._status_fmt.format(
+                index=self._index_fmt,
+                title=self._title_fmt,
+                keybinds=self._keybinds_fmt,
+            ).split()
         )
 
     @property
     def _index_fmt(self) -> str:
+        if self.is_help_opened:
+            return ""
+
         index = self.selected_line + 1
         if len(self.page_lines) == 0:
             index = 0
@@ -425,6 +436,8 @@ class FeederPager:
             self.main_window.height = self.container.height
             event.app.layout.reset()
             event.app.layout.focus(self.main_window)
+            self._keybinds_fmt = self._default_keybinds_fmt
+            self._title_fmt = ""
 
         return kb
 
