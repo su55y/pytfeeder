@@ -155,6 +155,8 @@ class Key(IntEnum):
     p = ord("p")
     n = ord("n")
     c = ord("c")
+    r = ord("r")
+    R = ord("R")
     TAB = 9
     SLASH = ord("/")
     ESC = 27
@@ -191,15 +193,8 @@ class Picker:
     ) -> None:
         self.feeder = feeder
 
-        if hide_feed:
-            self.channels = self.feeder.channels
-        else:
-            feed_channel = Channel(
-                title="Feed",
-                channel_id="feed",
-                have_updates=bool(self.feeder.unviewed_count()),
-            )
-            self.channels = [feed_channel, *self.feeder.channels]
+        self.hide_feed = hide_feed
+        self._set_channels()
 
         self.channels_fmt = channels_fmt
         self.entries_fmt = entries_fmt
@@ -220,6 +215,21 @@ class Picker:
         self.state = PageState.CHANNELS
         self._g_pressed = False
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
+        self._status_msg = ""
+
+    def _set_channels(self, channels: List[Channel] = list()) -> None:
+        if channels:
+            self.feeder.channels = channels
+
+        if self.hide_feed:
+            self.channels = self.feeder.channels
+        else:
+            feed_channel = Channel(
+                title="Feed",
+                channel_id="feed",
+                have_updates=bool(self.feeder.unviewed_count()),
+            )
+            self.channels = [feed_channel, *self.feeder.channels]
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -243,6 +253,7 @@ class Picker:
     def run_loop(self, screen: "curses._CursesWindow") -> None:
         while True:
             self.draw(screen)
+            self._status_msg = ""
             match screen.getch():
                 case Key.j | curses.KEY_DOWN | Key.TAB | Key.n:
                     if len(self.lines) > 0:
@@ -270,6 +281,9 @@ class Picker:
                             continue
                     if self.filtered:
                         self.filtered = False
+                case Key.r:
+                    self._status_msg = "updating..."
+                    self.reload()
                 case curses.KEY_HOME:
                     self.move_top()
                 case Key.g:
@@ -490,6 +504,33 @@ class Picker:
             self.move_right(self.last_channel_index)
             self.last_channel_index = self.last_page_index
 
+    def reload(self) -> None:
+        after = 0
+        if self.state == PageState.ENTRIES:
+            before = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
+        else:
+            before = self.feeder.unviewed_count()
+
+        try:
+            asyncio.run(self.feeder.sync_entries())
+        except:
+            self._status_msg = "reload failed;"
+        if self.state == PageState.CHANNELS:
+            self._set_channels(self.feeder.update_channels())
+            self.lines = list(map(Line, self.channels))
+            after = self.feeder.unviewed_count()
+        elif self.state == PageState.ENTRIES:
+            after = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
+            self.index = 0
+            self.lines = self.lines_by_id(
+                channel_id=self.channels[self.last_channel_index].channel_id
+            )
+        new = after - before
+        if max(new, 0) > 0:
+            self._status_msg = f"{new} new updates;"
+        else:
+            self._status_msg = "no updates;"
+
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
             return
@@ -586,9 +627,12 @@ class Picker:
             title = "%s " % self.channels[self.last_page_index].title
         if self.filtered:
             title = "%d found " % len(self.lines)
-        return self.status_fmt.format(
+        status = self.status_fmt.format(
             index=self._status_index, title=title, keybinds=self._status_keybinds
         )
+        if self._status_msg:
+            return f" {self._status_msg};{status}"
+        return status
 
     @property
     def _status_keybinds(self) -> str:
