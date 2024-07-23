@@ -514,22 +514,25 @@ class Picker:
         try:
             asyncio.run(self.feeder.sync_entries())
         except:
-            self._status_msg = "reload failed;"
+            self._status_msg = "reload failed"
+            return
+
+        self._set_channels(self.feeder.update_channels())
         if self.state == PageState.CHANNELS:
-            self._set_channels(self.feeder.update_channels())
             self.lines = list(map(Line, self.channels))
             after = self.feeder.unviewed_count()
         elif self.state == PageState.ENTRIES:
-            after = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
             self.index = 0
             self.lines = self.lines_by_id(
                 channel_id=self.channels[self.last_channel_index].channel_id
             )
+            after = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
+
         new = after - before
         if max(new, 0) > 0:
-            self._status_msg = f"{new} new updates;"
+            self._status_msg = f"{new} new updates"
         else:
-            self._status_msg = "no updates;"
+            self._status_msg = "no updates"
 
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
