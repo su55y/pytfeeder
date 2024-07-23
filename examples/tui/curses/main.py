@@ -98,6 +98,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
     )
+    parser.add_argument(
+        "-U", "--no-update", action="store_false", help="Disable update on startup"
+    )
     return parser.parse_args()
 
 
@@ -190,6 +193,7 @@ class Picker:
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
+        **_,
     ) -> None:
         self.feeder = feeder
 
@@ -668,7 +672,7 @@ if __name__ == "__main__":
     args = parse_args()
     feeder = Feeder(config, Storage(config.storage_path))
 
-    if is_update_interval_expired():
+    if args.no_update and is_update_interval_expired():
         print("updating...")
         try:
             asyncio.run(feeder.sync_entries())
