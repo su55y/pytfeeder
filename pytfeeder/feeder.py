@@ -27,6 +27,13 @@ class Feeder:
             )
         return self.config.channels
 
+    def update_channels(self) -> List[Channel]:
+        for i in range(len(self.config.channels)):
+            self.config.channels[i].have_updates = bool(
+                self.stor.select_unviewed(self.config.channels[i].channel_id)
+            )
+        return self.config.channels
+
     @lru_cache
     def channel(self, channel_id: str) -> Optional[Channel]:
         return self.__channels_map.get(channel_id)
