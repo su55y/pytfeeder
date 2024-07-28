@@ -190,15 +190,8 @@ class FeederPager:
     ) -> None:
         self.feeder = feeder
 
-        if hide_feed:
-            self.channels = self.feeder.channels
-        else:
-            feed_channel = Channel(
-                title="Feed",
-                channel_id="feed",
-                have_updates=bool(self.feeder.unviewed_count()),
-            )
-            self.channels = [feed_channel, *self.feeder.channels]
+        self.hide_feed = hide_feed
+        self._set_channels()
 
         self.entries: List[Entry] = []
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
@@ -280,6 +273,20 @@ class FeederPager:
                 CommandLine(self),
             ]
         )
+
+    def _set_channels(self, channels: List[Channel] = list()) -> None:
+        if channels:
+            self.feeder.channels = channels
+
+        if self.hide_feed:
+            self.channels = self.feeder.channels
+        else:
+            feed_channel = Channel(
+                title="Feed",
+                channel_id="feed",
+                have_updates=bool(self.feeder.unviewed_count()),
+            )
+            self.channels = [feed_channel, *self.feeder.channels]
 
     def mark_viewed_all(self) -> None:
         self.selected_data = self.page_lines[self.selected_line]
