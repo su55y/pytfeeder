@@ -38,7 +38,7 @@ DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
-DEFAULT_STATUS_FMT = "{index} {title} {keybinds}"
+DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
@@ -212,6 +212,7 @@ class FeederPager:
         self._filter: Optional[str] = None
 
         self._status_fmt = status_fmt
+        self._status_msg = ""
         self._default_keybinds_fmt = DEFAULT_KEYBINDS
         self._keybinds_fmt = DEFAULT_KEYBINDS
         self._title_fmt = ""
@@ -382,6 +383,7 @@ class FeederPager:
             self._keybinds_fmt = "[j,Down,k,Up]: navigate, [h,q,Left]: close help"
         return " ".join(
             self._status_fmt.format(
+                msg=self._status_msg,
                 index=self._index_fmt,
                 title=self._title_fmt,
                 keybinds=self._keybinds_fmt,
@@ -586,6 +588,42 @@ class FeederPager:
             else:
                 self.is_help_opened = False
                 event.app.layout.focus(self.main_window)
+
+        @kb.add("r")
+        async def _reload(event: KeyPressEvent) -> None:
+            # event.app.reset()
+            after = 0
+            before = 0
+            channel_id = ""
+            if self.state == PageState.ENTRIES:
+                channel_id = self.channels[self.last_index].channel_id
+                if channel_id != "feed":
+                    before = self.feeder.unviewed_count(channel_id)
+                else:
+                    before = self.feeder.unviewed_count()
+
+            try:
+                await self.feeder.sync_entries()
+            except:
+                self._status_msg = "reload failed; "
+                return
+
+            self._set_channels(self.feeder.update_channels())
+            if self.state == PageState.CHANNELS:
+                after = self.feeder.unviewed_count()
+            elif self.state == PageState.ENTRIES:
+                self.selected_line = 0
+                self.set_entries_by_id(channel_id)
+                if channel_id == "feed":
+                    after = self.feeder.unviewed_count()
+                else:
+                    after = self.feeder.unviewed_count(channel_id)
+
+            new = after - before
+            if max(new, 0) > 0:
+                self._status_msg = f"{new} new updates; "
+            else:
+                self._status_msg = "no updates; "
 
         return kb
 
