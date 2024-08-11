@@ -77,7 +77,8 @@ def format_keybindings() -> list[str]:
 
 def parse_args() -> argparse.Namespace:
     def format_epilog() -> str:
-        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{'\n'.join(format_keybindings())}\n"
+        keybinds_str = "\n".join(format_keybindings())
+        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{keybinds_str}\n"
 
     parser = argparse.ArgumentParser(
         epilog=format_epilog(),
