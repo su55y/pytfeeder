@@ -62,6 +62,7 @@ HELP_KEYBINDINGS = [
     ("K", "Move to the prev feed"),
     ("a", "Mark entry/feed viewed"),
     ("A", "Mark all enties/feeds viewed"),
+    ("r", "Reload/sync feeds"),
     ("/", "Open filter"),
     ("h", "Cancel filter"),
     ("c", "Clear screen"),
