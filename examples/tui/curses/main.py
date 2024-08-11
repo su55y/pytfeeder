@@ -160,7 +160,6 @@ class Key(IntEnum):
     n = ord("n")
     c = ord("c")
     r = ord("r")
-    R = ord("R")
     TAB = 9
     SLASH = ord("/")
     ESC = 27
