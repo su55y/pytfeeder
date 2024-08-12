@@ -4,6 +4,7 @@ import datetime as dt
 from enum import Enum, auto
 import os.path
 import subprocess as sp
+import time
 from typing import List, Optional, Tuple, Union
 
 from prompt_toolkit.filters import has_focus
@@ -215,6 +216,7 @@ class FeederPager:
 
         self._status_fmt = status_fmt
         self._status_msg = ""
+        self._status_msg_time = 0
         self._default_keybinds_fmt = DEFAULT_KEYBINDS
         self._keybinds_fmt = DEFAULT_KEYBINDS
         self._title_fmt = ""
@@ -381,8 +383,17 @@ class FeederPager:
 
     def _get_toolbar_text(self) -> str:
         if self.is_help_opened:
+            self._status_msg = ""
             self._title_fmt = "Help"
             self._keybinds_fmt = "[j,Down,k,Up]: navigate, [h,q,Left]: close help"
+
+        if (
+            len(self._status_msg) > 0
+            and (time.perf_counter() - self._status_msg_time) > 3
+        ):
+            self._status_msg = ""
+            self._status_msg_time = 0
+
         return " ".join(
             self._status_fmt.format(
                 msg=self._status_msg,
@@ -593,10 +604,11 @@ class FeederPager:
 
         @kb.add("r")
         async def _reload(event: KeyPressEvent) -> None:
-            # event.app.reset()
             after = 0
             before = 0
             channel_id = ""
+            self._status_msg = "reloading...; "
+            event.app._redraw()
             if self.state == PageState.ENTRIES:
                 channel_id = self.channels[self.last_index].channel_id
                 if channel_id != "feed":
@@ -626,6 +638,7 @@ class FeederPager:
                 self._status_msg = f"{new} new updates; "
             else:
                 self._status_msg = "no updates; "
+            self._status_msg_time = time.perf_counter()
 
         return kb
 
