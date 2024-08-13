@@ -647,7 +647,8 @@ class FeederPager:
 
 
 if __name__ == "__main__":
-    config = Config(default_config_path())
+    config_path = default_config_path()
+    config = Config(config_path)
     if not config:
         exit(1)
     if not config.storage_path.parent.exists():
@@ -655,7 +656,10 @@ if __name__ == "__main__":
 
     args = parse_args()
     feeder = Feeder(config, Storage(config.storage_path))
-    pager = FeederPager(feeder, **dict(vars(args)))
+
+    if len(feeder.channels) == 0:
+        print(f"No channels found in config {config_path}")
+        exit(0)
 
     if args.no_update and is_update_interval_expired():
         print("updating...")
@@ -663,6 +667,8 @@ if __name__ == "__main__":
             asyncio.run(feeder.sync_entries())
         except Exception as e:
             print("Update failed: %s" % e)
+
+    pager = FeederPager(feeder, **dict(vars(args)))
 
     kb = KeyBindings()
 

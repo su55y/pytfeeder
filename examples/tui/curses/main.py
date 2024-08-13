@@ -664,6 +664,7 @@ class Picker:
 
 
 if __name__ == "__main__":
+    config_path = default_config_path()
     config = Config(default_config_path())
     if not config:
         exit(1)
@@ -672,6 +673,10 @@ if __name__ == "__main__":
 
     args = parse_args()
     feeder = Feeder(config, Storage(config.storage_path))
+
+    if len(feeder.channels) == 0:
+        print(f"No channels found in config {config_path}")
+        exit(0)
 
     if args.no_update and is_update_interval_expired():
         print("updating...")
