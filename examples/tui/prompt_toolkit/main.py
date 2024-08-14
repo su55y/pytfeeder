@@ -93,6 +93,13 @@ def parse_args() -> argparse.Namespace:
         help="channels format (default: %(default)r)",
     )
     parser.add_argument(
+        "-c",
+        "--config",
+        metavar="PATH",
+        default=default_config_path(),
+        help="config path (default: %(default)s)",
+    )
+    parser.add_argument(
         "--entries-fmt",
         default=DEFAULT_ENTRIES_FMT,
         metavar="STR",
@@ -647,14 +654,14 @@ class FeederPager:
 
 
 if __name__ == "__main__":
-    config_path = default_config_path()
+    args = parse_args()
+    config_path = args.config
     config = Config(config_path)
     if not config:
         exit(1)
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
 
-    args = parse_args()
     feeder = Feeder(config, Storage(config.storage_path))
 
     if len(feeder.channels) == 0:
