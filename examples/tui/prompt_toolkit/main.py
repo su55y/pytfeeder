@@ -174,7 +174,7 @@ Lines = Union[List[Channel], List[Entry]]
 
 
 class CommandLine(ConditionalContainer):
-    def __init__(self, pager: "FeederPager"):
+    def __init__(self, pager: "App"):
         super(CommandLine, self).__init__(
             Window(
                 BufferControl(
@@ -186,7 +186,7 @@ class CommandLine(ConditionalContainer):
         )
 
 
-class FeederPager:
+class App:
     def __init__(
         self,
         feeder: Feeder,
@@ -676,7 +676,7 @@ if __name__ == "__main__":
         except Exception as e:
             print("Update failed: %s" % e)
 
-    pager = FeederPager(feeder, **dict(vars(args)))
+    pager = App(feeder, **dict(vars(args)))
 
     kb = KeyBindings()
 

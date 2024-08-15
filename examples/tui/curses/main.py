@@ -191,7 +191,7 @@ class PageState(Enum):
     ENTRIES = auto()
 
 
-class Picker:
+class App:
     def __init__(
         self,
         feeder: Feeder,
@@ -694,7 +694,7 @@ if __name__ == "__main__":
             print("Update failed: %s" % e)
 
     try:
-        _ = Picker(feeder, **dict(vars(args))).start()
+        _ = App(feeder, **dict(vars(args))).start()
     except Exception as e:
         print(e)
         exit(1)
