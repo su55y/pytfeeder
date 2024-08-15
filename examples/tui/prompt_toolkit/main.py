@@ -201,6 +201,7 @@ class FeederPager:
         self.feeder = feeder
 
         self.hide_feed = hide_feed
+        self.channels = list()
         self._set_channels()
 
         self.entries: List[Entry] = []

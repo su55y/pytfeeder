@@ -206,6 +206,7 @@ class Picker:
         self.feeder = feeder
 
         self.hide_feed = hide_feed
+        self.channels = list()
         self._set_channels()
 
         self.channels_fmt = channels_fmt
