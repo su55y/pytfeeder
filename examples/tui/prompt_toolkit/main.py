@@ -306,6 +306,7 @@ class App:
         if self.state == PageState.CHANNELS:
             if not isinstance(self.selected_data, Channel):
                 return
+            self.feeder.mark_as_viewed()
             for i in range(len(self.channels)):
                 self.channels[i].have_updates = False
         elif self.state == PageState.ENTRIES:
