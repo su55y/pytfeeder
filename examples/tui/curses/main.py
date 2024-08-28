@@ -607,8 +607,7 @@ class App:
 
         if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
             self.feeder.mark_as_viewed()
-            for i in range(len(self.channels)):
-                self.channels[i].have_updates = False
+            self._set_channels(self.feeder.update_channels())
         elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
             if self.channels[self.last_page_index].channel_id == "feed":
                 self.feeder.mark_as_viewed()
