@@ -303,14 +303,10 @@ class App:
 
     def mark_viewed_all(self) -> None:
         self.selected_data = self.page_lines[self.selected_line]
-        if self.state == PageState.CHANNELS:
-            if not isinstance(self.selected_data, Channel):
-                return
+        if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
             self.feeder.mark_as_viewed()
             self._set_channels(self.feeder.update_channels())
-        elif self.state == PageState.ENTRIES:
-            if not isinstance(self.selected_data, Entry):
-                return
+        elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
             if self.channels[self.last_index].channel_id == "feed":
                 self.feeder.mark_as_viewed()
                 for i in range(len(self.channels)):
