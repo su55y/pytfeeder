@@ -609,7 +609,7 @@ class App:
         @kb.add("r")
         async def _reload(event: KeyPressEvent) -> None:
             after = 0
-            before = 0
+            before = self.feeder.unviewed_count()
             channel_id = ""
             self._status_msg = "reloading...; "
             event.app._redraw()
@@ -617,8 +617,6 @@ class App:
                 channel_id = self.channels[self.last_index].channel_id
                 if channel_id != "feed":
                     before = self.feeder.unviewed_count(channel_id)
-                else:
-                    before = self.feeder.unviewed_count()
 
             try:
                 await self.feeder.sync_entries()
@@ -627,14 +625,11 @@ class App:
                 return
 
             self._set_channels(self.feeder.update_channels())
-            if self.state == PageState.CHANNELS:
-                after = self.feeder.unviewed_count()
-            elif self.state == PageState.ENTRIES:
+            after = self.feeder.unviewed_count()
+            if self.state == PageState.ENTRIES:
                 self.selected_line = 0
                 self.set_entries_by_id(channel_id)
-                if channel_id == "feed":
-                    after = self.feeder.unviewed_count()
-                else:
+                if channel_id != "feed":
                     after = self.feeder.unviewed_count(channel_id)
 
             new = after - before
