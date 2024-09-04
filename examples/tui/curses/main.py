@@ -519,10 +519,9 @@ class App:
 
     def reload(self) -> None:
         after = 0
-        if self.state == PageState.ENTRIES:
+        before = self.feeder.unviewed_count()
+        if self.state == PageState.ENTRIES and self.selected_data.channel_id != "feed":  # type: ignore
             before = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
-        else:
-            before = self.feeder.unviewed_count()
 
         try:
             asyncio.run(self.feeder.sync_entries())
@@ -539,7 +538,10 @@ class App:
             self.lines = self.lines_by_id(
                 channel_id=self.channels[self.last_channel_index].channel_id
             )
-            after = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
+            if self.selected_data.channel_id == "feed":  # type: ignore
+                after = self.feeder.unviewed_count()
+            else:
+                after = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
 
         new = after - before
         if max(new, 0) > 0:
