@@ -165,6 +165,45 @@ def play_video(id: str) -> None:
     )
 
 
+def notify(msg: str) -> bool:
+    if not msg:
+        return True
+    cmd = ["notify-send", "-a", "pytfeeder", msg]
+    p = sp.run(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+    if p.returncode != 0:
+        return False
+    return True
+
+
+def download_video(id: str) -> Optional[str]:
+    p = sp.check_output(
+        [
+            "tsp",
+            "yt-dlp",
+            f"https://youtu.be/{id}",
+            "-o",
+            "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
+        ],
+        shell=False,
+    )
+
+    _ = notify(f"⬇️Start downloading {id!r}...")
+
+    _ = sp.run(
+        [
+            "tsp",
+            "-D",
+            p.decode(),
+            "notify-send",
+            "-a",
+            "pytfeeder",
+            "✅Download done: {id}",
+        ],
+        stdout=sp.DEVNULL,
+        stderr=sp.DEVNULL,
+    )
+
+
 class PageState(Enum):
     CHANNELS = auto()
     ENTRIES = auto()
@@ -592,6 +631,18 @@ class App:
         @kb.add("A")
         def _mark_viewed_all(_) -> None:
             self.mark_viewed_all()
+
+        @kb.add("d")
+        def _download(_) -> None:
+            if self.state != PageState.ENTRIES:
+                return
+            if len(self.page_lines) == 0:
+                return
+
+            self.selected_data = self.page_lines[self.selected_line]
+            if not isinstance(self.selected_data, Entry):
+                return
+            download_video(self.selected_data.id)
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
