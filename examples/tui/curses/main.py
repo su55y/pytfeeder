@@ -6,7 +6,7 @@ import datetime as dt
 from enum import Enum, IntEnum, auto
 import os.path
 import subprocess as sp
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
@@ -127,6 +127,45 @@ def play_video(id: str) -> None:
     )
 
 
+def notify(msg: str) -> bool:
+    if not msg:
+        return True
+    cmd = ["notify-send", "-a", "pytfeeder", msg]
+    p = sp.run(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+    if p.returncode != 0:
+        return False
+    return True
+
+
+def download_video(id: str) -> Optional[str]:
+    p = sp.check_output(
+        [
+            "tsp",
+            "yt-dlp",
+            f"https://youtu.be/{id}",
+            "-o",
+            "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
+        ],
+        shell=False,
+    )
+
+    _ = notify(f"⬇️Start downloading {id!r}...")
+
+    _ = sp.run(
+        [
+            "tsp",
+            "-D",
+            p.decode(),
+            "notify-send",
+            "-a",
+            "pytfeeder",
+            "✅Download done: {id}",
+        ],
+        stdout=sp.DEVNULL,
+        stderr=sp.DEVNULL,
+    )
+
+
 def is_update_interval_expired() -> bool:
     def update_lock_file():
         with open(LOCK_FILE, "w") as f:
@@ -168,6 +207,7 @@ class Key(IntEnum):
     n = ord("n")
     c = ord("c")
     r = ord("r")
+    d = ord("d")
     TAB = 9
     SLASH = ord("/")
     ESC = 27
@@ -321,6 +361,20 @@ class App:
                         screen.clear()
                 case Key.QUESTION_MARK:
                     self.switch_to_pad(screen)
+                case Key.d:
+                    if self.state != PageState.ENTRIES:
+                        continue
+                    if len(self.lines) == 0:
+                        continue
+                    selected_data = self.lines[self.index].data
+                    if not isinstance(selected_data, Entry):
+                        raise Exception(
+                            "unexpected selected data type %s: %r"
+                            % (type(selected_data), selected_data)
+                        )
+                    err = download_video(selected_data.id)
+                    if err:
+                        self._status_msg = f"download failed: {err}"
                 case Key.c:
                     screen.clear()
                 case Key.q:
