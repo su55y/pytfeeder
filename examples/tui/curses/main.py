@@ -137,19 +137,19 @@ def notify(msg: str) -> bool:
     return True
 
 
-def download_video(id: str) -> Optional[str]:
+def download_video(entry: Entry) -> Optional[str]:
     p = sp.check_output(
         [
             "tsp",
             "yt-dlp",
-            f"https://youtu.be/{id}",
+            f"https://youtu.be/{entry.id}",
             "-o",
             "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
         ],
         shell=False,
     )
 
-    _ = notify(f"⬇️Start downloading {id!r}...")
+    _ = notify(f"⬇️Start downloading {entry.title!r}...")
 
     _ = sp.run(
         [
@@ -159,7 +159,7 @@ def download_video(id: str) -> Optional[str]:
             "notify-send",
             "-a",
             "pytfeeder",
-            f"✅Download done: {id}",
+            f"✅Download done: {entry.title}",
         ],
         stdout=sp.DEVNULL,
         stderr=sp.DEVNULL,
@@ -372,7 +372,7 @@ class App:
                             "unexpected selected data type %s: %r"
                             % (type(selected_data), selected_data)
                         )
-                    err = download_video(selected_data.id)
+                    err = download_video(selected_data)
                     if err:
                         self._status_msg = f"download failed: {err}"
                 case Key.c:
