@@ -159,7 +159,7 @@ def download_video(id: str) -> Optional[str]:
             "notify-send",
             "-a",
             "pytfeeder",
-            "✅Download done: {id}",
+            f"✅Download done: {id}",
         ],
         stdout=sp.DEVNULL,
         stderr=sp.DEVNULL,
