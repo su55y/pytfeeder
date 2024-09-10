@@ -45,6 +45,7 @@ HELP_KEYBINDINGS = [
     ("a", "Mark entry/feed viewed"),
     ("A", "Mark all enties/feeds viewed"),
     ("r", "Reload/sync feeds"),
+    ("d", "Download video"),
     ("/", "Open filter"),
     ("h", "Cancel filter"),
     ("c", "Clear screen"),
