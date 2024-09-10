@@ -376,6 +376,8 @@ class App:
                     err = download_video(selected_data)
                     if err:
                         self._status_msg = f"download failed: {err}"
+                    else:
+                        self.mark_viewed()
                 case Key.c:
                     screen.clear()
                 case Key.q:

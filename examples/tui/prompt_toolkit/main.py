@@ -644,6 +644,7 @@ class App:
             if not isinstance(self.selected_data, Entry):
                 return
             download_video(self.selected_data)
+            self.mark_viewed()
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
