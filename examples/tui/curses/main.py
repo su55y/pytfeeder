@@ -419,6 +419,7 @@ class App:
                     entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
                     if len(entries) > 0:
                         download_all(entries)  # type: ignore
+                    self.mark_viewed_all()
 
                 case Key.c:
                     screen.clear()
