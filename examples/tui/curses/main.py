@@ -167,6 +167,35 @@ def download_video(entry: Entry) -> Optional[str]:
     )
 
 
+def download_all(entries: list[Entry]) -> Optional[str]:
+    _ = notify(f"⬇️Start downloading {len(entries)} entries...")
+    for e in entries:
+        p = sp.check_output(
+            [
+                "tsp",
+                "yt-dlp",
+                f"https://youtu.be/{e.id}",
+                "-o",
+                "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
+            ],
+            shell=False,
+        )
+
+        _ = sp.run(
+            [
+                "tsp",
+                "-D",
+                p.decode(),
+                "notify-send",
+                "-a",
+                "pytfeeder",
+                f"✅Download done: {e.title}",
+            ],
+            stdout=sp.DEVNULL,
+            stderr=sp.DEVNULL,
+        )
+
+
 def is_update_interval_expired() -> bool:
     def update_lock_file():
         with open(LOCK_FILE, "w") as f:
@@ -209,6 +238,7 @@ class Key(IntEnum):
     c = ord("c")
     r = ord("r")
     d = ord("d")
+    D = ord("D")
     TAB = 9
     SLASH = ord("/")
     ESC = 27
@@ -378,6 +408,18 @@ class App:
                         self._status_msg = f"download failed: {err}"
                     else:
                         self.mark_viewed()
+                case Key.D:
+                    self.selected_data = self.lines[self.index].data
+                    if not (
+                        self.state == PageState.ENTRIES
+                        and isinstance(self.selected_data, Entry)
+                    ):
+                        continue
+
+                    entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
+                    if len(entries) > 0:
+                        download_all(entries)  # type: ignore
+
                 case Key.c:
                     screen.clear()
                 case Key.q:
