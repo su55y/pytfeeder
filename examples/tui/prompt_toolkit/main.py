@@ -205,6 +205,35 @@ def download_video(entry: Entry) -> Optional[str]:
     )
 
 
+def download_all(entries: list[Entry]) -> Optional[str]:
+    _ = notify(f"⬇️Start downloading {len(entries)} entries...")
+    for e in entries:
+        p = sp.check_output(
+            [
+                "tsp",
+                "yt-dlp",
+                f"https://youtu.be/{e.id}",
+                "-o",
+                "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
+            ],
+            shell=False,
+        )
+
+        _ = sp.run(
+            [
+                "tsp",
+                "-D",
+                p.decode(),
+                "notify-send",
+                "-a",
+                "pytfeeder",
+                f"✅Download done: {e.title}",
+            ],
+            stdout=sp.DEVNULL,
+            stderr=sp.DEVNULL,
+        )
+
+
 class PageState(Enum):
     CHANNELS = auto()
     ENTRIES = auto()
@@ -645,6 +674,20 @@ class App:
                 return
             download_video(self.selected_data)
             self.mark_viewed()
+
+        @kb.add("D")
+        def _download_all(_) -> None:
+            if self.state != PageState.ENTRIES:
+                return
+            if len(self.page_lines) == 0:
+                return
+            self.selected_data = self.page_lines[self.selected_line]
+            if not isinstance(self.selected_data, Entry):
+                return
+            entries = [l for l in self.page_lines if l.is_viewed is False]  # type: ignore
+            if len(entries) > 0:
+                download_all(entries)  # type: ignore
+                self.mark_viewed_all()
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
