@@ -139,7 +139,7 @@ def notify(msg: str) -> bool:
     return True
 
 
-def download_video(entry: Entry) -> Optional[str]:
+def download_video(entry: Entry, send_notification=True) -> Optional[str]:
     p = sp.check_output(
         [
             "tsp",
@@ -151,7 +151,8 @@ def download_video(entry: Entry) -> Optional[str]:
         shell=False,
     )
 
-    _ = notify(f"⬇️Start downloading {entry.title!r}...")
+    if send_notification:
+        _ = notify(f"⬇️Start downloading {entry.title!r}...")
 
     _ = sp.run(
         [
@@ -171,30 +172,7 @@ def download_video(entry: Entry) -> Optional[str]:
 def download_all(entries: list[Entry]) -> Optional[str]:
     _ = notify(f"⬇️Start downloading {len(entries)} entries...")
     for e in entries:
-        p = sp.check_output(
-            [
-                "tsp",
-                "yt-dlp",
-                f"https://youtu.be/{e.id}",
-                "-o",
-                "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
-            ],
-            shell=False,
-        )
-
-        _ = sp.run(
-            [
-                "tsp",
-                "-D",
-                p.decode(),
-                "notify-send",
-                "-a",
-                "pytfeeder",
-                f"✅Download done: {e.title}",
-            ],
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
-        )
+        download_video(e, send_notification=False)
 
 
 def is_update_interval_expired() -> bool:
