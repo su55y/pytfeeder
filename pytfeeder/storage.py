@@ -80,6 +80,15 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
+    def select_entries_count(self, channel_id: Optional[str] = None) -> int:
+        with self.get_cursor() as cursor:
+            query = "SELECT COUNT(*) FROM tb_entries {for_channel}".format(
+                for_channel=f"WHERE channel_id = '{channel_id}'" if channel_id else ""
+            )
+            self.log.debug(query)
+            count, *_ = cursor.execute(query).fetchone()
+            return count
+
     def mark_entry_as_viewed(self, id: str) -> None:
         with self.get_cursor() as cursor:
             query = "UPDATE tb_entries SET is_viewed = 1 WHERE id = ?"

@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+from pathlib import Path
 from typing import Dict, Optional
 
 from pytfeeder.config import Config
@@ -17,7 +18,7 @@ from pytfeeder.consts import (
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(epilog="last modification: 16.09.2024")
     parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
@@ -43,6 +44,9 @@ def parse_args() -> argparse.Namespace:
         "--sync",
         action="store_true",
         help="Updates all feeds and prints new entries count",
+    )
+    parser.add_argument(
+        "-S", "--storage-stats", action="store_true", help="Prints storage stats"
     )
     parser.add_argument(
         "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
@@ -125,6 +129,37 @@ def fetch_channel_info(url) -> Optional[Channel]:
         return Channel(title=title, channel_id=channel_id)
 
 
+def storage_file_stats(storage_path: Path) -> str:
+    from datetime import datetime
+    import math
+    import pwd
+
+    stat = storage_path.stat()
+    user = pwd.getpwuid(stat.st_uid)[0]
+
+    st_atime = datetime.fromtimestamp(stat.st_atime)
+    st_mtime = datetime.fromtimestamp(stat.st_mtime)
+    st_ctime = datetime.fromtimestamp(stat.st_ctime)
+
+    size = ""
+    if stat.st_size == 0:
+        size = "0B"
+    size_name = ("B", "KB", "MB", "GB", "TB")
+    i = int(math.floor(math.log(stat.st_size, 1024)))
+    p = math.pow(1024, i)
+    s = round(stat.st_size / p, 2)
+    size = "%s %s" % (s, size_name[i])
+
+    return "{tab}owner: {user}\n{tab}size: {size}\n{tab}ctime: {ctime}\n{tab}mtime: {mtime}\n{tab}atime: {atime}".format(
+        tab="  - ",
+        user=user,
+        size=size,
+        ctime=st_ctime,
+        mtime=st_mtime,
+        atime=st_atime,
+    )
+
+
 def run():
     args = parse_args()
 
@@ -158,6 +193,25 @@ def run():
         exit(0)
 
     feeder = Feeder(config, Storage(config.storage_path))
+
+    if args.storage_stats:
+        print("storage stats:\n")
+        print(
+            "entries count: %d (NEW %d)"
+            % (feeder.stor.select_entries_count(), feeder.unviewed_count())
+        )
+        for c in feeder.config.channels:
+            print(
+                "  - '%s': %d (NEW %d)"
+                % (
+                    c.title,
+                    feeder.stor.select_entries_count(c.channel_id),
+                    feeder.unviewed_count(c.channel_id),
+                )
+            )
+        print("\nfile stats:\n" + storage_file_stats(config.storage_path))
+        exit(0)
+
     if args.clean_cache:
         feeder.clean_cache(args.force)
 
