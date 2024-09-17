@@ -18,7 +18,7 @@ from pytfeeder.consts import (
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(epilog="last modification: 16.09.2024")
+    parser = argparse.ArgumentParser(epilog="last modification: 17.09.2024")
     parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
@@ -129,6 +129,30 @@ def fetch_channel_info(url) -> Optional[Channel]:
         return Channel(title=title, channel_id=channel_id)
 
 
+def entries_stats(feeder: Feeder) -> str:
+    stats = "entries count: %d (%d new)\n" % (
+        feeder.stor.select_entries_count(),
+        feeder.unviewed_count(),
+    )
+    max_title_len = max(len(c.title) for c in feeder.config.channels)
+    entries_stats_dict = {
+        c.title: (
+            feeder.stor.select_entries_count(c.channel_id),
+            feeder.unviewed_count(c.channel_id),
+        )
+        for c in feeder.config.channels
+    }
+    max_num_len = max(len(str(c)) for c, _ in entries_stats_dict.values())
+    entries_stats_lines = []
+    for title, (count, new) in entries_stats_dict.items():
+        entries_stats_lines.append(
+            f"  - {title + ':': <{max_title_len + 3}}{count:{max_num_len}d} ({new})"
+        )
+
+    stats += "\n".join(entries_stats_lines)
+    return stats
+
+
 def storage_file_stats(storage_path: Path) -> str:
     from datetime import datetime
     import math
@@ -196,19 +220,7 @@ def run():
 
     if args.storage_stats:
         print("storage stats:\n")
-        print(
-            "entries count: %d (NEW %d)"
-            % (feeder.stor.select_entries_count(), feeder.unviewed_count())
-        )
-        for c in feeder.config.channels:
-            print(
-                "  - '%s': %d (NEW %d)"
-                % (
-                    c.title,
-                    feeder.stor.select_entries_count(c.channel_id),
-                    feeder.unviewed_count(c.channel_id),
-                )
-            )
+        print(entries_stats(feeder))
         print("\nfile stats:\n" + storage_file_stats(config.storage_path))
         exit(0)
 
