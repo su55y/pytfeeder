@@ -8,7 +8,7 @@ import time
 from typing import List, Optional, Tuple, Union
 
 from prompt_toolkit.filters import has_focus
-from prompt_toolkit.application import Application
+from prompt_toolkit.application import Application, get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
@@ -682,39 +682,42 @@ class App:
                 event.app.layout.focus(self.main_window)
 
         @kb.add("r")
-        async def _reload(event: KeyPressEvent) -> None:
-            after = 0
-            before = self.feeder.unviewed_count()
-            channel_id = ""
+        def _reload(event: KeyPressEvent) -> None:
             self._status_msg = "reloading...; "
-            event.app._redraw()
-            if self.state == PageState.ENTRIES:
-                channel_id = self.channels[self.last_index].channel_id
-                if channel_id != "feed":
-                    before = self.feeder.unviewed_count(channel_id)
-
-            try:
-                await self.feeder.sync_entries()
-            except:
-                self._status_msg = "reload failed; "
-                return
-
-            self._set_channels(self.feeder.update_channels())
-            after = self.feeder.unviewed_count()
-            if self.state == PageState.ENTRIES:
-                self.selected_line = 0
-                self.set_entries_by_id(channel_id)
-                if channel_id != "feed":
-                    after = self.feeder.unviewed_count(channel_id)
-
-            new = after - before
-            if max(new, 0) > 0:
-                self._status_msg = f"{new} new updates; "
-            else:
-                self._status_msg = "no updates; "
-            self._status_msg_time = time.perf_counter()
+            event.app.invalidate()
+            self._reload_method()
 
         return kb
+
+    def _reload_method(self) -> None:
+        after = 0
+        before = self.feeder.unviewed_count()
+        channel_id = ""
+        if self.state == PageState.ENTRIES:
+            channel_id = self.channels[self.last_index].channel_id
+            if channel_id != "feed":
+                before = self.feeder.unviewed_count(channel_id)
+
+        try:
+            asyncio.gather(self.feeder.sync_entries())
+        except:
+            self._status_msg = "reload failed; "
+            return
+
+        self._set_channels(self.feeder.update_channels())
+        after = self.feeder.unviewed_count()
+        if self.state == PageState.ENTRIES:
+            self.selected_line = 0
+            self.set_entries_by_id(channel_id)
+            if channel_id != "feed":
+                after = self.feeder.unviewed_count(channel_id)
+
+        new = after - before
+        if max(new, 0) > 0:
+            self._status_msg = f"{new} new updates; "
+        else:
+            self._status_msg = "no updates; "
+        self._status_msg_time = time.perf_counter()
 
     def __pt_container__(self) -> HSplit:
         return self.container
