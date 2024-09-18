@@ -346,6 +346,7 @@ class App:
                         self.filtered = False
                 case Key.r:
                     self._status_msg = "updating..."
+                    self.draw(screen)
                     self.reload()
                 case curses.KEY_HOME:
                     self.move_top()
