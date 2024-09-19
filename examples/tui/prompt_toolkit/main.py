@@ -388,6 +388,14 @@ class App:
         else:
             self.entries = self.feeder.channel_feed(channel_id)
 
+    def reset_filter(self) -> None:
+        self._filter = None
+        self._keybinds_fmt = DEFAULT_KEYBINDS
+        if self.state is PageState.ENTRIES:
+            self._title_fmt = self.channels[self.last_index].title
+        elif self.state is PageState.CHANNELS:
+            self._title_fmt = ""
+
     @property
     def page_lines(self) -> Lines:
         match self.state:
@@ -570,13 +578,9 @@ class App:
                 return
 
             if self._filter:
-                self._filter = None
-                self._keybinds_fmt = DEFAULT_KEYBINDS
-                if self.state is PageState.ENTRIES:
-                    self._title_fmt = self.channels[self.last_index].title
-                elif self.state is PageState.CHANNELS:
-                    self._title_fmt = ""
+                self.reset_filter()
                 return
+
             match self.state:
                 case PageState.CHANNELS:
                     event.app.exit()
