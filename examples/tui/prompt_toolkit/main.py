@@ -682,14 +682,15 @@ class App:
                 event.app.layout.focus(self.main_window)
 
         @kb.add("r")
-        def _reload(event: KeyPressEvent) -> None:
+        async def _reload(event: KeyPressEvent) -> None:
             self._status_msg = "reloading...; "
+            self._status_msg_time = time.perf_counter()
             event.app.invalidate()
-            self._reload_method()
+            await self._reload_method()
 
         return kb
 
-    def _reload_method(self) -> None:
+    async def _reload_method(self) -> None:
         after = 0
         before = self.feeder.unviewed_count()
         channel_id = ""
@@ -699,7 +700,7 @@ class App:
                 before = self.feeder.unviewed_count(channel_id)
 
         try:
-            asyncio.gather(self.feeder.sync_entries())
+            await self.feeder.sync_entries()
         except:
             self._status_msg = "reload failed; "
             return
