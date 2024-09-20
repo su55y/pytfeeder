@@ -89,6 +89,20 @@ def parse_args() -> argparse.Namespace:
         help="entries format (default: %(default)r)",
     )
     parser.add_argument(
+        "-l",
+        "--limit",
+        default=0,
+        type=int,
+        help="Channels feed limit. Overrides config value (default: None)",
+    )
+    parser.add_argument(
+        "-L",
+        "--feed-limit",
+        default=0,
+        type=int,
+        help="Feed limit. Overrides config value (default: None)",
+    )
+    parser.add_argument(
         "--new-mark",
         default=DEFAULT_NEW_MARK,
         metavar="STR",
@@ -763,6 +777,12 @@ if __name__ == "__main__":
         config.storage_path.parent.mkdir(parents=True)
 
     feeder = Feeder(config, Storage(config.storage_path))
+
+    if args.limit > 0:
+        feeder.config.channel_feed_limit = args.limit
+
+    if args.feed_limit > 0:
+        feeder.config.feed_limit = args.feed_limit
 
     if len(feeder.channels) == 0:
         print(f"No channels found in config {config_path}")
