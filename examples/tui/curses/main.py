@@ -565,6 +565,7 @@ class App:
 
         if self.state == PageState.CHANNELS:
             self.state = PageState.ENTRIES
+            self.filtered = False
             if last_channel_index == -1:
                 self.last_page_index = self.index
             self.lines = self.lines_by_id(self.selected_data.channel_id)
