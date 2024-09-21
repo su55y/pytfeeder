@@ -8,7 +8,7 @@ import time
 from typing import List, Optional, Tuple, Union
 
 from prompt_toolkit.filters import has_focus
-from prompt_toolkit.application import Application, get_app
+from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
