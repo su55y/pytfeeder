@@ -570,8 +570,18 @@ class App:
                 case PageState.CHANNELS:
                     if self.selected_line >= len(self.channels):
                         return
-                    self.last_index = self.selected_line
-                    channel = self.channels[self.selected_line]
+                    if self._filter:
+                        channel = self.page_lines[self.selected_line]
+                        last_index = 0
+                        for i in range(len(self.channels)):
+                            if channel.channel_id == self.channels[i].channel_id:
+                                last_index = i
+                        self.last_index = last_index
+
+                        self.reset_filter()
+                    else:
+                        channel = self.channels[self.selected_line]
+                        self.last_index = self.selected_line
                     self.set_entries_by_id(channel.channel_id)
                     self.state = PageState.ENTRIES
                     self.selected_line = 0
