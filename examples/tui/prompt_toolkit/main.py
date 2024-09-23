@@ -322,6 +322,7 @@ class App:
                 self._filter = buf.text
                 self._title_fmt = "%d found" % len(self.page_lines)
                 self._keybinds_fmt = f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
+                self.selected_line = 0
             buf.text = ""
             return True
 
@@ -571,6 +572,8 @@ class App:
                     if self.selected_line >= len(self.channels):
                         return
                     if self._filter:
+                        if len(self.page_lines) < self.selected_line + 1:
+                            return
                         channel = self.page_lines[self.selected_line]
                         last_index = 0
                         for i in range(len(self.channels)):
