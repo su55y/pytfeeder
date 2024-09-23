@@ -93,6 +93,7 @@ def parse_args() -> argparse.Namespace:
         "--limit",
         default=0,
         type=int,
+        metavar="INT",
         help="Channels feed limit. Overrides config value (default: None)",
     )
     parser.add_argument(
@@ -100,6 +101,7 @@ def parse_args() -> argparse.Namespace:
         "--feed-limit",
         default=0,
         type=int,
+        metavar="INT",
         help="Feed limit. Overrides config value (default: None)",
     )
     parser.add_argument(
