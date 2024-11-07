@@ -148,7 +148,7 @@ def play_video(id: str) -> None:
 def notify(msg: str) -> bool:
     if not msg:
         return True
-    cmd = ["notify-send", "-a", "pytfeeder", msg]
+    cmd = ["notify-send", "-i", "youtube", "-a", "pytfeeder", msg]
     p = sp.run(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
     if p.returncode != 0:
         return False
