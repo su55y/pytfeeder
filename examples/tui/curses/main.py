@@ -176,6 +176,8 @@ def download_video(entry: Entry, send_notification=True) -> Optional[str]:
             "-D",
             p.decode(),
             "notify-send",
+            "-i",
+            "youtube",
             "-a",
             "pytfeeder",
             f"✅Download done: {entry.title}",
