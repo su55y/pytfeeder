@@ -668,7 +668,9 @@ class App:
 
         @kb.add("a")
         def _mark_viewed(_) -> None:
-            self.mark_viewed()
+            if len(self.page_lines) > 1:
+                self.mark_viewed()
+                self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
         @kb.add("A")
         def _mark_viewed_all(_) -> None:
@@ -686,6 +688,7 @@ class App:
                 return
             download_video(self.selected_data)
             self.mark_viewed()
+            self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
         @kb.add("D")
         def _download_all(_) -> None:
