@@ -400,6 +400,7 @@ class App:
                 return
             self.feeder.mark_as_viewed(id=self.selected_data.id)
             self.selected_data.is_viewed = True
+            self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
     def set_entries_by_id(self, channel_id: str) -> None:
         if channel_id == "feed":
@@ -672,7 +673,6 @@ class App:
         def _mark_viewed(_) -> None:
             if len(self.page_lines) > 1:
                 self.mark_viewed()
-                self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
         @kb.add("A")
         def _mark_viewed_all(_) -> None:
@@ -690,7 +690,6 @@ class App:
                 return
             download_video(self.selected_data)
             self.mark_viewed()
-            self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
         @kb.add("D")
         def _download_all(_) -> None:
