@@ -732,6 +732,7 @@ class App:
         elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
             self.feeder.mark_as_viewed(id=self.selected_data.id)
             self.selected_data.is_viewed = True
+            self.move_down()
 
     @property
     def status(self) -> str:
