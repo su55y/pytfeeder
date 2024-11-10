@@ -89,6 +89,12 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
+        "-A",
+        "--alphabetic",
+        action="store_true",
+        help="sort channels in alphabetic order, instead of order by config",
+    )
+    parser.add_argument(
         "--channels-fmt",
         default=DEFAULT_CHANNELS_FMT,
         metavar="STR",
@@ -262,11 +268,13 @@ class App:
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
+        alphabetic: bool = False,
         **_,
     ) -> None:
         self.feeder = feeder
 
         self.hide_feed = hide_feed
+        self.alphabetic = alphabetic
         self.channels = list()
         self._set_channels()
 
@@ -357,6 +365,9 @@ class App:
     def _set_channels(self, channels: List[Channel] = list()) -> None:
         if channels:
             self.feeder.channels = channels
+
+        if self.alphabetic:
+            self.feeder.channels.sort(key=lambda c: c.title)
 
         if self.hide_feed:
             self.channels = self.feeder.channels
