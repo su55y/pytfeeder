@@ -54,7 +54,7 @@ HELP_KEYBINDINGS = [
 ]
 
 
-def format_keybindings() -> list[str]:
+def format_keybindings() -> List[str]:
     max_keys_w = max(len(keys) for keys, _ in HELP_KEYBINDINGS)
     tab = " " * 4
     return [f"{tab}{keys:<{max_keys_w}}{tab}{desc}" for keys, desc in HELP_KEYBINDINGS]
@@ -193,7 +193,7 @@ def download_video(entry: Entry, send_notification=True) -> Optional[str]:
     )
 
 
-def download_all(entries: list[Entry]) -> Optional[str]:
+def download_all(entries: List[Entry]) -> Optional[str]:
     _ = notify(f"⬇️Start downloading {len(entries)} entries...")
     for e in entries:
         download_video(e, send_notification=False)
