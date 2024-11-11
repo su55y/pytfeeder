@@ -95,6 +95,15 @@ def parse_args() -> argparse.Namespace:
         help="entries format (default: %(default)r)",
     )
     parser.add_argument(
+        "--datetime-fmt",
+        default=DEFAULT_DATETIME_FMT,
+        metavar="STR",
+        help="`{updated}` datetime format of entry (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
+    )
+    parser.add_argument(
         "-l",
         "--limit",
         default=0,
@@ -121,15 +130,6 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_STATUS_FMT,
         metavar="STR",
         help="status bar format (default: %(default)r)",
-    )
-    parser.add_argument(
-        "--datetime-fmt",
-        default=DEFAULT_DATETIME_FMT,
-        metavar="STR",
-        help="`{updated}` datetime format of entry (default: %(default)r)",
-    )
-    parser.add_argument(
-        "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
     )
     parser.add_argument(
         "-U", "--no-update", action="store_false", help="Disable update on startup"
