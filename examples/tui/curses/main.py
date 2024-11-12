@@ -28,6 +28,7 @@ channels-fmt keys:
     {title}         - title of the channel
 
 entries-fmt keys:
+    {index}         - line index
     {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
@@ -441,10 +442,14 @@ class App:
         max_rows = max_y - y - 1
         self.update_scroll_top(max_rows)
         self.update_active()
-        for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
+        index_len = len(str(len(self.lines)))
+        for i, line in enumerate(
+            self.lines[self.scroll_top : self.scroll_top + max_rows]
+        ):
             color_pair = Color.NONE
             new_mark = " " * len(self.new_mark)
             text = "-"
+            index = f"{i + 1 + self.scroll_top:{index_len}d}"
 
             if isinstance(line.data, Entry):
                 if line.data.is_viewed is False:
@@ -452,6 +457,7 @@ class App:
                     color_pair = Color.NEW
                 updated = line.data.updated.strftime(self.datetime_fmt)
                 text = self.entries_fmt.format(
+                    index=index,
                     new_mark=new_mark,
                     updated=updated,
                     title=line.data.title,
