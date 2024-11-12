@@ -47,6 +47,7 @@ channels-fmt keys:
     {title}         - title of the channel
 
 entries-fmt keys:
+    {index}         - line index
     {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
@@ -455,7 +456,7 @@ class App:
             if i == self.selected_line:
                 result.append([("[SetCursorPosition]", "")])
             if isinstance(entry, Entry):
-                result.append(self._format_entry(entry))
+                result.append(self._format_entry(i, entry))
             elif isinstance(entry, Channel):
                 result.append(self._format_channel(entry))
             result.append("\n")
@@ -508,8 +509,14 @@ class App:
             (num_fmt % len(self.page_lines)),
         )
 
-    def _format_entry(self, entry: Entry) -> List[Tuple[str, str]]:
+    def _entry_index(self, i: int) -> str:
+        index = i + 1
+        index_len = max(1, len(str(len(self.page_lines))))
+        return f"{index:{index_len}d}"
+
+    def _format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
         line = self.entries_fmt.format(
+            index=self._entry_index(i),
             new_mark=self.new_marks[not entry.is_viewed],
             updated=entry.updated.strftime(self.datetime_fmt),
             title=entry.title,
