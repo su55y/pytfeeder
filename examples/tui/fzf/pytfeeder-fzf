@@ -1,0 +1,31 @@
+#!/bin/sh
+
+PYTFEEDER_CONFIG_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/pytfeeder/config.yaml"
+PYTFEEDER_DB_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/pytfeeder/pytfeeder.db"
+DOWNLOAD_DIR="$HOME/Videos/YouTube"
+
+if [ ! -f "$PYTFEEDER_CONFIG_PATH" ]; then
+    echo "config file $PYTFEEDER_CONFIG_PATH not found"
+    exit 1
+fi
+
+if [ ! -f "$PYTFEEDER_DB_PATH" ]; then
+    echo "db file $PYTFEEDER_DB_PATH not found"
+    exit 1
+fi
+
+SELECT_QUERY="SELECT id, title FROM tb_entries WHERE channel_id = '%s' ORDER BY updated DESC"
+
+channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" | jq -r '.channels[]|.channel_id+" "+.title' | fzf --with-nth 2.. --preview='')"
+[ -n "$channel_line" ] || exit 0
+channel_id="${channel_line%% *}"
+
+entry_line="$(sqlite3 -column "$PYTFEEDER_DB_PATH" "$(printf "$SELECT_QUERY" "$channel_id")" | fzf --with-nth 2.. --preview='')"
+[ -n "$entry_line" ] || exit 0
+
+vid_id="${entry_line%% *}"
+vid_title="$(echo "${entry_line#* }" | xargs)"
+
+notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
+qid="$(tsp yt-dlp "https://youtu.be/$vid_id" -R infinite -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
+tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>/dev/null
