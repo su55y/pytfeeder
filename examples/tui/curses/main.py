@@ -18,6 +18,7 @@ from pytfeeder.storage import Storage
 LOCK_FILE = "/tmp/pytfeeder_update.lock"
 UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
+DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = " {index}{title}{keybinds}"
@@ -100,6 +101,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_DATETIME_FMT,
         metavar="STR",
         help="`{updated}` datetime format of entry (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--feed-entries-fmt",
+        default=DEFAULT_FEED_ENTRIES_FMT,
+        metavar="STR",
+        help="feed entries format (default: %(default)r)",
     )
     parser.add_argument(
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
@@ -272,6 +279,7 @@ class App:
         feeder: Feeder,
         channels_fmt: str = DEFAULT_CHANNELS_FMT,
         entries_fmt: str = DEFAULT_ENTRIES_FMT,
+        feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
@@ -288,6 +296,7 @@ class App:
 
         self.channels_fmt = channels_fmt
         self.entries_fmt = entries_fmt
+        self.feed_entries_fmt = feed_entries_fmt
         self.status_fmt = status_fmt
         self.datetime_fmt = datetime_fmt
         self.filtered = False
@@ -306,6 +315,7 @@ class App:
         self._g_pressed = False
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self._status_msg = ""
+        self._is_feed = False
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
         if channels:
@@ -456,13 +466,15 @@ class App:
                     new_mark = self.new_mark
                     color_pair = Color.NEW
                 updated = line.data.updated.strftime(self.datetime_fmt)
-                text = self.entries_fmt.format(
+                fmt = self.feed_entries_fmt if self._is_feed else self.entries_fmt
+                text = fmt.format(
                     index=index,
                     new_mark=new_mark,
                     updated=updated,
                     title=line.data.title,
                     channel_title=f"{self.feeder.channel_title(line.data.channel_id):^{self.max_len_chan_title}s}",
                 )
+
             elif isinstance(line.data, Channel):
                 if line.data.have_updates:
                     new_mark = self.new_mark
@@ -785,7 +797,9 @@ class App:
 
     def lines_by_id(self, channel_id: str) -> List[Line]:
         if channel_id == "feed":
+            self._is_feed = True
             return list(map(Line, self.feeder.feed()))
+        self._is_feed = False
         return list(map(Line, self.feeder.channel_feed(channel_id)))
 
 
