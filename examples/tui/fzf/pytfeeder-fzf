@@ -20,7 +20,8 @@ channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" | jq -r '.channels[]|.channel
 [ -n "$channel_line" ] || exit 0
 channel_id="${channel_line%% *}"
 
-entry_line="$(sqlite3 -column "$PYTFEEDER_DB_PATH" "$(printf "$SELECT_QUERY" "$channel_id")" | fzf --with-nth 2.. --preview='')"
+entry_line="$(sqlite3 -column "$PYTFEEDER_DB_PATH" "$(printf "$SELECT_QUERY" "$channel_id")" |
+    fzf --bind='ctrl-space:execute-silent(setsid -f mpv "https://youtu.be/$(echo {} | cut -d " " -f 1) >/dev/null 2>&1")' --with-nth 2.. --preview='')"
 [ -n "$entry_line" ] || exit 0
 
 vid_id="${entry_line%% *}"
