@@ -91,16 +91,16 @@ def parse_args() -> argparse.Namespace:
         help="config path (default: %(default)s)",
     )
     parser.add_argument(
-        "--entries-fmt",
-        default=DEFAULT_ENTRIES_FMT,
-        metavar="STR",
-        help="entries format (default: %(default)r)",
-    )
-    parser.add_argument(
         "--datetime-fmt",
         default=DEFAULT_DATETIME_FMT,
         metavar="STR",
         help="`{updated}` datetime format of entry (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--entries-fmt",
+        default=DEFAULT_ENTRIES_FMT,
+        metavar="STR",
+        help="entries format (default: %(default)r)",
     )
     parser.add_argument(
         "--feed-entries-fmt",
@@ -278,8 +278,8 @@ class App:
         self,
         feeder: Feeder,
         channels_fmt: str = DEFAULT_CHANNELS_FMT,
-        entries_fmt: str = DEFAULT_ENTRIES_FMT,
         feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT,
+        entries_fmt: str = DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
@@ -295,8 +295,8 @@ class App:
         self._set_channels()
 
         self.channels_fmt = channels_fmt
-        self.entries_fmt = entries_fmt
         self.feed_entries_fmt = feed_entries_fmt
+        self.entries_fmt = entries_fmt
         self.status_fmt = status_fmt
         self.datetime_fmt = datetime_fmt
         self.filtered = False
