@@ -36,6 +36,7 @@ from pytfeeder.storage import Storage
 LOCK_FILE = "/tmp/pytfeeder_update.lock"
 UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
+DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
@@ -113,6 +114,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_DATETIME_FMT,
         metavar="STR",
         help="entries `{updated}` datetime format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "--feed-entries-fmt",
+        default=DEFAULT_FEED_ENTRIES_FMT,
+        metavar="STR",
+        help="feed entries format (default: %(default)r)",
     )
     parser.add_argument(
         "--entries-fmt",
@@ -264,6 +271,7 @@ class App:
         self,
         feeder: Feeder,
         channels_fmt: str = DEFAULT_CHANNELS_FMT,
+        feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT,
         entries_fmt: str = DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
@@ -282,12 +290,14 @@ class App:
         self.entries: List[Entry] = []
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self.is_help_opened = False
+        self.is_feed_opened = False
         self.state = PageState.CHANNELS
         self.selected_line = 0
         self.help_index = 0
         self.last_index = -1
 
         self.channels_fmt = channels_fmt
+        self.feed_entries_fmt = feed_entries_fmt
         self.entries_fmt = entries_fmt
         self.datetime_fmt = datetime_fmt
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
@@ -416,8 +426,10 @@ class App:
 
     def set_entries_by_id(self, channel_id: str) -> None:
         if channel_id == "feed":
+            self.is_feed_opened = True
             self.entries = self.feeder.feed()
         else:
+            self.is_feed_opened = False
             self.entries = self.feeder.channel_feed(channel_id)
 
     def reset_filter(self) -> None:
@@ -515,7 +527,8 @@ class App:
         return f"{index:{index_len}d}"
 
     def _format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
-        line = self.entries_fmt.format(
+        fmt = self.feed_entries_fmt if self.is_feed_opened else self.entries_fmt
+        line = fmt.format(
             index=self._entry_index(i),
             new_mark=self.new_marks[not entry.is_viewed],
             updated=entry.updated.strftime(self.datetime_fmt),
