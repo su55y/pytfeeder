@@ -56,14 +56,17 @@ class Feeder:
         )
 
     def mark_as_viewed(
-        self, id: Optional[str] = None, channel_id: Optional[str] = None
+        self,
+        id: Optional[str] = None,
+        channel_id: Optional[str] = None,
+        unviewed: bool = False,
     ) -> None:
         if id:
-            self.stor.mark_entry_as_viewed(id)
+            self.stor.mark_entry_as_viewed(id, unviewed)
         elif channel_id:
-            self.stor.mark_channel_entries_as_viewed(channel_id)
+            self.stor.mark_channel_entries_as_viewed(channel_id, unviewed)
         else:
-            self.stor.mark_all_entries_as_viewed()
+            self.stor.mark_all_entries_as_viewed(unviewed)
 
     def unviewed_count(self, channel_id: Optional[str] = None) -> int:
         return self.stor.select_unviewed(channel_id)

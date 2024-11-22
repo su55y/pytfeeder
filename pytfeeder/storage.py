@@ -89,23 +89,28 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
-    def mark_entry_as_viewed(self, id: str) -> None:
+    def mark_entry_as_viewed(self, id: str, unviewed: bool = False) -> None:
+        value = 0 if unviewed else 1
         with self.get_cursor() as cursor:
-            query = "UPDATE tb_entries SET is_viewed = 1 WHERE id = ?"
+            query = f"UPDATE tb_entries SET is_viewed = {value} WHERE id = ?"
             self.log.debug("%s, id: %s" % (query, id))
             count = cursor.execute(query, (id,)).rowcount
             if count != 1:
                 self.log.warning("rowcount != 1 for mark_entry_as_viewed(%s)" % id)
 
-    def mark_channel_entries_as_viewed(self, channel_id: str) -> None:
+    def mark_channel_entries_as_viewed(
+        self, channel_id: str, unviewed: bool = False
+    ) -> None:
+        value = 0 if unviewed else 1
         with self.get_cursor() as cursor:
-            query = "UPDATE tb_entries SET is_viewed = 1 WHERE channel_id = ?"
+            query = f"UPDATE tb_entries SET is_viewed = {value} WHERE channel_id = ?"
             self.log.debug("%s, channel_id: %s" % (query, channel_id))
             cursor.execute(query, (channel_id,))
 
-    def mark_all_entries_as_viewed(self):
+    def mark_all_entries_as_viewed(self, unviewed: bool = False):
+        value = 0 if unviewed else 1
         with self.get_cursor() as cursor:
-            query = "UPDATE tb_entries SET is_viewed = 1"
+            query = f"UPDATE tb_entries SET is_viewed = {value}"
             self.log.debug(query)
             cursor.execute(query)
 
