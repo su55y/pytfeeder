@@ -393,20 +393,26 @@ class App:
     def mark_viewed_all(self) -> None:
         self.selected_data = self.page_lines[self.selected_line]
         if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
-            self.feeder.mark_as_viewed()
+            self.feeder.mark_as_viewed(
+                unviewed=all(not c.have_updates for c in self.feeder.channels)
+            )
             self._set_channels(self.feeder.update_channels())
         elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
             if self.channels[self.last_index].channel_id == "feed":
-                self.feeder.mark_as_viewed()
+                unviewed = all(not c.have_updates for c in self.channels)
+                self.feeder.mark_as_viewed(unviewed=unviewed)
                 for i in range(len(self.channels)):
-                    self.channels[i].have_updates = False
+                    self.channels[i].have_updates = unviewed
                 for i in range(len(self.page_lines)):
-                    self.page_lines[i].is_viewed = True  # type: ignore
+                    self.page_lines[i].is_viewed = not unviewed  # type: ignore
             else:
-                self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
-                self.channels[self.last_index].have_updates = False
+                unviewed = not self.channels[self.last_index].have_updates
+                self.feeder.mark_as_viewed(
+                    channel_id=self.selected_data.channel_id, unviewed=unviewed
+                )
+                self.channels[self.last_index].have_updates = unviewed
                 for i in range(len(self.page_lines)):
-                    self.page_lines[i].is_viewed = True  # type: ignore
+                    self.page_lines[i].is_viewed = not unviewed  # type: ignore
 
     def mark_viewed(self) -> None:
         self.selected_data = self.page_lines[self.selected_line]
@@ -415,13 +421,17 @@ class App:
                 return
             if self.selected_data.channel_id == "feed":
                 return
-            self.feeder.mark_as_viewed(channel_id=self.selected_data.channel_id)
-            self.selected_data.have_updates = False
+            unviewed = not self.selected_data.have_updates
+            self.feeder.mark_as_viewed(
+                channel_id=self.selected_data.channel_id, unviewed=unviewed
+            )
+            self.selected_data.have_updates = unviewed
         elif self.state == PageState.ENTRIES:
             if not isinstance(self.selected_data, Entry):
                 return
-            self.feeder.mark_as_viewed(id=self.selected_data.id)
-            self.selected_data.is_viewed = True
+            unviewed = self.selected_data.is_viewed
+            self.feeder.mark_as_viewed(id=self.selected_data.id, unviewed=unviewed)
+            self.selected_data.is_viewed = not unviewed
             self.selected_line = (self.selected_line + 1) % len(self.page_lines)
 
     def set_entries_by_id(self, channel_id: str) -> None:
