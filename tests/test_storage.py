@@ -47,10 +47,16 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(count, 0)
 
     def test3_mark_as_viewed(self):
+        self.assertEqual(self.stor.select_entries()[0].is_viewed, False)
         self.stor.mark_entry_as_viewed(id=mocks.sample_entries[0].id)
         self.assertEqual(self.stor.select_entries()[0].is_viewed, True)
 
-    def test4_delete_inactive(self):
+    def test4_toggle_viewed(self):
+        self.assertEqual(self.stor.select_entries()[0].is_viewed, True)
+        self.stor.mark_entry_as_viewed(id=mocks.sample_entries[0].id, unviewed=True)
+        self.assertEqual(self.stor.select_entries()[0].is_viewed, False)
+
+    def test5_delete_inactive(self):
         count = self.stor.add_entries(mocks.another_sample_entries)
         self.assertEqual(count, len(mocks.another_sample_entries))
         self.stor.delete_inactive_channels(
@@ -58,6 +64,6 @@ class StorageTest(unittest.TestCase):
         )
         self.assertEqual(self.stor.select_entries(), mocks.sample_entries)
 
-    def test5_delete(self):
+    def test6_delete(self):
         self.stor.delete_all_entries(force=True)
         self.assertEqual(len(self.stor.select_entries()), 0)
