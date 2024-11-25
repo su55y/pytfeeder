@@ -49,7 +49,7 @@ class YTFeedParser:
             )
 
     def _read_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
-        tag = self.__tree.find(name) if not el else el.find(name)
+        tag = self.__tree.find(name) if el is None else el.find(name)
         if tag is not None:
             return tag.text
         self.log.error(f"can't read {name} tag")
@@ -57,7 +57,7 @@ class YTFeedParser:
     def _read_yt_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
         tag = (
             self.__tree.find(name, self.__namespace)
-            if not el
+            if el is None
             else el.find(name, self.__namespace)
         )
         if tag is not None:
