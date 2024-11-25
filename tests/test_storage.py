@@ -48,7 +48,7 @@ class StorageTest(unittest.TestCase):
 
     def test3_mark_as_viewed(self):
         self.stor.mark_entry_as_viewed(id=mocks.sample_entries[0].id)
-        self.assertTrue(self.stor.select_entries()[0])
+        self.assertEqual(self.stor.select_entries()[0].is_viewed, True)
 
     def test4_delete_inactive(self):
         count = self.stor.add_entries(mocks.another_sample_entries)
