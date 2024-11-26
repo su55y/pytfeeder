@@ -44,6 +44,7 @@ DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
+    {index}         - line index
     {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
     {title}         - title of the channel
 
@@ -258,11 +259,11 @@ class CommandLine(ConditionalContainer):
         super(CommandLine, self).__init__(
             Window(
                 BufferControl(
-                    buffer=pager.command_buffer, input_processors=[BeforeInput("/")]
+                    buffer=pager.filter_buffer, input_processors=[BeforeInput("/")]
                 ),
                 height=1,
             ),
-            filter=has_focus(pager.command_buffer),
+            filter=has_focus(pager.filter_buffer),
         )
 
 
@@ -304,7 +305,7 @@ class App:
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
 
-        self._command_line_app_link: Optional[Application] = None
+        self._app_link: Optional[Application] = None
         self._filter: Optional[str] = None
 
         self._status_fmt = status_fmt
@@ -337,11 +338,11 @@ class App:
             z_index=1,
         )
 
-        def command_line_handler(buf: Buffer) -> bool:
-            if self._command_line_app_link:
-                self._command_line_app_link.layout.focus(self.main_window)
-                self._command_line_app_link.vi_state.input_mode = InputMode.NAVIGATION
-                self._command_line_app_link = None
+        def filter_handler(buf: Buffer) -> bool:
+            if self._app_link:
+                self._app_link.layout.focus(self.main_window)
+                self._app_link.vi_state.input_mode = InputMode.NAVIGATION
+                self._app_link = None
                 self._filter = buf.text
                 self._title_fmt = "%d found" % len(self.page_lines)
                 self._keybinds_fmt = f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
@@ -349,9 +350,7 @@ class App:
             buf.text = ""
             return True
 
-        self.command_buffer = Buffer(
-            multiline=False, accept_handler=command_line_handler
-        )
+        self.filter_buffer = Buffer(multiline=False, accept_handler=filter_handler)
 
         self.help_window = Window(
             always_hide_cursor=True,
@@ -480,7 +479,7 @@ class App:
             if isinstance(entry, Entry):
                 result.append(self._format_entry(i, entry))
             elif isinstance(entry, Channel):
-                result.append(self._format_channel(entry))
+                result.append(self._format_channel(i, entry))
             result.append("\n")
 
         return merge_formatted_text(result)
@@ -547,9 +546,11 @@ class App:
         )
         return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
 
-    def _format_channel(self, channel: Channel) -> List[Tuple[str, str]]:
+    def _format_channel(self, i: int, channel: Channel) -> List[Tuple[str, str]]:
         line = self.channels_fmt.format(
-            new_mark=self.new_marks[channel.have_updates], title=channel.title
+            index=self._entry_index(i),
+            new_mark=self.new_marks[channel.have_updates],
+            title=channel.title,
         )
         return [(f"class:{self.classnames[channel.have_updates]}", line)]
 
@@ -706,9 +707,9 @@ class App:
 
         @kb.add("/")
         def _prompt_search(event: KeyPressEvent) -> None:
-            event.app.layout.focus(self.command_buffer)
+            event.app.layout.focus(self.filter_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
-            self._command_line_app_link = event.app
+            self._app_link = event.app
 
         @kb.add("a")
         def _mark_viewed(_) -> None:
