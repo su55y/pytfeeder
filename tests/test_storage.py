@@ -46,14 +46,17 @@ class StorageTest(unittest.TestCase):
         count = self.stor.add_entries(mocks.sample_entries)
         self.assertEqual(count, 0)
 
-    def test5_delete_inactive(self):
+    def test4_delete_inactive(self):
         count = self.stor.add_entries(mocks.another_sample_entries)
         self.assertEqual(count, len(mocks.another_sample_entries))
-        self.stor.delete_inactive_channels(
-            ", ".join(f"{c.channel_id!r}" for c in mocks.sample_entries)
+        self.assertEqual(
+            len(mocks.sample_entries) + len(mocks.another_sample_entries),
+            self.stor.select_entries_count(),
         )
+        active_channels = ", ".join(f"{c.channel_id!r}" for c in mocks.sample_entries)
+        self.stor.delete_inactive_channels(active_channels)
         self.assertEqual(self.stor.select_entries(), mocks.sample_entries)
 
-    def test6_delete(self):
+    def test5_delete(self):
         self.stor.delete_all_entries(force=True)
         self.assertEqual(len(self.stor.select_entries()), 0)
