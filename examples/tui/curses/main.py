@@ -250,6 +250,15 @@ class Key(IntEnum):
     r = ord("r")
     d = ord("d")
     D = ord("D")
+    N1 = ord("1")
+    N2 = ord("2")
+    N3 = ord("3")
+    N4 = ord("4")
+    N5 = ord("5")
+    N6 = ord("6")
+    N7 = ord("7")
+    N8 = ord("8")
+    N9 = ord("9")
     TAB = 9
     SLASH = ord("/")
     ESC = 27
@@ -357,7 +366,8 @@ class App:
         while True:
             self.draw(screen)
             self._status_msg = ""
-            match screen.getch():
+            ch = screen.getch()
+            match ch:
                 case Key.j | curses.KEY_DOWN | Key.TAB | Key.n:
                     if len(self.lines) > 0:
                         self.move_down()
@@ -398,6 +408,18 @@ class App:
                     self.move_bottom()
                 case Key.SLASH:
                     self.handle_slash(screen)
+                case (
+                    Key.N1
+                    | Key.N2
+                    | Key.N3
+                    | Key.N4
+                    | Key.N5
+                    | Key.N6
+                    | Key.N7
+                    | Key.N8
+                    | Key.N9
+                ):
+                    self.handle_num(screen, ch)
                 case Key.a:
                     self.mark_viewed()
                 case Key.A:
@@ -690,6 +712,15 @@ class App:
         self.filtered = True
         curses.curs_set(0)
 
+    def jump(self, key_index: int) -> None:
+        if key_index > len(self.lines) + 1:
+            return
+        # if self.state == PageState.CHANNELS:
+        #     self.last_page_index = self.index
+        self.index = key_index - 1
+        self.gravity = Gravity.DOWN
+        curses.curs_set(0)
+
     def handle_slash(self, screen: "curses._CursesWindow") -> None:
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
@@ -715,6 +746,59 @@ class App:
                     if not keyword:
                         return
                     self.filter_lines(keyword)
+                    return
+                if ch in (Key.SLASH, Key.ESC):
+                    screen.clear()
+                    return
+                if ch == curses.KEY_BACKSPACE:
+                    if not len(keyword):
+                        continue
+                    keyword = keyword[: len(keyword) - 1]
+                    screen.addnstr(max_y - 1, 3, " " * max_x, max_x - 4)
+                    screen.refresh()
+                else:
+                    keyword += chr(ch)
+                width = min(len(keyword), max_x - 3)
+                screen.addnstr(max_y - 1, 3, keyword, width or 1)
+        except KeyboardInterrupt:
+            return
+
+    def handle_num(self, screen: "curses._CursesWindow", n: int) -> None:
+        num = n - 48
+        if num > 9 or num < 1:
+            return
+        curses.curs_set(1)
+        max_y, max_x = screen.getmaxyx()
+        screen.addnstr(
+            max_y - 2,
+            0,
+            f"{self.status:<{max_x}}",
+            max_x,
+            curses.color_pair(Color.ACTIVE),
+        )
+        screen.move(max_y - 1, 0)
+        screen.clrtoeol()
+        screen.move(max_y - 1, 2)
+        screen.addch(":")
+        keyword = f"{num}"
+        screen.addnstr(max_y - 1, 3, keyword, 1)
+        screen.refresh()
+        try:
+            while ch := screen.getch():
+                screen.refresh()
+                max_y, max_x = screen.getmaxyx()
+                if ch == 10:
+                    screen.clear()
+                    curses.curs_set(0)
+                    if not keyword:
+                        return
+                    try:
+                        key_index = int(keyword)
+                    except:
+                        return
+                    if key_index < 1:
+                        return
+                    self.jump(key_index)
                     return
                 if ch in (Key.SLASH, Key.ESC):
                     screen.clear()
