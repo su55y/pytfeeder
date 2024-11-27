@@ -25,6 +25,7 @@ DEFAULT_STATUS_FMT = " {index}{title}{keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 channels-fmt keys:
+    {index}         - line index
     {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
     {title}         - title of the channel
 
@@ -502,7 +503,7 @@ class App:
                     new_mark = self.new_mark
                     color_pair = Color.NEW
                 text = self.channels_fmt.format(
-                    new_mark=new_mark, title=line.data.title
+                    index=index, new_mark=new_mark, title=line.data.title
                 )
 
             if line.is_active:
