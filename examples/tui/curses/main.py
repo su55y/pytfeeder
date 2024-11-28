@@ -283,6 +283,11 @@ class PageState(Enum):
     ENTRIES = auto()
 
 
+class CLIType(Enum):
+    FILTER = auto()
+    JUMP = auto()
+
+
 class App:
     def __init__(
         self,
@@ -408,7 +413,7 @@ class App:
                 case Key.G | curses.KEY_END:
                     self.move_bottom()
                 case Key.SLASH:
-                    self.handle_slash(screen)
+                    self.handle_input(screen)
                 case (
                     Key.N1
                     | Key.N2
@@ -420,7 +425,7 @@ class App:
                     | Key.N8
                     | Key.N9
                 ):
-                    self.handle_num(screen, ch)
+                    self.handle_input(screen, cli_type=CLIType.JUMP, n=ch)
                 case Key.a:
                     self.mark_viewed()
                 case Key.A:
@@ -716,58 +721,27 @@ class App:
     def jump(self, key_index: int) -> None:
         if key_index > len(self.lines) + 1:
             return
-        # if self.state == PageState.CHANNELS:
-        #     self.last_page_index = self.index
         self.index = key_index - 1
         self.gravity = Gravity.DOWN
         curses.curs_set(0)
 
-    def handle_slash(self, screen: "curses._CursesWindow") -> None:
-        curses.curs_set(1)
-        max_y, max_x = screen.getmaxyx()
-        screen.addnstr(
-            max_y - 2,
-            0,
-            f"{self.status:<{max_x}}",
-            max_x,
-            curses.color_pair(Color.ACTIVE),
-        )
-        screen.move(max_y - 1, 0)
-        screen.clrtoeol()
-        screen.move(max_y - 1, 2)
-        screen.addch("/")
-        screen.refresh()
+    def handle_input(
+        self,
+        screen: "curses._CursesWindow",
+        cli_type: CLIType = CLIType.FILTER,
+        n: Optional[int] = None,
+    ) -> None:
+        prefix = "/"
         keyword = ""
-        try:
-            while ch := screen.getch():
-                screen.refresh()
-                max_y, max_x = screen.getmaxyx()
-                if ch == 10:
-                    screen.clear()
-                    if not keyword:
-                        return
-                    self.filter_lines(keyword)
-                    return
-                if ch in (Key.SLASH, Key.ESC):
-                    screen.clear()
-                    return
-                if ch == curses.KEY_BACKSPACE:
-                    if not len(keyword):
-                        continue
-                    keyword = keyword[: len(keyword) - 1]
-                    screen.addnstr(max_y - 1, 3, " " * max_x, max_x - 4)
-                    screen.refresh()
-                else:
-                    keyword += chr(ch)
-                width = min(len(keyword), max_x - 3)
-                screen.addnstr(max_y - 1, 3, keyword, width or 1)
-        except KeyboardInterrupt:
-            return
+        if cli_type is CLIType.JUMP:
+            if n is None:
+                return
+            num = n - 48
+            if num > 9 or num < 1:
+                return
+            prefix = ":"
+            keyword = f"{num}"
 
-    def handle_num(self, screen: "curses._CursesWindow", n: int) -> None:
-        num = n - 48
-        if num > 9 or num < 1:
-            return
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
         screen.addnstr(
@@ -780,8 +754,7 @@ class App:
         screen.move(max_y - 1, 0)
         screen.clrtoeol()
         screen.move(max_y - 1, 2)
-        screen.addch(":")
-        keyword = f"{num}"
+        screen.addch(prefix)
         screen.addnstr(max_y - 1, 3, keyword, 1)
         screen.refresh()
         try:
@@ -793,13 +766,18 @@ class App:
                     curses.curs_set(0)
                     if not keyword:
                         return
-                    try:
-                        key_index = int(keyword)
-                    except:
-                        return
-                    if key_index < 1:
-                        return
-                    self.jump(key_index)
+
+                    if cli_type is CLIType.JUMP:
+                        try:
+                            key_index = int(keyword)
+                        except:
+                            return
+                        if key_index < 1:
+                            return
+
+                        self.jump(key_index)
+                    else:
+                        self.filter_lines(keyword)
                     return
                 if ch in (Key.SLASH, Key.ESC):
                     screen.clear()
