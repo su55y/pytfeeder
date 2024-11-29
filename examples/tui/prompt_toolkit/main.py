@@ -254,9 +254,9 @@ class PageState(Enum):
 Lines = Union[List[Channel], List[Entry]]
 
 
-class CommandLine(ConditionalContainer):
+class FilterContainer(ConditionalContainer):
     def __init__(self, pager: "App"):
-        super(CommandLine, self).__init__(
+        super(FilterContainer, self).__init__(
             Window(
                 BufferControl(
                     buffer=pager.filter_buffer, input_processors=[BeforeInput("/")]
@@ -267,9 +267,9 @@ class CommandLine(ConditionalContainer):
         )
 
 
-class CommandLine2(ConditionalContainer):
+class JumpContainer(ConditionalContainer):
     def __init__(self, pager: "App"):
-        super(CommandLine2, self).__init__(
+        super(JumpContainer, self).__init__(
             Window(
                 BufferControl(
                     buffer=pager.jump_buffer, input_processors=[BeforeInput(":")]
@@ -404,8 +404,8 @@ class App:
                 self.main_window,
                 self.help_window,
                 self.toolbar_window,
-                CommandLine(self),
-                CommandLine2(self),
+                FilterContainer(self),
+                JumpContainer(self),
             ]
         )
 
