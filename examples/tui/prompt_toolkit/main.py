@@ -267,6 +267,19 @@ class CommandLine(ConditionalContainer):
         )
 
 
+class CommandLine2(ConditionalContainer):
+    def __init__(self, pager: "App"):
+        super(CommandLine2, self).__init__(
+            Window(
+                BufferControl(
+                    buffer=pager.jump_buffer, input_processors=[BeforeInput(":")]
+                ),
+                height=1,
+            ),
+            filter=has_focus(pager.jump_buffer),
+        )
+
+
 class App:
     def __init__(
         self,
@@ -352,6 +365,29 @@ class App:
 
         self.filter_buffer = Buffer(multiline=False, accept_handler=filter_handler)
 
+        self.jump_last_index = None
+
+        def jump_handler(buf: Buffer) -> bool:
+            if self._app_link:
+                self._app_link.layout.focus(self.main_window)
+                self._app_link.vi_state.input_mode = InputMode.NAVIGATION
+                self._app_link = None
+
+                try:
+                    number = int(buf.text)
+                except:
+                    return False
+
+                if number > len(self.page_lines) or number < 1:
+                    return False
+
+                self.selected_line = number - 1
+
+            buf.text = ""
+            return True
+
+        self.jump_buffer = Buffer(multiline=False, accept_handler=jump_handler)
+
         self.help_window = Window(
             always_hide_cursor=True,
             content=FormattedTextControl(
@@ -369,6 +405,7 @@ class App:
                 self.help_window,
                 self.toolbar_window,
                 CommandLine(self),
+                CommandLine2(self),
             ]
         )
 
@@ -709,6 +746,22 @@ class App:
         def _prompt_search(event: KeyPressEvent) -> None:
             event.app.layout.focus(self.filter_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
+            self._app_link = event.app
+
+        @kb.add("1")
+        @kb.add("2")
+        @kb.add("3")
+        @kb.add("4")
+        @kb.add("5")
+        @kb.add("6")
+        @kb.add("7")
+        @kb.add("8")
+        @kb.add("9")
+        def _prompt_jump(event: KeyPressEvent) -> None:
+            event.app.layout.focus(self.jump_buffer)
+            event.app.vi_state.input_mode = InputMode.INSERT
+            self.jump_buffer.text = str(event.key_sequence.pop().key)
+            self.jump_buffer.cursor_position = 1
             self._app_link = event.app
 
         @kb.add("a")
