@@ -148,6 +148,26 @@ def parse_args() -> argparse.Namespace:
         help="Feed limit. Overrides config value (default: None)",
     )
     parser.add_argument(
+        "--macro1",
+        metavar="STR",
+        help="F1 macro",
+    )
+    parser.add_argument(
+        "--macro2",
+        metavar="STR",
+        help="F2 macro",
+    )
+    parser.add_argument(
+        "--macro3",
+        metavar="STR",
+        help="F4 macro",
+    )
+    parser.add_argument(
+        "--macro4",
+        metavar="STR",
+        help="F4 macro",
+    )
+    parser.add_argument(
         "--new-mark",
         default=DEFAULT_NEW_MARK,
         metavar="STR",
@@ -292,6 +312,10 @@ class App:
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
         alphabetic: bool = False,
+        macro1: str = "",
+        macro2: str = "",
+        macro3: str = "",
+        macro4: str = "",
         **_,
     ) -> None:
         self.feeder = feeder
@@ -317,6 +341,13 @@ class App:
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
+
+        self.macros = {
+            "f1": macro1,
+            "f2": macro2,
+            "f3": macro3,
+            "f4": macro4,
+        }
 
         self._app_link: Optional[Application] = None
         self._filter: Optional[str] = None
@@ -763,6 +794,37 @@ class App:
             self.jump_buffer.text = str(event.key_sequence.pop().key)
             self.jump_buffer.cursor_position = 1
             self._app_link = event.app
+
+        @kb.add("f1")
+        @kb.add("f2")
+        @kb.add("f3")
+        @kb.add("f4")
+        def _macro(event: KeyPressEvent) -> None:
+            if len(self.page_lines) == 0:
+                return
+            if len(event.key_sequence) != 1:
+                return
+            if self.state != PageState.ENTRIES:
+                return
+
+            macro = self.macros.get(key := event.key_sequence.pop().key)
+            if not macro or len(macro) == 0:
+                self._status_msg = f"Macro {key!r} not found; "
+                self._status_msg_time = time.perf_counter()
+                return
+
+            self._status_msg = f"Executing macro {key!r}...; "
+            self._status_msg_time = time.perf_counter()
+
+            self.selected_data = self.page_lines[self.selected_line]
+            if not isinstance(self.selected_data, Entry):
+                return
+
+            sp.Popen(
+                [macro, self.selected_data.id, self.selected_data.title],
+                stdout=sp.DEVNULL,
+                stderr=sp.DEVNULL,
+            )
 
         @kb.add("a")
         def _mark_viewed(_) -> None:
