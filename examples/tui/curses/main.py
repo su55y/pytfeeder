@@ -6,7 +6,7 @@ import datetime as dt
 from enum import Enum, IntEnum, auto
 import os.path
 import subprocess as sp
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
@@ -127,6 +127,26 @@ def parse_args() -> argparse.Namespace:
         type=int,
         metavar="INT",
         help="Feed limit. Overrides config value (default: None)",
+    )
+    parser.add_argument(
+        "--macro1",
+        metavar="STR",
+        help="F1 macro",
+    )
+    parser.add_argument(
+        "--macro2",
+        metavar="STR",
+        help="F2 macro",
+    )
+    parser.add_argument(
+        "--macro3",
+        metavar="STR",
+        help="F4 macro",
+    )
+    parser.add_argument(
+        "--macro4",
+        metavar="STR",
+        help="F4 macro",
     )
     parser.add_argument(
         "--new-mark",
@@ -251,6 +271,10 @@ class Key(IntEnum):
     r = ord("r")
     d = ord("d")
     D = ord("D")
+    F1 = 265
+    F2 = 266
+    F3 = 267
+    F4 = 268
     N1 = ord("1")
     N2 = ord("2")
     N3 = ord("3")
@@ -300,6 +324,10 @@ class App:
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
         alphabetic: bool = False,
+        macro1: str = "",
+        macro2: str = "",
+        macro3: str = "",
+        macro4: str = "",
         **_,
     ) -> None:
         self.feeder = feeder
@@ -331,6 +359,12 @@ class App:
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self._status_msg = ""
         self._is_feed = False
+        self.macros = {
+            Key.F1: macro1,
+            Key.F2: macro2,
+            Key.F3: macro3,
+            Key.F4: macro4,
+        }
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
         if channels:
@@ -414,6 +448,8 @@ class App:
                     self.move_bottom()
                 case Key.SLASH:
                     self.handle_input(screen)
+                case Key.F1 | Key.F2 | Key.F3 | Key.F4:
+                    self.handle_macro(ch)
                 case (
                     Key.N1
                     | Key.N2
@@ -473,6 +509,26 @@ class App:
                     screen.clear()
                 case Key.q:
                     exit(0)
+
+    def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
+        if self.state != PageState.ENTRIES:
+            return
+        if len(self.lines) == 0:
+            return
+        macro = self.macros.get(key)
+        if not macro or len(macro) == 0:
+            return
+
+        self.selected_data = self.lines[self.index].data
+        if not isinstance(self.selected_data, Entry):
+            return
+
+        self._status_msg = f"Executing macro {Key(key).name}..."
+        sp.Popen(
+            [macro, self.selected_data.id, self.selected_data.title],
+            stdout=sp.DEVNULL,
+            stderr=sp.DEVNULL,
+        )
 
     def draw(self, screen: "curses._CursesWindow") -> None:
         x, y = 0, 0
