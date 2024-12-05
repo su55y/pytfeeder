@@ -24,6 +24,11 @@ DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = " {index}{title}{keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
+macros available only in entries screens.
+macros args:
+    $1 - id
+    $2 - title
+
 channels-fmt keys:
     {index}         - line index
     {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
@@ -53,6 +58,8 @@ HELP_KEYBINDINGS = [
     ("/", "Open filter"),
     ("h", "Cancel filter"),
     ("c", "Clear screen"),
+    ("0-9", "Jump to line {index}"),
+    ("F1-F4", "Execute macro 1-4"),
     ("q", "Quit"),
 ]
 
