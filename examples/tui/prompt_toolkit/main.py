@@ -853,7 +853,8 @@ class App:
             if not isinstance(self.selected_data, Entry):
                 return
             download_video(self.selected_data)
-            self.mark_viewed()
+            if not self.selected_data.is_viewed:
+                self.mark_viewed()
 
         @kb.add("D")
         def _download_all(_) -> None:

@@ -498,7 +498,8 @@ class App:
                     if err:
                         self._status_msg = f"download failed: {err}"
                     else:
-                        self.mark_viewed()
+                        if not selected_data.is_viewed:
+                            self.mark_viewed()
                 case Key.D:
                     self.selected_data = self.lines[self.index].data
                     if not (
