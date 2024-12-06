@@ -715,9 +715,11 @@ class App:
                     if self.selected_line >= len(self.entries):
                         return
                     entry_id = self.entries[self.selected_line].id
+                    title = self.entries[self.selected_line].title
                     self.feeder.mark_as_viewed(id=entry_id)
                     play_video(entry_id)
-                    event.app.exit()
+                    self.mark_viewed()
+                    notify(f"{title} playing...")
 
         @kb.add("h")
         @kb.add("left")
