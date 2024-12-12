@@ -18,7 +18,7 @@ from pytfeeder.consts import (
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(epilog="last modification: 17.09.2024")
+    parser = argparse.ArgumentParser(epilog="last modification: 12.12.2024")
     parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
@@ -121,10 +121,12 @@ def fetch_channel_info(url) -> Optional[Channel]:
     with YoutubeDL({"quiet": True}) as ydl:
         info = ydl.extract_info(url, download=False, process=False)
         if not info or not isinstance(info, Dict):
+            logging.error(f"Can't extract info by url: {url}")
             return
         title = info.get("title", "Unknown")
         channel_id = info.get("channel_id")
         if not channel_id or len(channel_id) != 24:
+            logging.error(f"Invalid channel_id {channel_id!r}\ninfo: {info}")
             return
         return Channel(title=title, channel_id=channel_id)
 
