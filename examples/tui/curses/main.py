@@ -720,7 +720,6 @@ class App:
             play_video(self.selected_data.id)
             self.mark_viewed()
             notify(f"{self.selected_data.title} playing...")
-            exit(0)
 
     def move_left_channels(self) -> None:
         self.lines = list(map(Line, self.channels))
