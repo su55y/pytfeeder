@@ -890,7 +890,7 @@ class App:
         if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
             if self.selected_data.channel_id == "feed":
                 return
-            unviewed = self.selected_data.have_updates
+            unviewed = not self.selected_data.have_updates
             self.feeder.mark_as_viewed(
                 channel_id=self.selected_data.channel_id, unviewed=unviewed
             )
