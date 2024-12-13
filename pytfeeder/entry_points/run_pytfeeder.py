@@ -2,12 +2,10 @@ import argparse
 import asyncio
 import logging
 from pathlib import Path
-from typing import Dict, Optional
 
 from pytfeeder.config import Config
 from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
-from pytfeeder.models import Channel
 from pytfeeder.rofi import RofiPrinter
 from pytfeeder.storage import Storage
 from pytfeeder.consts import (
@@ -15,6 +13,7 @@ from pytfeeder.consts import (
     DEFAULT_CHANNEL_FMT,
     DEFAULT_DATETIME_FMT,
 )
+from pytfeeder.utils import fetch_channel_info
 
 
 def parse_args() -> argparse.Namespace:
@@ -109,26 +108,6 @@ def init_logger(config: Config):
     handler = logging.FileHandler(config.log_file)
     handler.setFormatter(logging.Formatter(config.log_fmt))
     logger.addHandler(handler)
-
-
-def fetch_channel_info(url) -> Optional[Channel]:
-    try:
-        from yt_dlp import YoutubeDL
-    except ImportError as e:
-        print(f"ImportError: {e!s}")
-        return
-
-    with YoutubeDL({"quiet": True}) as ydl:
-        info = ydl.extract_info(url, download=False, process=False)
-        if not info or not isinstance(info, Dict):
-            logging.error(f"Can't extract info by url: {url}")
-            return
-        title = info.get("title", "Unknown")
-        channel_id = info.get("channel_id")
-        if not channel_id or len(channel_id) != 24:
-            logging.error(f"Invalid channel_id {channel_id!r}\ninfo: {info}")
-            return
-        return Channel(title=title, channel_id=channel_id)
 
 
 def entries_stats(feeder: Feeder) -> str:
