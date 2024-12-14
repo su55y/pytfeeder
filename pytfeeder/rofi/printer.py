@@ -12,8 +12,8 @@ class RofiPrinter:
     ) -> None:
         self.config = config
         self.feeder = feeder
-        self.channels_fmt = args.channels_fmt or self.config.channels_fmt
-        self.entries_fmt = args.entries_fmt or self.config.entries_fmt
+        self.channels_fmt = args.channels_fmt or self.config.rofi_channels_fmt
+        self.entries_fmt = args.entries_fmt or self.config.rofi_entries_fmt
         self.limit = args.limit
         self.offset = args.active_offset
         self.separator = args.separator
