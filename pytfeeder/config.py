@@ -9,8 +9,8 @@ import yaml
 from .defaults import default_cachedir_path
 from .models import Channel
 from .consts import (
-    DEFAULT_CHANNEL_FMT,
-    DEFAULT_ENTRY_FMT,
+    DEFAULT_ROFI_CHANNELS_FMT,
+    DEFAULT_ROFI_ENTRIES_FMT,
     DEFAULT_LOG_FMT,
     DEFAULT_DATETIME_FMT,
 )
@@ -86,8 +86,8 @@ class Config:
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
         self.storage_path = storage_path or self.cache_dir.joinpath("pytfeeder.db")
-        self.rofi_channels_fmt = rofi_channels_fmt or DEFAULT_CHANNEL_FMT
-        self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ENTRY_FMT
+        self.rofi_channels_fmt = rofi_channels_fmt or DEFAULT_ROFI_CHANNELS_FMT
+        self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ROFI_ENTRIES_FMT
         self.unviewed_first = unviewed_first or False
         if config_file:
             config_file = expand_path(config_file)
@@ -136,6 +136,8 @@ class Config:
             "feed_limit": self.feed_limit,
             "log_fmt": self.log_fmt,
             "log_level": self.log_level,
+            "rofi_channels_fmt": self.rofi_channels_fmt,
+            "rofi_entries_fmt": self.rofi_entries_fmt,
             "unviewed_first": self.unviewed_first,
         }
         with open(config_file, "w") as f:
@@ -151,8 +153,12 @@ class Config:
                 for c in self.channels
             )
         repr_str += f"channel_feed_limit: {self.channel_feed_limit}\n"
+        repr_str += f"channels_fmt: {self.channels_fmt!r}\n"
+        repr_str += f"entries_fmt: {self.entries_fmt!r}\n"
         repr_str += f"feed_limit: {self.feed_limit}\n"
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
         repr_str += f"log_level: {self.log_level}\n"
+        repr_str += f"rofi_channels_fmt: {self.rofi_channels_fmt!r}\n"
+        repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
         repr_str += f"unviewed_first: {self.unviewed_first}\n"
         return repr_str.strip()
