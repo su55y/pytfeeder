@@ -9,8 +9,8 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.rofi import RofiPrinter
 from pytfeeder.storage import Storage
 from pytfeeder.consts import (
-    DEFAULT_ENTRY_FMT,
-    DEFAULT_CHANNEL_FMT,
+    DEFAULT_ROFI_ENTRIES_FMT,
+    DEFAULT_ROFI_CHANNELS_FMT,
     DEFAULT_DATETIME_FMT,
 )
 from pytfeeder.utils import fetch_channel_info
@@ -72,10 +72,10 @@ def parse_args() -> argparse.Namespace:
         help="Prints channel feed by given channel_id",
     )
     rofi_args.add_argument(
-        "--channels-fmt",
+        "--rofi-channels-fmt",
         type=lambda s: eval("'%s'" % s),
         metavar="STR",
-        help=f"Channels print format (default: {DEFAULT_CHANNEL_FMT!r})",
+        help=f"Channels print format (default: {DEFAULT_ROFI_CHANNELS_FMT!r})",
     )
     rofi_args.add_argument(
         "--datetime-fmt",
@@ -83,10 +83,10 @@ def parse_args() -> argparse.Namespace:
         help=f"Datetime key format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
     rofi_args.add_argument(
-        "--entries-fmt",
+        "--rofi-entries-fmt",
         type=lambda s: eval("'%s'" % s),
         metavar="STR",
-        help=f"Entries print format (default: {DEFAULT_ENTRY_FMT!r}",
+        help=f"Entries print format (default: {DEFAULT_ROFI_ENTRIES_FMT!r}",
     )
     rofi_args.add_argument("-f", "--feed", action="store_true", help="Prints feed")
     rofi_args.add_argument(
@@ -171,8 +171,8 @@ def run():
     config_args = {"config_file": args.config_file}
     if args.rofi:
         config_args["datetime_fmt"] = args.datetime_fmt
-        config_args["entries_fmt"] = args.entries_fmt
-        config_args["channels_fmt"] = args.channels_fmt
+        config_args["rofi_entries_fmt"] = args.rofi_entries_fmt
+        config_args["rofi_channels_fmt"] = args.rofi_channels_fmt
 
     config = Config(**config_args)
     if not config:
