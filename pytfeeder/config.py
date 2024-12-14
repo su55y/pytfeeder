@@ -51,6 +51,8 @@ class Config:
     log_file: Path
     log_fmt: str
     storage_path: Path
+    rofi_channels_fmt: str
+    rofi_entries_fmt: str
     unviewed_first: bool
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
@@ -58,10 +60,10 @@ class Config:
     def __init__(
         self,
         config_file: Optional[Union[Path, str]] = None,
+        cache_dir: Optional[Path] = None,
         channels: Optional[List[Channel]] = None,
         channel_feed_limit: Optional[int] = None,
         channels_fmt: Optional[str] = None,
-        cache_dir: Optional[Path] = None,
         datetime_fmt: Optional[str] = None,
         entries_fmt: Optional[str] = None,
         feed_limit: Optional[int] = None,
@@ -69,19 +71,23 @@ class Config:
         log_file: Optional[Path] = None,
         log_fmt: Optional[str] = None,
         storage_path: Optional[Path] = None,
+        rofi_entries_fmt: Optional[str] = None,
+        rofi_channels_fmt: Optional[str] = None,
         unviewed_first: Optional[bool] = None,
     ) -> None:
         self.channels = channels or []
         self.feed_limit = feed_limit
         self.channel_feed_limit = channel_feed_limit
         self.cache_dir = cache_dir or default_cachedir_path()
-        self.channels_fmt = channels_fmt or DEFAULT_CHANNEL_FMT
+        self.channels_fmt = channels_fmt or ""
         self.datetime_fmt = datetime_fmt or DEFAULT_DATETIME_FMT
-        self.entries_fmt = entries_fmt or DEFAULT_ENTRY_FMT
+        self.entries_fmt = entries_fmt or ""
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
         self.storage_path = storage_path or self.cache_dir.joinpath("pytfeeder.db")
+        self.rofi_channels_fmt = rofi_channels_fmt or DEFAULT_CHANNEL_FMT
+        self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ENTRY_FMT
         self.unviewed_first = unviewed_first or False
         if config_file:
             config_file = expand_path(config_file)
@@ -112,6 +118,10 @@ class Config:
             self.entries_fmt = entries_fmt
         if datetime_fmt := config.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
+        if rofi_channels_fmt := config.get("rofi_channels_fmt"):
+            self.rofi_channels_fmt = rofi_channels_fmt
+        if rofi_entries_fmt := config.get("rofi_entries_fmt"):
+            self.rofi_entries_fmt = rofi_entries_fmt
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
 
