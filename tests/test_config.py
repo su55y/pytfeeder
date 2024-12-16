@@ -1,7 +1,7 @@
 from pathlib import Path
 import unittest
 from pytfeeder.config import Config
-from pytfeeder.consts import DEFAULT_CHANNEL_FMT, DEFAULT_ENTRY_FMT, DEFAULT_LOG_FMT
+import pytfeeder.consts as c
 
 
 class TestConfig(unittest.TestCase):
@@ -10,12 +10,12 @@ class TestConfig(unittest.TestCase):
         config = Config(
             cache_dir=Path.home().joinpath(".cache/pytfeeder"),
             channels=list(),
-            channels_fmt=DEFAULT_CHANNEL_FMT,
+            channels_fmt=c.DEFAULT_CHANNELS_FMT,
             channel_feed_limit=None,
-            entries_fmt=DEFAULT_ENTRY_FMT,
+            entries_fmt=c.DEFAULT_ENTRIES_FMT,
             feed_limit=None,
             log_level=0,
-            log_fmt=DEFAULT_LOG_FMT,
+            log_fmt=c.DEFAULT_LOG_FMT,
             unviewed_first=False,
         )
         self.assertEqual(default_config.channels, config.channels)
