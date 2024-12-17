@@ -106,9 +106,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--channels-fmt",
-        default=DEFAULT_CHANNELS_FMT,
         metavar="STR",
-        help="channels format (default: %(default)r)",
+        help=f"channels format (default: {DEFAULT_CHANNELS_FMT!r})",
     )
     parser.add_argument(
         "-c",
@@ -119,9 +118,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--datetime-fmt",
-        default=DEFAULT_DATETIME_FMT,
         metavar="STR",
-        help="entries `{updated}` datetime format (default: %(default)r)",
+        help=f"entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT!r})",
     )
     parser.add_argument(
         "--feed-entries-fmt",
@@ -131,9 +129,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--entries-fmt",
-        default=DEFAULT_ENTRIES_FMT,
         metavar="STR",
-        help="entries format (default: %(default)r)",
+        help=f"entries format (default: {DEFAULT_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
@@ -956,7 +953,18 @@ if __name__ == "__main__":
         except Exception as e:
             print("Update failed: %s" % e)
 
-    pager = App(feeder, **dict(vars(args)))
+    kwargs = dict(vars(args))
+    kwargs["channels_fmt"] = kwargs.get("channels_fmt") or (
+        config.channels_fmt or DEFAULT_CHANNELS_FMT
+    )
+    kwargs["entries_fmt"] = kwargs.get("entries_fmt") or (
+        config.entries_fmt or DEFAULT_ENTRIES_FMT
+    )
+    kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
+        config.datetime_fmt or DEFAULT_ENTRIES_FMT
+    )
+
+    pager = App(feeder, **kwargs)
 
     kb = KeyBindings()
 
