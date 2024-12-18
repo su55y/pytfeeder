@@ -47,6 +47,7 @@ class Config:
     channels: List[Channel]
     channels_fmt: str
     entries_fmt: str
+    feed_entries_fmt: str
     log_level: int
     log_file: Path
     log_fmt: str
@@ -66,6 +67,7 @@ class Config:
         channels_fmt: Optional[str] = None,
         datetime_fmt: Optional[str] = None,
         entries_fmt: Optional[str] = None,
+        feed_entries_fmt: Optional[str] = None,
         feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
@@ -82,6 +84,7 @@ class Config:
         self.channels_fmt = channels_fmt or ""
         self.datetime_fmt = datetime_fmt or DEFAULT_DATETIME_FMT
         self.entries_fmt = entries_fmt or ""
+        self.feed_entries_fmt = feed_entries_fmt or ""
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
@@ -116,6 +119,8 @@ class Config:
             self.channels_fmt = channels_fmt
         if entries_fmt := config.get("entries_fmt"):
             self.entries_fmt = entries_fmt
+        if feed_entries_fmt := config.get("feed_entries_fmt"):
+            self.feed_entries_fmt = feed_entries_fmt
         if datetime_fmt := config.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
         if rofi_channels_fmt := config.get("rofi_channels_fmt"):
@@ -132,6 +137,7 @@ class Config:
             "channels_fmt": self.channels_fmt,
             "channel_feed_limit": self.channel_feed_limit,
             "entries_fmt": self.entries_fmt,
+            "feed_entries_fmt": self.feed_entries_fmt,
             "datetime_fmt": self.datetime_fmt,
             "feed_limit": self.feed_limit,
             "log_fmt": self.log_fmt,
@@ -155,6 +161,7 @@ class Config:
         repr_str += f"channel_feed_limit: {self.channel_feed_limit}\n"
         repr_str += f"channels_fmt: {self.channels_fmt!r}\n"
         repr_str += f"entries_fmt: {self.entries_fmt!r}\n"
+        repr_str += f"feed_entries_fmt: {self.feed_entries_fmt!r}\n"
         repr_str += f"feed_limit: {self.feed_limit}\n"
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
         repr_str += f"log_level: {self.log_level}\n"
