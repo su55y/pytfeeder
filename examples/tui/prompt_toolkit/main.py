@@ -123,9 +123,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--feed-entries-fmt",
-        default=DEFAULT_FEED_ENTRIES_FMT,
         metavar="STR",
-        help="feed entries format (default: %(default)r)",
+        help=f"feed entries format (default: {DEFAULT_FEED_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--entries-fmt",
@@ -962,6 +961,9 @@ if __name__ == "__main__":
     )
     kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
         config.datetime_fmt or DEFAULT_ENTRIES_FMT
+    )
+    kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
+        config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
     )
 
     pager = App(feeder, **kwargs)
