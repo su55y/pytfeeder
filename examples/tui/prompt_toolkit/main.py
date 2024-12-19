@@ -119,7 +119,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--datetime-fmt",
         metavar="STR",
-        help=f"entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT!r})",
+        help=f"entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--feed-entries-fmt",
