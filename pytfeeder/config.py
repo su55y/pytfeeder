@@ -54,6 +54,7 @@ class Config:
     storage_path: Path
     rofi_channels_fmt: str
     rofi_entries_fmt: str
+    alphabetic_sort: bool
     unviewed_first: bool
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
@@ -75,6 +76,7 @@ class Config:
         storage_path: Optional[Path] = None,
         rofi_entries_fmt: Optional[str] = None,
         rofi_channels_fmt: Optional[str] = None,
+        alphabetic_sort: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
     ) -> None:
         self.channels = channels or []
@@ -91,6 +93,7 @@ class Config:
         self.storage_path = storage_path or self.cache_dir.joinpath("pytfeeder.db")
         self.rofi_channels_fmt = rofi_channels_fmt or DEFAULT_ROFI_CHANNELS_FMT
         self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ROFI_ENTRIES_FMT
+        self.alphabetic_sort = alphabetic_sort or False
         self.unviewed_first = unviewed_first or False
         if config_file:
             config_file = expand_path(config_file)
@@ -127,11 +130,14 @@ class Config:
             self.rofi_channels_fmt = rofi_channels_fmt
         if rofi_entries_fmt := config.get("rofi_entries_fmt"):
             self.rofi_entries_fmt = rofi_entries_fmt
+        if alphabetic_sort := config.get("alphabetic_sort"):
+            self.alphabetic_sort = bool(alphabetic_sort)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
 
     def dump(self, config_file: str) -> None:
         data = {
+            "alphabetic_sort": self.alphabetic_sort,
             "cache_dir": str(self.cache_dir),
             "channels": [c.dump() for c in self.channels],
             "channels_fmt": self.channels_fmt,
@@ -151,6 +157,7 @@ class Config:
 
     def __repr__(self) -> str:
         repr_str = ""
+        repr_str += f"alphabetic_sort {self.alphabetic_sort}\n"
         repr_str += f"cache_dir: {self.cache_dir!s}\n"
         if self.channels:
             repr_str += "channels:\n"
