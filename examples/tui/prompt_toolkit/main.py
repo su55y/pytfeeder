@@ -100,7 +100,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-A",
-        "--alphabetic",
+        "--alphabetic-sort",
         action="store_true",
         help="sort channels in alphabetic order, instead of order by config",
     )
@@ -314,7 +314,7 @@ class App:
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
-        alphabetic: bool = False,
+        alphabetic_sort: bool = False,
         macro1: str = "",
         macro2: str = "",
         macro3: str = "",
@@ -324,7 +324,7 @@ class App:
         self.feeder = feeder
 
         self.hide_feed = hide_feed
-        self.alphabetic = alphabetic
+        self.alphabetic_sort = alphabetic_sort
         self.channels = list()
         self._set_channels()
 
@@ -447,7 +447,7 @@ class App:
         if channels:
             self.feeder.channels = channels
 
-        if self.alphabetic:
+        if self.alphabetic_sort:
             self.feeder.channels.sort(key=lambda c: c.title)
 
         if self.hide_feed:
@@ -953,7 +953,7 @@ if __name__ == "__main__":
             print("Update failed: %s" % e)
 
     kwargs = dict(vars(args))
-    kwargs["alphabetic"] = kwargs.get("alphabetic") or config.alphabetic_sort
+    kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
     kwargs["channels_fmt"] = kwargs.get("channels_fmt") or (
         config.channels_fmt or DEFAULT_CHANNELS_FMT
     )
