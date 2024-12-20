@@ -953,6 +953,7 @@ if __name__ == "__main__":
             print("Update failed: %s" % e)
 
     kwargs = dict(vars(args))
+    kwargs["alphabetic"] = kwargs.get("alphabetic") or config.alphabetic_sort
     kwargs["channels_fmt"] = kwargs.get("channels_fmt") or (
         config.channels_fmt or DEFAULT_CHANNELS_FMT
     )
