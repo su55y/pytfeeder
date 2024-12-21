@@ -183,7 +183,7 @@ def parse_args() -> argparse.Namespace:
         help="status bar format (default: %(default)r)",
     )
     parser.add_argument(
-        "-U", "--no-update", action="store_false", help="Disable update on startup"
+        "-U", "--update", action="store_true", help="Update all feeds on startup"
     )
     return parser.parse_args()
 
@@ -945,7 +945,7 @@ if __name__ == "__main__":
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    if args.no_update and is_update_interval_expired():
+    if args.update or is_update_interval_expired():
         print("updating...")
         try:
             asyncio.run(feeder.sync_entries())
