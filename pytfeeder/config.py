@@ -56,6 +56,7 @@ class Config:
     rofi_entries_fmt: str
     alphabetic_sort: bool
     unviewed_first: bool
+    always_update: bool
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
 
@@ -77,6 +78,7 @@ class Config:
         rofi_entries_fmt: Optional[str] = None,
         rofi_channels_fmt: Optional[str] = None,
         alphabetic_sort: Optional[bool] = None,
+        always_update: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
     ) -> None:
         self.channels = channels or []
@@ -94,6 +96,7 @@ class Config:
         self.rofi_channels_fmt = rofi_channels_fmt or DEFAULT_ROFI_CHANNELS_FMT
         self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ROFI_ENTRIES_FMT
         self.alphabetic_sort = alphabetic_sort or False
+        self.always_update = always_update or False
         self.unviewed_first = unviewed_first or False
         if config_file:
             config_file = expand_path(config_file)
@@ -132,12 +135,15 @@ class Config:
             self.rofi_entries_fmt = rofi_entries_fmt
         if alphabetic_sort := config.get("alphabetic_sort"):
             self.alphabetic_sort = bool(alphabetic_sort)
+        if always_update := config.get("always_update"):
+            self.always_update = bool(always_update)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
 
     def dump(self, config_file: str) -> None:
         data = {
             "alphabetic_sort": self.alphabetic_sort,
+            "always_update": self.always_update,
             "cache_dir": str(self.cache_dir),
             "channels": [c.dump() for c in self.channels],
             "channels_fmt": self.channels_fmt,
@@ -157,7 +163,8 @@ class Config:
 
     def __repr__(self) -> str:
         repr_str = ""
-        repr_str += f"alphabetic_sort {self.alphabetic_sort}\n"
+        repr_str += f"alphabetic_sort: {self.alphabetic_sort}\n"
+        repr_str += f"always_update: {self.always_update}\n"
         repr_str += f"cache_dir: {self.cache_dir!s}\n"
         if self.channels:
             repr_str += "channels:\n"
