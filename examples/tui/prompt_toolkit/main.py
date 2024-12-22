@@ -945,7 +945,7 @@ if __name__ == "__main__":
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    if args.update or is_update_interval_expired():
+    if args.update or config.always_update or is_update_interval_expired():
         print("updating...")
         try:
             asyncio.run(feeder.sync_entries())
