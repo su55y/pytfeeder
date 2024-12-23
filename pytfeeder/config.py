@@ -59,6 +59,10 @@ class Config:
     always_update: bool
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
+    macro1: Optional[str] = None
+    macro2: Optional[str] = None
+    macro3: Optional[str] = None
+    macro4: Optional[str] = None
 
     def __init__(
         self,
@@ -80,6 +84,10 @@ class Config:
         alphabetic_sort: Optional[bool] = None,
         always_update: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
+        macro1: Optional[str] = None,
+        macro2: Optional[str] = None,
+        macro3: Optional[str] = None,
+        macro4: Optional[str] = None,
     ) -> None:
         self.channels = channels or []
         self.feed_limit = feed_limit
@@ -98,6 +106,10 @@ class Config:
         self.alphabetic_sort = alphabetic_sort or False
         self.always_update = always_update or False
         self.unviewed_first = unviewed_first or False
+        self.macro1 = macro1
+        self.macro2 = macro2
+        self.macro3 = macro3
+        self.macro4 = macro4
         if config_file:
             config_file = expand_path(config_file)
             if config_file.exists():
@@ -139,6 +151,14 @@ class Config:
             self.always_update = bool(always_update)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
+        if macro1 := config.get("macro1"):
+            self.macro1 = macro1
+        if macro2 := config.get("macro2"):
+            self.macro2 = macro2
+        if macro3 := config.get("macro3"):
+            self.macro3 = macro3
+        if macro4 := config.get("macro4"):
+            self.macro4 = macro4
 
     def dump(self, config_file: str) -> None:
         data = {
