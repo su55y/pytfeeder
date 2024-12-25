@@ -27,14 +27,14 @@ err_msg() {
 start_menu() {
 	printf "\000markup-rows\037true\n"
 	printf "feed\r%s new entries\000info\037feed\n" "$(pytfeeder -u)"
-	pytfeeder --rofi --channels-fmt '{title}\r{unviewed_count} new entries\000info\037{id}' "$@"
+	pytfeeder --rofi --rofi-channels-fmt '{title}\r{unviewed_count} new entries\000info\037{id}' "$@"
 	printf "\000new-selection\0370\n"
 }
 
 print_feed() {
 	printf "back\000info\037main\n"
 	printf "\000markup-rows\037true\n"
-	pytfeeder --rofi -f --entries-fmt '{title}\r<b><i>{channel_title}</i></b>\000info\037{id}\037meta\037{meta}' "$@"
+	pytfeeder --rofi -f --rofi-entries-fmt '{title}\r<b><i>{channel_title}</i></b>\000info\037{id}\037meta\037{meta}' "$@"
 }
 
 print_channel_feed() {
@@ -42,7 +42,7 @@ print_channel_feed() {
 	channel_id="$1"
 	shift
 	printf "back\000info\037main\n"
-	pytfeeder --rofi -i="$channel_id" "$@" --entries-fmt '{title}\r<b>{updated}</b>\000info\037{id}\037meta\037{meta}' --datetime-fmt '<i>%d %B</i>'
+	pytfeeder --rofi -i="$channel_id" "$@" --rofi-entries-fmt '{title}\r<b>{updated}</b>\000info\037{id}\037meta\037{meta}' --datetime-fmt '<i>%d %B</i>'
 }
 
 play() {
