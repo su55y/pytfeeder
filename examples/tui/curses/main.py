@@ -87,9 +87,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--channels-fmt",
-        default=DEFAULT_CHANNELS_FMT,
         metavar="STR",
-        help="channels format (default: %(default)r)",
+        help=f"channels format (default: {DEFAULT_CHANNELS_FMT!r})",
     )
     parser.add_argument(
         "-c",
@@ -100,21 +99,18 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--datetime-fmt",
-        default=DEFAULT_DATETIME_FMT,
         metavar="STR",
-        help="`{updated}` datetime format of entry (default: %(default)r)",
+        help=f"entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--entries-fmt",
-        default=DEFAULT_ENTRIES_FMT,
         metavar="STR",
-        help="entries format (default: %(default)r)",
+        help=f"entries format (default: {DEFAULT_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--feed-entries-fmt",
-        default=DEFAULT_FEED_ENTRIES_FMT,
         metavar="STR",
-        help="feed entries format (default: %(default)r)",
+        help=f"feed entries format (default: {DEFAULT_FEED_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
@@ -969,8 +965,28 @@ if __name__ == "__main__":
         except Exception as e:
             print("Update failed: %s" % e)
 
+    kwargs = dict(vars(args))
+    kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
+    kwargs["channels_fmt"] = kwargs.get("channels_fmt") or (
+        config.channels_fmt or DEFAULT_CHANNELS_FMT
+    )
+    kwargs["entries_fmt"] = kwargs.get("entries_fmt") or (
+        config.entries_fmt or DEFAULT_ENTRIES_FMT
+    )
+    kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
+        config.datetime_fmt or DEFAULT_ENTRIES_FMT
+    )
+    kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
+        config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
+    )
+
+    kwargs["macro1"] = kwargs.get("macro1") or config.macro1
+    kwargs["macro2"] = kwargs.get("macro2") or config.macro2
+    kwargs["macro3"] = kwargs.get("macro3") or config.macro3
+    kwargs["macro4"] = kwargs.get("macro4") or config.macro4
+
     try:
-        _ = App(feeder, **dict(vars(args))).start()
+        _ = App(feeder, **kwargs).start()
     except Exception as e:
         print(e)
         exit(1)
