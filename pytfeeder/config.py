@@ -195,6 +195,7 @@ class Config:
         repr_str += f"channel_feed_limit: {self.channel_feed_limit}\n"
         repr_str += f"channels_fmt: {self.channels_fmt!r}\n"
         repr_str += f"entries_fmt: {self.entries_fmt!r}\n"
+        repr_str += f"datetime_fmt: {self.datetime_fmt!r}\n"
         repr_str += f"feed_entries_fmt: {self.feed_entries_fmt!r}\n"
         repr_str += f"feed_limit: {self.feed_limit}\n"
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
@@ -202,4 +203,8 @@ class Config:
         repr_str += f"rofi_channels_fmt: {self.rofi_channels_fmt!r}\n"
         repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
         repr_str += f"unviewed_first: {self.unviewed_first}\n"
+        repr_str += f"macro1: {self.macro1!r}"
+        repr_str += f"macro2: {self.macro2!r}"
+        repr_str += f"macro3: {self.macro3!r}"
+        repr_str += f"macro4: {self.macro4!r}"
         return repr_str.strip()
