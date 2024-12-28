@@ -13,11 +13,11 @@ from pytfeeder.consts import (
     DEFAULT_ROFI_CHANNELS_FMT,
     DEFAULT_DATETIME_FMT,
 )
-from pytfeeder.utils import fetch_channel_info
+from pytfeeder.utils import fetch_channel_info, human_readable_size
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(epilog="last modification: 27.12.2024")
+    parser = argparse.ArgumentParser(epilog="last modification: 28.12.2024")
     parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
@@ -136,7 +136,6 @@ def entries_stats(feeder: Feeder) -> str:
 
 def storage_file_stats(storage_path: Path) -> str:
     from datetime import datetime
-    import math
     import pwd
 
     stat = storage_path.stat()
@@ -145,15 +144,7 @@ def storage_file_stats(storage_path: Path) -> str:
     st_atime = datetime.fromtimestamp(stat.st_atime)
     st_mtime = datetime.fromtimestamp(stat.st_mtime)
     st_ctime = datetime.fromtimestamp(stat.st_ctime)
-
-    size = ""
-    if stat.st_size == 0:
-        size = "0B"
-    size_name = ("B", "KB", "MB", "GB", "TB")
-    i = int(math.floor(math.log(stat.st_size, 1024)))
-    p = math.pow(1024, i)
-    s = round(stat.st_size / p, 2)
-    size = "%s %s" % (s, size_name[i])
+    size = human_readable_size(stat.st_size)
 
     return "{tab}owner: {user}\n{tab}size: {size}\n{tab}ctime: {ctime}\n{tab}mtime: {mtime}\n{tab}atime: {atime}".format(
         tab="  - ",
