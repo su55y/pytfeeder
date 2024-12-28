@@ -139,14 +139,13 @@ def storage_file_stats(storage_path: Path) -> str:
     import pwd
 
     stat = storage_path.stat()
-    user = pwd.getpwuid(stat.st_uid)[0]
-
+    user = "%s/%s" % (stat.st_uid, pwd.getpwuid(stat.st_uid)[0])
     st_atime = datetime.fromtimestamp(stat.st_atime)
     st_mtime = datetime.fromtimestamp(stat.st_mtime)
     st_ctime = datetime.fromtimestamp(stat.st_ctime)
     size = human_readable_size(stat.st_size)
 
-    return "{tab}owner: {user}\n{tab}size: {size}\n{tab}ctime: {ctime}\n{tab}mtime: {mtime}\n{tab}atime: {atime}".format(
+    return "{tab}Uid: {user}\n{tab}Size: {size}\n{tab}Change: {ctime}\n{tab}Modify: {mtime}\n{tab}Access: {atime}".format(
         tab="  - ",
         user=user,
         size=size,
