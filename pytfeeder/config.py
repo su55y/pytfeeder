@@ -177,6 +177,10 @@ class Config:
             "rofi_channels_fmt": self.rofi_channels_fmt,
             "rofi_entries_fmt": self.rofi_entries_fmt,
             "unviewed_first": self.unviewed_first,
+            "macro1": self.macro1,
+            "macro2": self.macro2,
+            "macro3": self.macro3,
+            "macro4": self.macro4,
         }
         with open(config_file, "w") as f:
             yaml.safe_dump(data, f, allow_unicode=True)
