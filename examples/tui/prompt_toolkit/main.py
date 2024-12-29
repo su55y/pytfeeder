@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import datetime as dt
 from enum import Enum, auto
-import os.path
+from pathlib import Path
 import subprocess as sp
 import time
 from typing import List, Optional, Tuple, Union
@@ -33,7 +33,7 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 
 
-LOCK_FILE = "/tmp/pytfeeder_update.lock"
+LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
 UPDATE_INVERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
@@ -190,16 +190,13 @@ def parse_args() -> argparse.Namespace:
 
 def is_update_interval_expired() -> bool:
     def update_lock_file():
-        with open(LOCK_FILE, "w") as f:
-            f.write(dt.datetime.now().strftime("%s"))
+        LOCK_FILE.write_text(dt.datetime.now().strftime("%s"))
 
-    if not os.path.exists(LOCK_FILE):
+    if not LOCK_FILE.exists():
         update_lock_file()
         return True
 
-    last_update = dt.datetime.now()
-    with open(LOCK_FILE) as f:
-        last_update = dt.datetime.fromtimestamp(float(f.read()))
+    last_update = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
     if last_update < (dt.datetime.now() - dt.timedelta(minutes=UPDATE_INVERVAL_MINS)):
         update_lock_file()
         return True
