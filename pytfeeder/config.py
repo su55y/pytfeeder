@@ -59,6 +59,7 @@ class Config:
     always_update: bool
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
+    update_interval: Optional[int] = None
     macro1: Optional[str] = None
     macro2: Optional[str] = None
     macro3: Optional[str] = None
@@ -84,6 +85,7 @@ class Config:
         alphabetic_sort: Optional[bool] = None,
         always_update: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
+        update_interval: Optional[int] = None,
         macro1: Optional[str] = None,
         macro2: Optional[str] = None,
         macro3: Optional[str] = None,
@@ -106,6 +108,7 @@ class Config:
         self.alphabetic_sort = alphabetic_sort or False
         self.always_update = always_update or False
         self.unviewed_first = unviewed_first or False
+        self.update_interval = update_interval or None
         self.macro1 = macro1
         self.macro2 = macro2
         self.macro3 = macro3
@@ -151,6 +154,8 @@ class Config:
             self.always_update = bool(always_update)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
+        if update_interval := config.get("update_interval"):
+            self.update_interval = update_interval
         if macro1 := config.get("macro1"):
             self.macro1 = macro1
         if macro2 := config.get("macro2"):
@@ -177,6 +182,7 @@ class Config:
             "rofi_channels_fmt": self.rofi_channels_fmt,
             "rofi_entries_fmt": self.rofi_entries_fmt,
             "unviewed_first": self.unviewed_first,
+            "update_interval": self.update_interval,
             "macro1": self.macro1,
             "macro2": self.macro2,
             "macro3": self.macro3,
@@ -207,6 +213,7 @@ class Config:
         repr_str += f"rofi_channels_fmt: {self.rofi_channels_fmt!r}\n"
         repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
         repr_str += f"unviewed_first: {self.unviewed_first}\n"
+        repr_str += f"update_interval: {self.update_interval}\n"
         repr_str += f"macro1: {self.macro1!r}"
         repr_str += f"macro2: {self.macro2!r}"
         repr_str += f"macro3: {self.macro3!r}"
