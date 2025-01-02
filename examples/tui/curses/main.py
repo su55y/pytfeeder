@@ -4,7 +4,7 @@ import curses
 from dataclasses import dataclass
 import datetime as dt
 from enum import Enum, IntEnum, auto
-import os.path
+from pathlib import Path
 import subprocess as sp
 from typing import List, Literal, Optional, Union
 
@@ -15,8 +15,8 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 
 
-LOCK_FILE = "/tmp/pytfeeder_update.lock"
-UPDATE_INVERVAL_MINS = 30
+LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
+DEFAULT_UPDATE_INTERVAL_MINS = 30
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
@@ -164,6 +164,13 @@ def parse_args() -> argparse.Namespace:
         help="status bar format (default: %(default)r)",
     )
     parser.add_argument(
+        "-u",
+        "--update-interval",
+        metavar="INT",
+        type=int,
+        help=f"Update interval in minutes (default: {DEFAULT_UPDATE_INTERVAL_MINS})",
+    )
+    parser.add_argument(
         "-U", "--update", action="store_true", help="Update all feeds on startup"
     )
     return parser.parse_args()
@@ -231,19 +238,16 @@ def download_all(entries: List[Entry]) -> Optional[str]:
         download_video(e, send_notification=False)
 
 
-def is_update_interval_expired() -> bool:
+def is_update_interval_expired(mins: int) -> bool:
     def update_lock_file():
-        with open(LOCK_FILE, "w") as f:
-            f.write(dt.datetime.now().strftime("%s"))
+        LOCK_FILE.write_text(dt.datetime.now().strftime("%s"))
 
-    if not os.path.exists(LOCK_FILE):
+    if not LOCK_FILE.exists():
         update_lock_file()
         return True
 
-    last_update = dt.datetime.now()
-    with open(LOCK_FILE) as f:
-        last_update = dt.datetime.fromtimestamp(float(f.read()))
-    if last_update < (dt.datetime.now() - dt.timedelta(minutes=UPDATE_INVERVAL_MINS)):
+    last_update = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
+    if last_update < (dt.datetime.now() - dt.timedelta(minutes=mins)):
         update_lock_file()
         return True
 
@@ -958,7 +962,14 @@ if __name__ == "__main__":
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    if args.update or is_update_interval_expired():
+    update_interval_mins = (
+        args.update_interval or config.update_interval or DEFAULT_UPDATE_INTERVAL_MINS
+    )
+    if (
+        args.update
+        or config.always_update
+        or is_update_interval_expired(update_interval_mins)
+    ):
         print("updating...")
         try:
             asyncio.run(feeder.sync_entries())
