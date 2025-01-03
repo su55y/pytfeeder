@@ -323,6 +323,7 @@ class App:
         macro2: str = "",
         macro3: str = "",
         macro4: str = "",
+        update_label: Optional[str] = None,
         **_,
     ) -> None:
         self.feeder = feeder
@@ -446,6 +447,10 @@ class App:
                 JumpContainer(self),
             ]
         )
+
+        if update_label:
+            self._status_msg = f"{update_label}; "
+            self._status_msg_time = time.perf_counter()
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
         if channels:
@@ -949,6 +954,7 @@ if __name__ == "__main__":
         print(f"No channels found in config {config_path}")
         exit(0)
 
+    update_label = None
     update_interval_mins = (
         args.update_interval or config.update_interval or DEFAULT_UPDATE_INTERVAL_MINS
     )
@@ -958,10 +964,17 @@ if __name__ == "__main__":
         or is_update_interval_expired(update_interval_mins)
     ):
         print("updating...")
+        before = feeder.unviewed_count()
         try:
             asyncio.run(feeder.sync_entries())
         except Exception as e:
             print("Update failed: %s" % e)
+        else:
+            after = feeder.unviewed_count()
+            if before < after:
+                feeder.update_channels()
+                new = after - before
+                update_label = f"{after - before} new entries"
 
     kwargs = dict(vars(args))
     kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
@@ -982,6 +995,7 @@ if __name__ == "__main__":
     kwargs["macro2"] = kwargs.get("macro2") or config.macro2
     kwargs["macro3"] = kwargs.get("macro3") or config.macro3
     kwargs["macro4"] = kwargs.get("macro4") or config.macro4
+    kwargs["update_label"] = update_label
 
     pager = App(feeder, **kwargs)
 
