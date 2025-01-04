@@ -192,6 +192,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-U", "--update", action="store_true", help="Update all feeds on startup"
     )
+    parser.add_argument(
+        "--last-update-fmt",
+        default="%D %T",
+        help="{{last_update}} status key datetime format",
+    )
     return parser.parse_args()
 
 
@@ -324,6 +329,7 @@ class App:
         macro3: str = "",
         macro4: str = "",
         update_label: Optional[str] = None,
+        last_update: str = "",
         **_,
     ) -> None:
         self.feeder = feeder
@@ -363,6 +369,7 @@ class App:
         self._status_fmt = status_fmt
         self._status_msg = ""
         self._status_msg_time = 0
+        self._last_update = last_update
         self._default_keybinds_fmt = DEFAULT_KEYBINDS
         self._keybinds_fmt = DEFAULT_KEYBINDS
         self._title_fmt = ""
@@ -593,6 +600,7 @@ class App:
                 index=self._index_fmt,
                 title=self._title_fmt,
                 keybinds=self._keybinds_fmt,
+                last_update=self._last_update,
             ).split()
         )
 
@@ -996,6 +1004,13 @@ if __name__ == "__main__":
     kwargs["macro3"] = kwargs.get("macro3") or config.macro3
     kwargs["macro4"] = kwargs.get("macro4") or config.macro4
     kwargs["update_label"] = update_label
+    kwargs["last_update"] = ""
+    try:
+        dt_str = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
+    except:
+        pass
+    else:
+        kwargs["last_update"] = dt_str.strftime(args.last_update_fmt)
 
     pager = App(feeder, **kwargs)
 
