@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import datetime as dt
 from enum import Enum, auto
+from functools import cached_property
 from pathlib import Path
 import subprocess as sp
 import time
@@ -42,6 +43,7 @@ DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
+DEFAULT_LAST_UPDATE_FMT = "%D %T"
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens.
 macros args:
@@ -200,10 +202,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def is_update_interval_expired(mins: int) -> bool:
-    def update_lock_file():
-        LOCK_FILE.write_text(dt.datetime.now().strftime("%s"))
+def update_lock_file():
+    LOCK_FILE.write_text(dt.datetime.now().strftime("%s"))
 
+
+def is_update_interval_expired(mins: int) -> bool:
     if not LOCK_FILE.exists():
         update_lock_file()
         return True
@@ -329,7 +332,7 @@ class App:
         macro3: str = "",
         macro4: str = "",
         update_label: Optional[str] = None,
-        last_update: str = "",
+        last_update_fmt: str = DEFAULT_LAST_UPDATE_FMT,
         **_,
     ) -> None:
         self.feeder = feeder
@@ -369,7 +372,9 @@ class App:
         self._status_fmt = status_fmt
         self._status_msg = ""
         self._status_msg_time = 0
-        self._last_update = last_update
+        self._last_update = ""
+        self._last_update_fmt = last_update_fmt
+        self.refresh_last_update()
         self._default_keybinds_fmt = DEFAULT_KEYBINDS
         self._keybinds_fmt = DEFAULT_KEYBINDS
         self._title_fmt = ""
@@ -936,6 +941,16 @@ class App:
         else:
             self._status_msg = "no updates; "
         self._status_msg_time = time.perf_counter()
+        update_lock_file()
+        self.refresh_last_update()
+
+    def refresh_last_update(self) -> None:
+        try:
+            dt_str = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
+        except:
+            pass
+        else:
+            self._last_update = dt_str.strftime(self._last_update_fmt)
 
     def __pt_container__(self) -> HSplit:
         return self.container
@@ -998,19 +1013,13 @@ if __name__ == "__main__":
     kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
         config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
     )
+    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or DEFAULT_LAST_UPDATE_FMT
 
     kwargs["macro1"] = kwargs.get("macro1") or config.macro1
     kwargs["macro2"] = kwargs.get("macro2") or config.macro2
     kwargs["macro3"] = kwargs.get("macro3") or config.macro3
     kwargs["macro4"] = kwargs.get("macro4") or config.macro4
     kwargs["update_label"] = update_label
-    kwargs["last_update"] = ""
-    try:
-        dt_str = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
-    except:
-        pass
-    else:
-        kwargs["last_update"] = dt_str.strftime(args.last_update_fmt)
 
     pager = App(feeder, **kwargs)
 
