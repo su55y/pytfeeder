@@ -385,7 +385,7 @@ class App:
         self._last_update_fmt = last_update_fmt
         self.refresh_last_update()
         if update_label:
-            self._status_msg = f"{update_label}; "
+            self._status_msg = update_label
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
         if channels:
