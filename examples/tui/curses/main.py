@@ -23,6 +23,7 @@ DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = " {index}{title}{keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
+DEFAULT_LAST_UPDATE_FMT = "%D %T"
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens.
 macros args:
@@ -132,6 +133,11 @@ def parse_args() -> argparse.Namespace:
         help="Feed limit. Overrides config value (default: None)",
     )
     parser.add_argument(
+        "--last-update-fmt",
+        metavar="STR",
+        help=f"{{last_update}} status key datetime format (default: {DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
+    )
+    parser.add_argument(
         "--macro1",
         metavar="STR",
         help="F1 macro",
@@ -238,10 +244,11 @@ def download_all(entries: List[Entry]) -> Optional[str]:
         download_video(e, send_notification=False)
 
 
-def is_update_interval_expired(mins: int) -> bool:
-    def update_lock_file():
-        LOCK_FILE.write_text(dt.datetime.now().strftime("%s"))
+def update_lock_file():
+    LOCK_FILE.write_text(dt.datetime.now().strftime("%s"))
 
+
+def is_update_interval_expired(mins: int) -> bool:
     if not LOCK_FILE.exists():
         update_lock_file()
         return True
@@ -336,6 +343,7 @@ class App:
         macro3: str = "",
         macro4: str = "",
         update_label: Optional[str] = None,
+        last_update_fmt: str = DEFAULT_LAST_UPDATE_FMT,
         **_,
     ) -> None:
         self.feeder = feeder
@@ -373,6 +381,9 @@ class App:
             Key.F3: macro3,
             Key.F4: macro4,
         }
+        self._last_update = ""
+        self._last_update_fmt = last_update_fmt
+        self.refresh_last_update()
         if update_label:
             self._status_msg = f"{update_label}; "
 
@@ -773,6 +784,17 @@ class App:
         else:
             self._status_msg = "no updates"
 
+        update_lock_file()
+        self.refresh_last_update()
+
+    def refresh_last_update(self) -> None:
+        try:
+            dt_str = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
+        except:
+            pass
+        else:
+            self._last_update = dt_str.strftime(self._last_update_fmt)
+
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
             return
@@ -915,7 +937,10 @@ class App:
         if self.filtered:
             title = "%d found " % len(self.lines)
         status = self.status_fmt.format(
-            index=self._status_index, title=title, keybinds=self._status_keybinds
+            index=self._status_index,
+            title=title,
+            keybinds=self._status_keybinds,
+            last_update=self._last_update,
         )
         if self._status_msg:
             return f" {self._status_msg};{status}"
@@ -1007,6 +1032,7 @@ if __name__ == "__main__":
     kwargs["macro3"] = kwargs.get("macro3") or config.macro3
     kwargs["macro4"] = kwargs.get("macro4") or config.macro4
     kwargs["update_label"] = update_label
+    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or DEFAULT_LAST_UPDATE_FMT
 
     try:
         _ = App(feeder, **kwargs).start()
