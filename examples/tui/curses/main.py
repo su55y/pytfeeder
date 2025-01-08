@@ -6,6 +6,7 @@ import datetime as dt
 from enum import Enum, IntEnum, auto
 from pathlib import Path
 import subprocess as sp
+import time
 from typing import List, Literal, Optional, Union
 
 from pytfeeder.defaults import default_config_path
@@ -21,7 +22,7 @@ DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
-DEFAULT_STATUS_FMT = " {index}{title}{keybinds}"
+DEFAULT_STATUS_FMT = "{msg}{index}{title}{keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
 DEFAULT_LAST_UPDATE_FMT = "%D %T"
 OPTIONS_DESCRIPTION = """
@@ -374,6 +375,7 @@ class App:
         self._g_pressed = False
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self._status_msg = ""
+        self._status_msg_time = 0
         self._is_feed = False
         self.macros = {
             Key.F1: macro1,
@@ -386,6 +388,7 @@ class App:
         self.refresh_last_update()
         if update_label:
             self._status_msg = update_label
+            self._status_msg_time = time.perf_counter()
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
         if channels:
@@ -426,8 +429,8 @@ class App:
     def run_loop(self, screen: "curses._CursesWindow") -> None:
         while True:
             self.draw(screen)
-            self._status_msg = ""
             ch = screen.getch()
+            self._status_msg = ""
             match ch:
                 case Key.j | curses.KEY_DOWN | Key.TAB | Key.n:
                     if len(self.lines) > 0:
@@ -457,6 +460,7 @@ class App:
                         self.filtered = False
                 case Key.r:
                     self._status_msg = "updating..."
+                    self._status_msg_time = time.perf_counter()
                     self.draw(screen)
                     self.reload()
                 case curses.KEY_HOME:
@@ -511,6 +515,7 @@ class App:
                     err = download_video(selected_data)
                     if err:
                         self._status_msg = f"download failed: {err}"
+                        self._status_msg_time = time.perf_counter()
                     else:
                         if not selected_data.is_viewed:
                             self.mark_viewed()
@@ -546,6 +551,7 @@ class App:
             return
 
         self._status_msg = f"Executing macro {Key(key).name}..."
+        self._status_msg_time = time.perf_counter()
         sp.Popen(
             [macro, self.selected_data.id, self.selected_data.title],
             stdout=sp.DEVNULL,
@@ -762,6 +768,7 @@ class App:
             asyncio.run(self.feeder.sync_entries())
         except:
             self._status_msg = "reload failed"
+            self._status_msg_time = time.perf_counter()
             return
 
         self._set_channels(self.feeder.update_channels())
@@ -783,6 +790,7 @@ class App:
             self._status_msg = f"{new} new updates"
         else:
             self._status_msg = "no updates"
+        self._status_msg_time = time.perf_counter()
 
         update_lock_file()
         self.refresh_last_update()
@@ -936,15 +944,22 @@ class App:
             title = "%s " % self.channels[self.last_page_index].title
         if self.filtered:
             title = "%d found " % len(self.lines)
-        status = self.status_fmt.format(
-            index=self._status_index,
-            title=title,
-            keybinds=self._status_keybinds,
-            last_update=self._last_update,
+        if (
+            len(self._status_msg) > 0
+            and (time.perf_counter() - self._status_msg_time) > 3
+        ):
+            self._status_msg = ""
+            self._status_msg_time = 0
+
+        return " ".join(
+            self.status_fmt.format(
+                msg=self._status_msg,
+                index=self._status_index,
+                title=title,
+                keybinds=self._status_keybinds,
+                last_update=self._last_update,
+            ).split()
         )
-        if self._status_msg:
-            return f" {self._status_msg};{status}"
-        return status
 
     @property
     def _status_keybinds(self) -> str:
