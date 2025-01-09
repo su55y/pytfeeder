@@ -60,6 +60,12 @@ entries-fmt keys:
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
     {channel_title} - title of the channel
+
+status-fmt keys:
+    {index}         - current line index
+    {msg}           - status message
+    {title}         - current feed title
+    {last_update}   - time of last update (optionally formatted with `--last-update-fmt`)
 """
 HELP_KEYBINDINGS = [
     ("h, Left", "Return to previous screen/Quit"),
@@ -152,6 +158,11 @@ def parse_args() -> argparse.Namespace:
         help="Feed limit. Overrides config value (default: None)",
     )
     parser.add_argument(
+        "--last-update-fmt",
+        default="%D %T",
+        help="{{last_update}} status key datetime format",
+    )
+    parser.add_argument(
         "--macro1",
         metavar="STR",
         help="F1 macro",
@@ -192,11 +203,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-U", "--update", action="store_true", help="Update all feeds on startup"
-    )
-    parser.add_argument(
-        "--last-update-fmt",
-        default="%D %T",
-        help="{{last_update}} status key datetime format",
     )
     return parser.parse_args()
 

@@ -42,6 +42,12 @@ entries-fmt keys:
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
     {channel_title} - title of the channel
+
+status-fmt keys:
+    {index}         - current line index
+    {msg}           - status message
+    {title}         - current feed title
+    {last_update}   - time of last update (optionally formatted with `--last-update-fmt`)
 """
 HELP_KEYBINDINGS = [
     ("h, Left", "Return to previous screen/Quit"),
