@@ -344,7 +344,7 @@ class App:
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
-        alphabetic: bool = False,
+        alphabetic_sort: bool = False,
         macro1: str = "",
         macro2: str = "",
         macro3: str = "",
@@ -356,7 +356,7 @@ class App:
         self.feeder = feeder
 
         self.hide_feed = hide_feed
-        self.alphabetic = alphabetic
+        self.alphabetic_sort = alphabetic_sort
         self.channels = list()
         self._set_channels()
 
@@ -400,7 +400,7 @@ class App:
         if channels:
             self.feeder.channels = channels
 
-        if self.alphabetic:
+        if self.alphabetic_sort:
             self.feeder.channels.sort(key=lambda c: c.title)
 
         if self.hide_feed:
