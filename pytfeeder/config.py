@@ -14,6 +14,7 @@ from .consts import (
     DEFAULT_LOG_FMT,
     DEFAULT_DATETIME_FMT,
 )
+from pytfeeder.tui import ConfigTUI
 
 
 log_levels_map = {
@@ -57,6 +58,7 @@ class Config:
     alphabetic_sort: bool
     unviewed_first: bool
     always_update: bool
+    tui: ConfigTUI
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
     update_interval: Optional[int] = None
@@ -113,6 +115,7 @@ class Config:
         self.macro2 = macro2
         self.macro3 = macro3
         self.macro4 = macro4
+        self.tui = ConfigTUI()
         if config_file:
             config_file = expand_path(config_file)
             if config_file.exists():
@@ -164,6 +167,7 @@ class Config:
             self.macro3 = macro3
         if macro4 := config.get("macro4"):
             self.macro4 = macro4
+        self.tui.parse_kwargs(config)
 
     def dump(self, config_file: str) -> None:
         data = {
