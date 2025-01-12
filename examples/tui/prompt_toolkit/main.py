@@ -159,8 +159,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--last-update-fmt",
-        default="%D %T",
-        help="{{last_update}} status key datetime format",
+        help=f"{{last_update}} status key datetime format (default: {DEFAULT_LAST_UPDATE_FMT!r})",
     )
     parser.add_argument(
         "--macro1",
@@ -190,9 +189,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--status-fmt",
-        default=DEFAULT_STATUS_FMT,
         metavar="STR",
-        help="status bar format (default: %(default)r)",
+        help=f"status bar format (default: {DEFAULT_STATUS_FMT!r})",
     )
     parser.add_argument(
         "-u",
@@ -1018,7 +1016,12 @@ if __name__ == "__main__":
     kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
         config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
     )
-    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or DEFAULT_LAST_UPDATE_FMT
+    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or (
+        config.tui.last_update_fmt or DEFAULT_LAST_UPDATE_FMT
+    )
+    kwargs["status_fmt"] = (
+        kwargs.get("status_fmt") or (config.tui.status_fmt) or DEFAULT_STATUS_FMT
+    )
 
     kwargs["macro1"] = kwargs.get("macro1") or config.macro1
     kwargs["macro2"] = kwargs.get("macro2") or config.macro2
