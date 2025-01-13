@@ -1023,10 +1023,10 @@ if __name__ == "__main__":
         kwargs.get("status_fmt") or (config.tui.status_fmt) or DEFAULT_STATUS_FMT
     )
 
-    kwargs["macro1"] = kwargs.get("macro1") or config.macro1
-    kwargs["macro2"] = kwargs.get("macro2") or config.macro2
-    kwargs["macro3"] = kwargs.get("macro3") or config.macro3
-    kwargs["macro4"] = kwargs.get("macro4") or config.macro4
+    kwargs["macro1"] = kwargs.get("macro1") or config.tui.macro1
+    kwargs["macro2"] = kwargs.get("macro2") or config.tui.macro2
+    kwargs["macro3"] = kwargs.get("macro3") or config.tui.macro3
+    kwargs["macro4"] = kwargs.get("macro4") or config.tui.macro4
     kwargs["update_label"] = update_label
 
     pager = App(feeder, **kwargs)
