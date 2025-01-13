@@ -88,10 +88,7 @@ class Config:
         always_update: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
         update_interval: Optional[int] = None,
-        macro1: Optional[str] = None,
-        macro2: Optional[str] = None,
-        macro3: Optional[str] = None,
-        macro4: Optional[str] = None,
+        tui: ConfigTUI = ConfigTUI(),
     ) -> None:
         self.channels = channels or []
         self.feed_limit = feed_limit
@@ -111,11 +108,7 @@ class Config:
         self.always_update = always_update or False
         self.unviewed_first = unviewed_first or False
         self.update_interval = update_interval or None
-        self.macro1 = macro1
-        self.macro2 = macro2
-        self.macro3 = macro3
-        self.macro4 = macro4
-        self.tui = ConfigTUI()
+        self.tui = tui
         if config_file:
             config_file = expand_path(config_file)
             if config_file.exists():
@@ -159,14 +152,6 @@ class Config:
             self.unviewed_first = bool(unviewed_first)
         if update_interval := config.get("update_interval"):
             self.update_interval = update_interval
-        if macro1 := config.get("macro1"):
-            self.macro1 = macro1
-        if macro2 := config.get("macro2"):
-            self.macro2 = macro2
-        if macro3 := config.get("macro3"):
-            self.macro3 = macro3
-        if macro4 := config.get("macro4"):
-            self.macro4 = macro4
         self.tui.parse_kwargs(config)
 
     def dump(self, config_file: str) -> None:
