@@ -62,10 +62,6 @@ class Config:
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
     update_interval: Optional[int] = None
-    macro1: Optional[str] = None
-    macro2: Optional[str] = None
-    macro3: Optional[str] = None
-    macro4: Optional[str] = None
 
     def __init__(
         self,
@@ -172,10 +168,10 @@ class Config:
             "rofi_entries_fmt": self.rofi_entries_fmt,
             "unviewed_first": self.unviewed_first,
             "update_interval": self.update_interval,
-            "macro1": self.macro1,
-            "macro2": self.macro2,
-            "macro3": self.macro3,
-            "macro4": self.macro4,
+            "macro1": self.tui.macro1,
+            "macro2": self.tui.macro2,
+            "macro3": self.tui.macro3,
+            "macro4": self.tui.macro4,
         }
         with open(config_file, "w") as f:
             yaml.safe_dump(data, f, allow_unicode=True)
@@ -203,8 +199,8 @@ class Config:
         repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
         repr_str += f"unviewed_first: {self.unviewed_first}\n"
         repr_str += f"update_interval: {self.update_interval}\n"
-        repr_str += f"macro1: {self.macro1!r}\n"
-        repr_str += f"macro2: {self.macro2!r}\n"
-        repr_str += f"macro3: {self.macro3!r}\n"
-        repr_str += f"macro4: {self.macro4!r}\n"
+        repr_str += f"macro1: {self.tui.macro1!r}\n"
+        repr_str += f"macro2: {self.tui.macro2!r}\n"
+        repr_str += f"macro3: {self.tui.macro3!r}\n"
+        repr_str += f"macro4: {self.tui.macro4!r}\n"
         return repr_str.strip()
