@@ -83,7 +83,6 @@ class Config:
         alphabetic_sort: Optional[bool] = None,
         always_update: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
-        update_interval: Optional[int] = None,
         tui: ConfigTUI = ConfigTUI(),
     ) -> None:
         self.channels = channels or []
@@ -103,7 +102,6 @@ class Config:
         self.alphabetic_sort = alphabetic_sort or False
         self.always_update = always_update or False
         self.unviewed_first = unviewed_first or False
-        self.update_interval = update_interval or None
         self.tui = tui
         if config_file:
             config_file = expand_path(config_file)
@@ -146,8 +144,6 @@ class Config:
             self.always_update = bool(always_update)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
-        if update_interval := config.get("update_interval"):
-            self.update_interval = update_interval
         self.tui.parse_kwargs(config)
 
     def dump(self, config_file: str) -> None:
