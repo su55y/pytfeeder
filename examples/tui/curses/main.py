@@ -172,9 +172,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--status-fmt",
-        default=DEFAULT_STATUS_FMT,
         metavar="STR",
-        help="status bar format (default: %(default)r)",
+        help=f"status bar format (default: {DEFAULT_STATUS_FMT})",
     )
     parser.add_argument(
         "-u",
@@ -1053,7 +1052,12 @@ if __name__ == "__main__":
     kwargs["macro3"] = kwargs.get("macro3") or config.tui.macro3
     kwargs["macro4"] = kwargs.get("macro4") or config.tui.macro4
     kwargs["update_label"] = update_label
-    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or DEFAULT_LAST_UPDATE_FMT
+    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or (
+        config.tui.last_update_fmt or DEFAULT_LAST_UPDATE_FMT
+    )
+    kwargs["status_fmt"] = (
+        kwargs.get("status_fmt") or (config.tui.status_fmt) or DEFAULT_STATUS_FMT
+    )
 
     try:
         _ = App(feeder, **kwargs).start()
