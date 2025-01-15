@@ -1012,7 +1012,9 @@ if __name__ == "__main__":
 
     update_label = None
     update_interval_mins = (
-        args.update_interval or config.update_interval or DEFAULT_UPDATE_INTERVAL_MINS
+        args.update_interval
+        or config.tui.update_interval
+        or DEFAULT_UPDATE_INTERVAL_MINS
     )
     if (
         args.update
