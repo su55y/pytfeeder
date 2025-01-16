@@ -988,7 +988,7 @@ if __name__ == "__main__":
     )
     if (
         args.update
-        or config.always_update
+        or config.tui.always_update
         or is_update_interval_expired(update_interval_mins)
     ):
         print("updating...")
