@@ -4,6 +4,7 @@ from typing import Dict, Optional
 
 @dataclass
 class ConfigTUI:
+    always_update: bool = False
     status_fmt: str = ""
     last_update_fmt: str = ""
     update_interval: Optional[int] = None
@@ -13,6 +14,8 @@ class ConfigTUI:
     macro4: str = ""
 
     def parse_kwargs(self, kw: Dict) -> None:
+        if always_update := kw.get("always_update"):
+            self.always_update = bool(always_update)
         if status_fmt := kw.get("status_fmt"):
             self.status_fmt = status_fmt
         if last_update_fmt := kw.get("last_update_fmt"):

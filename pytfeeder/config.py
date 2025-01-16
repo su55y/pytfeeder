@@ -81,7 +81,6 @@ class Config:
         rofi_entries_fmt: Optional[str] = None,
         rofi_channels_fmt: Optional[str] = None,
         alphabetic_sort: Optional[bool] = None,
-        always_update: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
         tui: ConfigTUI = ConfigTUI(),
     ) -> None:
@@ -100,7 +99,6 @@ class Config:
         self.rofi_channels_fmt = rofi_channels_fmt or DEFAULT_ROFI_CHANNELS_FMT
         self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ROFI_ENTRIES_FMT
         self.alphabetic_sort = alphabetic_sort or False
-        self.always_update = always_update or False
         self.unviewed_first = unviewed_first or False
         self.tui = tui
         if config_file:
@@ -140,8 +138,6 @@ class Config:
             self.rofi_entries_fmt = rofi_entries_fmt
         if alphabetic_sort := config.get("alphabetic_sort"):
             self.alphabetic_sort = bool(alphabetic_sort)
-        if always_update := config.get("always_update"):
-            self.always_update = bool(always_update)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
         self.tui.parse_kwargs(config)
@@ -149,7 +145,6 @@ class Config:
     def dump(self, config_file: str) -> None:
         data = {
             "alphabetic_sort": self.alphabetic_sort,
-            "always_update": self.always_update,
             "cache_dir": str(self.cache_dir),
             "channels": [c.dump() for c in self.channels],
             "channels_fmt": self.channels_fmt,
@@ -164,6 +159,9 @@ class Config:
             "rofi_entries_fmt": self.rofi_entries_fmt,
             "unviewed_first": self.unviewed_first,
             "update_interval": self.update_interval,
+            "always_update": self.tui.always_update,
+            "status_fmt": self.tui.status_fmt,
+            "last_update_fmt": self.tui.last_update_fmt,
             "macro1": self.tui.macro1,
             "macro2": self.tui.macro2,
             "macro3": self.tui.macro3,
@@ -175,7 +173,6 @@ class Config:
     def __repr__(self) -> str:
         repr_str = ""
         repr_str += f"alphabetic_sort: {self.alphabetic_sort}\n"
-        repr_str += f"always_update: {self.always_update}\n"
         repr_str += f"cache_dir: {self.cache_dir!s}\n"
         if self.channels:
             repr_str += "channels:\n"
@@ -195,6 +192,9 @@ class Config:
         repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
         repr_str += f"unviewed_first: {self.unviewed_first}\n"
         repr_str += f"update_interval: {self.update_interval}\n"
+        repr_str += f"always_update: {self.tui.always_update}\n"
+        repr_str += f"status_fmt: {self.tui.status_fmt!r}\n"
+        repr_str += f"last_update_fmt: {self.tui.last_update_fmt!r}\n"
         repr_str += f"macro1: {self.tui.macro1!r}\n"
         repr_str += f"macro2: {self.tui.macro2!r}\n"
         repr_str += f"macro3: {self.tui.macro3!r}\n"
