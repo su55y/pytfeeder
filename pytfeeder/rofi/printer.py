@@ -17,6 +17,8 @@ class RofiPrinter:
         self.limit = args.limit
         self.offset = args.active_offset
         self.separator = args.separator
+        if self.config.alphabetic_sort:
+            self.feeder.channels.sort(key=lambda c: c.title)
 
     def print_channels(self) -> None:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
