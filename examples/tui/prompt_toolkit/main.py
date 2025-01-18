@@ -995,7 +995,8 @@ if __name__ == "__main__":
         try:
             asyncio.run(feeder.sync_entries())
         except Exception as e:
-            print("Update failed: %s" % e)
+            update_label = "Update failed: %s" % e
+            print(update_label)
         else:
             update_lock_file()
             after = feeder.unviewed_count()
