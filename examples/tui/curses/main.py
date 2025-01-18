@@ -256,7 +256,6 @@ def update_lock_file():
 
 def is_update_interval_expired(mins: int) -> bool:
     if not LOCK_FILE.exists():
-        update_lock_file()
         return True
 
     last_update = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
@@ -1028,6 +1027,7 @@ if __name__ == "__main__":
         except Exception as e:
             print("Update failed: %s" % e)
         else:
+            update_lock_file()
             after = feeder.unviewed_count()
             if before < after:
                 feeder.update_channels()
