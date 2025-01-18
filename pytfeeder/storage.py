@@ -21,6 +21,7 @@ class Storage:
     def __init__(self, db_file: Path) -> None:
         self.db_file = db_file
         self.log = logging.getLogger()
+        sqlite3.register_adapter(dt.datetime, lambda v: v.isoformat())
         self.__init_db()
 
     def __init_db(self) -> None:
@@ -29,7 +30,7 @@ class Storage:
 
     @contextmanager
     def get_cursor(self):
-        conn = sqlite3.connect(self.db_file)
+        conn = sqlite3.connect(self.db_file, detect_types=sqlite3.PARSE_DECLTYPES)
         try:
             yield conn.cursor()
         except Exception as e:
