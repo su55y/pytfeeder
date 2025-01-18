@@ -15,6 +15,15 @@ theme() {
     cat <<EOF
 configuration {
   font: "NotoSans Nerd Font 16";
+  kb-custom-1: "Ctrl+s";
+  kb-secondary-copy: "Ctrl+y";
+  kb-custom-2: "Ctrl+c";
+  kb-custom-3: "Ctrl+x";
+  kb-custom-4: "Ctrl+X";
+  kb-move-front: "";
+  kb-custom-5: "Ctrl+a";
+  kb-remove-char-forward: "Delete";
+  kb-custom-6: "Ctrl+d";
 }
 window {
   height: 90%;
@@ -35,14 +44,5 @@ EOF
 
 SCRIPTPATH="$SCRIPTPATH" rofi -i -show "pytfeeder-rofi-launcher" \
     -modi "pytfeeder-rofi-launcher:$SCRIPTPATH/helper.sh" \
-    -no-config -kb-custom-1 "Ctrl+s" \
-    -kb-secondary-copy "Ctrl+y" \
-    -kb-custom-2 "Ctrl+c" \
-    -kb-custom-3 "Ctrl+x" \
-    -kb-custom-4 "Ctrl+X" \
-    -kb-move-front "" \
-    -kb-custom-5 "Ctrl+a" \
-    -kb-remove-char-forward "Delete" \
-    -kb-custom-6 "Ctrl+d" \
-    -theme-str "$(theme)" \
+    -no-config -theme-str "$(theme)" \
     -normal-window -eh 2
