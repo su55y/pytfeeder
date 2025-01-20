@@ -159,7 +159,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--last-update-fmt",
-        help=f"{{last_update}} status key datetime format (default: {DEFAULT_LAST_UPDATE_FMT!r})",
+        help=f"{{last_update}} status key datetime format (default: {DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--macro1",
