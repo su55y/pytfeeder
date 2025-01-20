@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -140,7 +140,7 @@ class Config:
             self.alphabetic_sort = bool(alphabetic_sort)
         if unviewed_first := config.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
-        self.tui.parse_kwargs(config)
+        self.tui.parse_kwargs(config.get("tui", dict()))
 
     def dump(self, config_file: str) -> None:
         data = {
@@ -158,14 +158,7 @@ class Config:
             "rofi_channels_fmt": self.rofi_channels_fmt,
             "rofi_entries_fmt": self.rofi_entries_fmt,
             "unviewed_first": self.unviewed_first,
-            "update_interval": self.update_interval,
-            "always_update": self.tui.always_update,
-            "status_fmt": self.tui.status_fmt,
-            "last_update_fmt": self.tui.last_update_fmt,
-            "macro1": self.tui.macro1,
-            "macro2": self.tui.macro2,
-            "macro3": self.tui.macro3,
-            "macro4": self.tui.macro4,
+            "tui": asdict(self.tui),
         }
         with open(config_file, "w") as f:
             yaml.safe_dump(data, f, allow_unicode=True)
