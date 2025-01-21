@@ -4,6 +4,8 @@ from typing import Dict, Optional
 
 @dataclass
 class ConfigTUI:
+    channels_fmt: str = ""
+    entries_fmt: str = ""
     always_update: bool = False
     status_fmt: str = ""
     last_update_fmt: str = ""
@@ -16,6 +18,10 @@ class ConfigTUI:
     def parse_kwargs(self, kw: Dict) -> None:
         if always_update := kw.get("always_update"):
             self.always_update = bool(always_update)
+        if channels_fmt := kw.get("channels_fmt"):
+            self.channels_fmt = channels_fmt
+        if entries_fmt := kw.get("entries_fmt"):
+            self.entries_fmt = entries_fmt
         if status_fmt := kw.get("status_fmt"):
             self.status_fmt = status_fmt
         if last_update_fmt := kw.get("last_update_fmt"):
