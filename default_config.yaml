@@ -1,30 +1,36 @@
-# dir to store db and logs, required
-cache_dir: $XDG_CACHE_HOME/pytfeeder
+# sort channels list in alphabetic order, instead of config defined, boolean
+alphabetic_sort: true
+
+# dir to store db and logs, required, defaults to $XDG_CACHE_HOME/pytfeeder
+# cache_dir:
 
 # channels list, channel example: {channel_id: 'foobar', title: 'Foo Bar'}, required
 channels:
   - { channel_id: UCI0vQvr9aFn27yR6Ej6n5UA, title: Real Python }
   - { channel_id: UC7OEbnj75LYjOxj6tjYXVjA, title: Антропологія }
 
+# channel feed select limit, optional, default: none
+# channel_feed_limit: 0
+
 # channels print format for rofi, available keys:
 # -- id             - 24 characters long channel id
 # -- title          - channel title
 # -- unviewed_count - count of new entries
-# channels_fmt: "{title}\x00info\x1f{id}"
-
-# channel feed select limit, optional, default: None
-# channel_feed_limit: 0
+rofi_channels_fmt: "{title}\x00info\x1f{id}"
 
 # entries print format for rofi, available keys:
 # -- id            - 11 characters long video id
 # -- title         - video title
 # -- channel_title - the title of the channel this video is from
 # -- meta          - the title of channel, splitted and joined by template 'a b' = 'a b,a,b'
-# -- updated       - publication date of entry
-# entries_fmt: "{title}\x00info\x1f{id}\x1fmeta\x1f{meta}"
+# -- updated       - updated in `datetime-fmt` format (rss `updated` value or fetch date)
+rofi_entries_fmt: "{title}\x00info\x1f{id}\x1fmeta\x1f{meta}"
 
-# datetime format for the updated key of entries_fmt
-# datetime_fmt: '%D %T'
+# datetime format for the {updated} key of entry format
+datetime_fmt: '%D %T'
+
+# feed entry format, keys same as in other entries formats
+feed_entries_fmt: '{index} {updated}{channel_title}{title}'
 
 # int, common feed select limit, optional, default: None
 # feed_limit: 0
@@ -36,4 +42,30 @@ log_fmt: '[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)'
 log_level: none
 
 # defines sorting order, boolean
-unviewed_first: False
+unviewed_first: false
+
+# tui config
+tui:
+  # sync feeds on start, boolean
+  always_update: false
+  # channels print format, available keys:
+  # -- id             - 24 characters long channel id
+  # -- title          - channel title
+  # -- new_mark       - mark if have updates, otherwise whitespace
+  channels_fmt: ''
+  # entries print format, available keys:
+  # -- index          - line index
+  # -- new_mark       - new-mark if have updates, otherwise whitespace
+  # -- title          - title of the entry
+  # -- updated        - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
+  # -- channel_title  - title of the channel
+  entries_fmt: ''
+  # {last_update} status key datetime format
+  last_update_fmt: '%D %T'
+  # macros F1-F4, available only in entries screens, passed args:
+  # -- $1 - id
+  # -- $2 - title
+  macro1: null
+  macro2: null
+  macro3: null
+  macro4: null
