@@ -1038,10 +1038,10 @@ if __name__ == "__main__":
     kwargs = dict(vars(args))
     kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
     kwargs["channels_fmt"] = kwargs.get("channels_fmt") or (
-        config.channels_fmt or DEFAULT_CHANNELS_FMT
+        config.tui.channels_fmt or DEFAULT_CHANNELS_FMT
     )
     kwargs["entries_fmt"] = kwargs.get("entries_fmt") or (
-        config.entries_fmt or DEFAULT_ENTRIES_FMT
+        config.tui.entries_fmt or DEFAULT_ENTRIES_FMT
     )
     kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
         config.datetime_fmt or DEFAULT_ENTRIES_FMT
