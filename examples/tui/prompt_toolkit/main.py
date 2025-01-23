@@ -56,7 +56,7 @@ channels-fmt keys:
 
 entries-fmt keys:
     {index}         - line index
-    {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
+    {new_mark}      - new-mark if unviewed, otherwise `' '*len(new_mark)`
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
     {channel_title} - title of the channel
