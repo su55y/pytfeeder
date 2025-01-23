@@ -162,7 +162,6 @@ class Config:
                 for c in self.channels
             )
         repr_str += f"channel_feed_limit: {self.channel_feed_limit}\n"
-        repr_str += f"entries_fmt: {self.tui.entries_fmt!r}\n"
         repr_str += f"datetime_fmt: {self.datetime_fmt!r}\n"
         repr_str += f"feed_entries_fmt: {self.feed_entries_fmt!r}\n"
         repr_str += f"feed_limit: {self.feed_limit}\n"
@@ -171,13 +170,6 @@ class Config:
         repr_str += f"rofi_channels_fmt: {self.rofi_channels_fmt!r}\n"
         repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
         repr_str += f"unviewed_first: {self.unviewed_first}\n"
-        repr_str += f"channels_fmt: {self.tui.channels_fmt!r}\n"
         repr_str += f"update_interval: {self.update_interval}\n"
-        repr_str += f"always_update: {self.tui.always_update}\n"
-        repr_str += f"status_fmt: {self.tui.status_fmt!r}\n"
-        repr_str += f"last_update_fmt: {self.tui.last_update_fmt!r}\n"
-        repr_str += f"macro1: {self.tui.macro1!r}\n"
-        repr_str += f"macro2: {self.tui.macro2!r}\n"
-        repr_str += f"macro3: {self.tui.macro3!r}\n"
-        repr_str += f"macro4: {self.tui.macro4!r}\n"
+        repr_str += repr(self.tui)
         return repr_str.strip()
