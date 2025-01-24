@@ -59,7 +59,6 @@ class Config:
     tui: ConfigTUI
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
-    update_interval: Optional[int] = None
 
     def __init__(
         self,
@@ -170,6 +169,5 @@ class Config:
         repr_str += f"rofi_channels_fmt: {self.rofi_channels_fmt!r}\n"
         repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
         repr_str += f"unviewed_first: {self.unviewed_first}\n"
-        repr_str += f"update_interval: {self.update_interval}\n"
         repr_str += repr(self.tui)
         return repr_str.strip()
