@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
+DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
+
 
 @dataclass
 class ConfigTUI:
-    channels_fmt: str = ""
-    entries_fmt: str = ""
+    channels_fmt: str = DEFAULT_CHANNELS_FMT
+    entries_fmt: str = DEFAULT_ENTRIES_FMT
     always_update: bool = False
     status_fmt: str = ""
     last_update_fmt: str = ""
