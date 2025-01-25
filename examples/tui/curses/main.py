@@ -742,7 +742,8 @@ class App:
                     % (type(self.selected_data), self.selected_data)
                 )
             play_video(self.selected_data.id)
-            self.mark_viewed()
+            if not self.selected_data.is_viewed:
+                self.mark_viewed()
             notify(f"{self.selected_data.title} playing...")
 
     def move_left_channels(self) -> None:

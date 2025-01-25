@@ -736,9 +736,11 @@ class App:
                         return
                     entry_id = self.entries[self.selected_line].id
                     title = self.entries[self.selected_line].title
+                    is_viewed = self.entries[self.selected_line].is_viewed
                     self.feeder.mark_as_viewed(id=entry_id)
                     play_video(entry_id)
-                    self.mark_viewed()
+                    if not is_viewed:
+                        self.mark_viewed()
                     notify(f"{title} playing...")
 
         @kb.add("h")
