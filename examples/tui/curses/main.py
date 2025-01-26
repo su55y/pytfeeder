@@ -14,13 +14,12 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
+from pytfeeder.tui import config as tui_config
 
 
 LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
 DEFAULT_UPDATE_INTERVAL_MINS = 30
-DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
-DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = "{msg}{index}{title}{keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
@@ -96,7 +95,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--channels-fmt",
         metavar="STR",
-        help=f"channels format (default: {DEFAULT_CHANNELS_FMT!r})",
+        help=f"channels format (default: {tui_config.DEFAULT_CHANNELS_FMT!r})",
     )
     parser.add_argument(
         "-c",
@@ -113,7 +112,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--entries-fmt",
         metavar="STR",
-        help=f"entries format (default: {DEFAULT_ENTRIES_FMT!r})",
+        help=f"entries format (default: {tui_config.DEFAULT_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--feed-entries-fmt",
@@ -335,9 +334,9 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
-        channels_fmt: str = DEFAULT_CHANNELS_FMT,
+        channels_fmt: str = tui_config.DEFAULT_CHANNELS_FMT,
         feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT,
-        entries_fmt: str = DEFAULT_ENTRIES_FMT,
+        entries_fmt: str = tui_config.DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
         status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
@@ -1039,13 +1038,13 @@ if __name__ == "__main__":
     kwargs = dict(vars(args))
     kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
     kwargs["channels_fmt"] = kwargs.get("channels_fmt") or (
-        config.tui.channels_fmt or DEFAULT_CHANNELS_FMT
+        config.tui.channels_fmt or tui_config.DEFAULT_CHANNELS_FMT
     )
     kwargs["entries_fmt"] = kwargs.get("entries_fmt") or (
-        config.tui.entries_fmt or DEFAULT_ENTRIES_FMT
+        config.tui.entries_fmt or tui_config.DEFAULT_ENTRIES_FMT
     )
     kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
-        config.datetime_fmt or DEFAULT_ENTRIES_FMT
+        config.datetime_fmt or DEFAULT_DATETIME_FMT
     )
     kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
         config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
