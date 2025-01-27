@@ -46,6 +46,8 @@ class Config:
     """
 
     channels: List[Channel]
+    alphabetic_sort: bool
+    datetime_fmt: str
     feed_entries_fmt: str
     log_level: int
     log_file: Path
@@ -53,9 +55,7 @@ class Config:
     storage_path: Path
     rofi_channels_fmt: str
     rofi_entries_fmt: str
-    alphabetic_sort: bool
     unviewed_first: bool
-    always_update: bool
     tui: ConfigTUI
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
