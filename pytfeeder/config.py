@@ -25,14 +25,6 @@ log_levels_map = {
 }
 
 
-def read_config(file: Path) -> Dict:
-    try:
-        with open(file) as f:
-            return yaml.safe_load(f)
-    except Exception as e:
-        exit("invalid config %s: %s" % (file, e))
-
-
 def expand_path(path: Union[Path, str]) -> Path:
     return Path(expandvars(path)).expanduser()
 
@@ -100,36 +92,41 @@ class Config:
                 self._override_defaults(config_file)
 
     def _override_defaults(self, config_path: Path) -> None:
-        config = read_config(config_path)
-        if not isinstance(config, Dict):
-            print("Invalid config file given")
+        try:
+            config_dict = yaml.safe_load(config_path.open())
+        except Exception as e:
+            exit("Invalid config %s: %s" % (config_path, e))
+
+        if not isinstance(config_dict, Dict):
+            print("Invalid config format (type: %s)" % type(config_dict))
             exit(1)
-        self.channels = [Channel(**c) for c in config.get("channels", [])]
-        if cache_dir := config.get("cache_dir"):
+
+        self.channels = [Channel(**c) for c in config_dict.get("channels", [])]
+        if cache_dir := config_dict.get("cache_dir"):
             self.cache_dir = expand_path(cache_dir)
             self.log_file = self.cache_dir.joinpath("pytfeeder.log")
             self.storage_path = self.cache_dir.joinpath("pytfeeder.db")
-        if log_fmt := config.get("log_fmt"):
+        if log_fmt := config_dict.get("log_fmt"):
             self.log_fmt = str(log_fmt)
-        if isinstance((log_level := config.get("log_level")), str):
+        if isinstance((log_level := config_dict.get("log_level")), str):
             self.log_level = log_levels_map.get(log_level.lower(), logging.NOTSET)
-        if feed_limit := config.get("feed_limit"):
+        if feed_limit := config_dict.get("feed_limit"):
             self.feed_limit = int(feed_limit)
-        if channel_feed_limit := config.get("channel_feed_limit"):
+        if channel_feed_limit := config_dict.get("channel_feed_limit"):
             self.channel_feed_limit = int(channel_feed_limit)
-        if feed_entries_fmt := config.get("feed_entries_fmt"):
+        if feed_entries_fmt := config_dict.get("feed_entries_fmt"):
             self.feed_entries_fmt = feed_entries_fmt
-        if datetime_fmt := config.get("datetime_fmt"):
+        if datetime_fmt := config_dict.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
-        if rofi_channels_fmt := config.get("rofi_channels_fmt"):
+        if rofi_channels_fmt := config_dict.get("rofi_channels_fmt"):
             self.rofi_channels_fmt = rofi_channels_fmt
-        if rofi_entries_fmt := config.get("rofi_entries_fmt"):
+        if rofi_entries_fmt := config_dict.get("rofi_entries_fmt"):
             self.rofi_entries_fmt = rofi_entries_fmt
-        if alphabetic_sort := config.get("alphabetic_sort"):
+        if alphabetic_sort := config_dict.get("alphabetic_sort"):
             self.alphabetic_sort = bool(alphabetic_sort)
-        if unviewed_first := config.get("unviewed_first"):
+        if unviewed_first := config_dict.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
-        self.tui.parse_kwargs(config.get("tui", dict()))
+        self.tui.parse_kwargs(config_dict.get("tui", dict()))
 
     def dump(self, config_file: str) -> None:
         data = {
