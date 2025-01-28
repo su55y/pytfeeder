@@ -5,7 +5,7 @@ from enum import Enum, auto
 from pathlib import Path
 import subprocess as sp
 import time
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
@@ -39,9 +39,7 @@ DEFAULT_UPDATE_INTERVAL_MINS = 30
 DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
-DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
 DEFAULT_DATETIME_FMT = "%b %d"
-DEFAULT_LAST_UPDATE_FMT = "%D %T"
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens.
 macros args:
@@ -158,7 +156,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--last-update-fmt",
-        help=f"{{last_update}} status key datetime format (default: {DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
+        help=f"{{last_update}} status key datetime format (default: {tui_config.DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--macro1",
@@ -189,7 +187,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--status-fmt",
         metavar="STR",
-        help=f"status bar format (default: {DEFAULT_STATUS_FMT!r})",
+        help=f"status bar format (default: {tui_config.DEFAULT_STATUS_FMT!r})",
     )
     parser.add_argument(
         "-u",
@@ -320,23 +318,17 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
-        channels_fmt: str = tui_config.DEFAULT_CHANNELS_FMT,
+        tui_config: tui_config.ConfigTUI,
         feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT,
-        entries_fmt: str = tui_config.DEFAULT_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
-        status_fmt: str = DEFAULT_STATUS_FMT,
         datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
         alphabetic_sort: bool = False,
-        macro1: str = "",
-        macro2: str = "",
-        macro3: str = "",
-        macro4: str = "",
         update_label: Optional[str] = None,
-        last_update_fmt: str = DEFAULT_LAST_UPDATE_FMT,
         **_,
     ) -> None:
         self.feeder = feeder
+        self.c = tui_config
 
         self.hide_feed = hide_feed
         self.alphabetic_sort = alphabetic_sort
@@ -352,29 +344,25 @@ class App:
         self.help_index = 0
         self.last_index = -1
 
-        self.channels_fmt = channels_fmt
         self.feed_entries_fmt = feed_entries_fmt
-        self.entries_fmt = entries_fmt
         self.datetime_fmt = datetime_fmt
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
 
         self.macros = {
-            "f1": macro1,
-            "f2": macro2,
-            "f3": macro3,
-            "f4": macro4,
+            "f1": self.c.macro1,
+            "f2": self.c.macro2,
+            "f3": self.c.macro3,
+            "f4": self.c.macro4,
         }
 
         self._app_link: Optional[Application] = None
         self._filter: Optional[str] = None
 
-        self._status_fmt = status_fmt
         self._status_msg = ""
         self._status_msg_time = 0
         self._last_update = ""
-        self._last_update_fmt = last_update_fmt
         self.refresh_last_update()
         self._default_keybinds_fmt = DEFAULT_KEYBINDS
         self._keybinds_fmt = DEFAULT_KEYBINDS
@@ -601,7 +589,7 @@ class App:
             self._status_msg_time = 0
 
         return " ".join(
-            self._status_fmt.format(
+            self.c.status_fmt.format(
                 msg=self._status_msg,
                 index=self._index_fmt,
                 title=self._title_fmt,
@@ -630,7 +618,7 @@ class App:
         return f"{index:{index_len}d}"
 
     def _format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
-        fmt = self.feed_entries_fmt if self.is_feed_opened else self.entries_fmt
+        fmt = self.feed_entries_fmt if self.is_feed_opened else self.c.entries_fmt
         line = fmt.format(
             index=self._entry_index(i),
             new_mark=self.new_marks[not entry.is_viewed],
@@ -641,7 +629,7 @@ class App:
         return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
 
     def _format_channel(self, i: int, channel: Channel) -> List[Tuple[str, str]]:
-        line = self.channels_fmt.format(
+        line = self.c.channels_fmt.format(
             index=self._entry_index(i),
             new_mark=self.new_marks[channel.have_updates],
             title=channel.title,
@@ -953,10 +941,29 @@ class App:
         except:
             pass
         else:
-            self._last_update = dt_str.strftime(self._last_update_fmt)
+            self._last_update = dt_str.strftime(self.c.last_update_fmt)
 
     def __pt_container__(self) -> HSplit:
         return self.container
+
+
+def update_tui_config(kw: Dict[str, Any], c: tui_config.ConfigTUI) -> None:
+    if channels_fmt := kw.get("channels_fmt"):
+        c.channels_fmt = channels_fmt
+    if entries_fmt := kw.get("entries_fmt"):
+        c.entries_fmt = entries_fmt
+    if last_update_fmt := kw.get("last_update_fmt"):
+        c.last_update_fmt = last_update_fmt
+    if status_fmt := kw.get("status_fmt"):
+        c.status_fmt = status_fmt
+    if m1 := kw.get("macro1"):
+        c.macro1 = m1
+    if m2 := kw.get("macro2"):
+        c.macro2 = m2
+    if m3 := kw.get("macro3"):
+        c.macro1 = m3
+    if m4 := kw.get("macro4"):
+        c.macro1 = m4
 
 
 if __name__ == "__main__":
@@ -1007,31 +1014,17 @@ if __name__ == "__main__":
                 update_label = f"{after - before} new entries"
 
     kwargs = dict(vars(args))
+    update_tui_config(kwargs, config.tui)
     kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
-    kwargs["channels_fmt"] = kwargs.get("channels_fmt") or config.tui.channels_fmt
-    kwargs["entries_fmt"] = kwargs.get("entries_fmt") or (
-        config.tui.entries_fmt or tui_config.DEFAULT_ENTRIES_FMT
-    )
     kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
         config.datetime_fmt or DEFAULT_DATETIME_FMT
     )
     kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
         config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
     )
-    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or (
-        config.tui.last_update_fmt or DEFAULT_LAST_UPDATE_FMT
-    )
-    kwargs["status_fmt"] = (
-        kwargs.get("status_fmt") or (config.tui.status_fmt) or DEFAULT_STATUS_FMT
-    )
-
-    kwargs["macro1"] = kwargs.get("macro1") or config.tui.macro1
-    kwargs["macro2"] = kwargs.get("macro2") or config.tui.macro2
-    kwargs["macro3"] = kwargs.get("macro3") or config.tui.macro3
-    kwargs["macro4"] = kwargs.get("macro4") or config.tui.macro4
     kwargs["update_label"] = update_label
 
-    pager = App(feeder, **kwargs)
+    pager = App(feeder, config.tui, **kwargs)
 
     kb = KeyBindings()
 
