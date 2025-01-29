@@ -318,20 +318,16 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
-        tui_config: tui_config.ConfigTUI,
-        feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT,
         new_mark: str = DEFAULT_NEW_MARK,
-        datetime_fmt: str = DEFAULT_DATETIME_FMT,
         hide_feed: bool = False,
-        alphabetic_sort: bool = False,
         update_label: Optional[str] = None,
         **_,
     ) -> None:
         self.feeder = feeder
-        self.c = tui_config
+        self.c = self.feeder.config.tui
 
         self.hide_feed = hide_feed
-        self.alphabetic_sort = alphabetic_sort
+        self.alphabetic_sort = self.feeder.config.alphabetic_sort
         self.channels = list()
         self._set_channels()
 
@@ -344,8 +340,8 @@ class App:
         self.help_index = 0
         self.last_index = -1
 
-        self.feed_entries_fmt = feed_entries_fmt
-        self.datetime_fmt = datetime_fmt
+        self.feed_entries_fmt = self.feeder.config.feed_entries_fmt
+        self.datetime_fmt = self.feeder.config.datetime_fmt
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
@@ -976,6 +972,9 @@ if __name__ == "__main__":
         config.storage_path.parent.mkdir(parents=True)
 
     feeder = Feeder(config, Storage(config.storage_path))
+    if len(feeder.channels) == 0:
+        print(f"No channels found in config {config_path}")
+        exit(0)
 
     if args.limit > 0:
         feeder.config.channel_feed_limit = args.limit
@@ -983,19 +982,24 @@ if __name__ == "__main__":
     if args.feed_limit > 0:
         feeder.config.feed_limit = args.feed_limit
 
-    if len(feeder.channels) == 0:
-        print(f"No channels found in config {config_path}")
-        exit(0)
+    kwargs = dict(vars(args))
+    update_tui_config(kwargs, feeder.config.tui)
+    if (alphabetic_sort := kwargs.get("alphabetic_sort")) is not None:
+        feeder.config.alphabetic_sort = alphabetic_sort
+    if datetime_fmt := kwargs.get("datetime_fmt"):
+        feeder.config.datetime_fmt = datetime_fmt
+    if feed_entries_fmt := kwargs.get("feed_entries_fmt"):
+        feeder.config.feed_entries_fmt = feed_entries_fmt
 
     update_label = None
     update_interval_mins = (
         args.update_interval
-        or config.tui.update_interval
+        or feeder.config.tui.update_interval
         or DEFAULT_UPDATE_INTERVAL_MINS
     )
     if (
         args.update
-        or config.tui.always_update
+        or feeder.config.tui.always_update
         or is_update_interval_expired(update_interval_mins)
     ):
         print("updating...")
@@ -1013,18 +1017,9 @@ if __name__ == "__main__":
                 new = after - before
                 update_label = f"{after - before} new entries"
 
-    kwargs = dict(vars(args))
-    update_tui_config(kwargs, config.tui)
-    kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
-    kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
-        config.datetime_fmt or DEFAULT_DATETIME_FMT
-    )
-    kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
-        config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
-    )
     kwargs["update_label"] = update_label
 
-    pager = App(feeder, config.tui, **kwargs)
+    pager = App(feeder, **kwargs)
 
     kb = KeyBindings()
 
