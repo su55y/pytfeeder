@@ -3,6 +3,8 @@ from typing import Dict, Optional
 
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
+DEFAULT_LAST_UPDATE_FMT = "%D %T"
+DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
 
 
 @dataclass
@@ -10,8 +12,8 @@ class ConfigTUI:
     channels_fmt: str = DEFAULT_CHANNELS_FMT
     entries_fmt: str = DEFAULT_ENTRIES_FMT
     always_update: bool = False
-    status_fmt: str = ""
-    last_update_fmt: str = ""
+    status_fmt: str = DEFAULT_STATUS_FMT
+    last_update_fmt: str = DEFAULT_LAST_UPDATE_FMT
     update_interval: Optional[int] = None
     macro1: str = ""
     macro2: str = ""
