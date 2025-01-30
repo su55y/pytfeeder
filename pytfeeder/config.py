@@ -40,7 +40,6 @@ class Config:
     channels: List[Channel]
     alphabetic_sort: bool
     datetime_fmt: str
-    feed_entries_fmt: str
     log_level: int
     log_file: Path
     log_fmt: str
@@ -59,7 +58,6 @@ class Config:
         channels: Optional[List[Channel]] = None,
         channel_feed_limit: Optional[int] = None,
         datetime_fmt: Optional[str] = None,
-        feed_entries_fmt: Optional[str] = None,
         feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
@@ -76,7 +74,6 @@ class Config:
         self.channel_feed_limit = channel_feed_limit
         self.cache_dir = cache_dir or default_cachedir_path()
         self.datetime_fmt = datetime_fmt or DEFAULT_DATETIME_FMT
-        self.feed_entries_fmt = feed_entries_fmt or ""
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
@@ -114,8 +111,6 @@ class Config:
             self.feed_limit = int(feed_limit)
         if channel_feed_limit := config_dict.get("channel_feed_limit"):
             self.channel_feed_limit = int(channel_feed_limit)
-        if feed_entries_fmt := config_dict.get("feed_entries_fmt"):
-            self.feed_entries_fmt = feed_entries_fmt
         if datetime_fmt := config_dict.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
         if rofi_channels_fmt := config_dict.get("rofi_channels_fmt"):
@@ -126,7 +121,8 @@ class Config:
             self.alphabetic_sort = bool(alphabetic_sort)
         if unviewed_first := config_dict.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
-        self.tui.parse_kwargs(config_dict.get("tui", dict()))
+        if tui_object := config_dict.get("tui"):
+            self.tui.parse_kwargs(tui_object)
 
     def dump(self, config_file: str) -> None:
         data = {
@@ -134,7 +130,6 @@ class Config:
             "cache_dir": str(self.cache_dir),
             "channels": [c.dump() for c in self.channels],
             "channel_feed_limit": self.channel_feed_limit,
-            "feed_entries_fmt": self.feed_entries_fmt,
             "datetime_fmt": self.datetime_fmt,
             "feed_limit": self.feed_limit,
             "log_fmt": self.log_fmt,
@@ -159,7 +154,6 @@ class Config:
             )
         repr_str += f"channel_feed_limit: {self.channel_feed_limit}\n"
         repr_str += f"datetime_fmt: {self.datetime_fmt!r}\n"
-        repr_str += f"feed_entries_fmt: {self.feed_entries_fmt!r}\n"
         repr_str += f"feed_limit: {self.feed_limit}\n"
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
         repr_str += f"log_level: {self.log_level}\n"
