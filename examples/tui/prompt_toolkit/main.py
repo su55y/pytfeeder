@@ -318,14 +318,12 @@ class App:
         self,
         feeder: Feeder,
         new_mark: str = DEFAULT_NEW_MARK,
-        hide_feed: bool = False,
         update_label: Optional[str] = None,
         **_,
     ) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
 
-        self.hide_feed = hide_feed
         self.alphabetic_sort = self.feeder.config.alphabetic_sort
         self.channels = list()
         self._set_channels()
@@ -455,7 +453,7 @@ class App:
         if self.alphabetic_sort:
             self.feeder.channels.sort(key=lambda c: c.title)
 
-        if self.hide_feed:
+        if self.c.hide_feed:
             self.channels = self.feeder.channels
         else:
             feed_channel = Channel(
@@ -949,6 +947,8 @@ def update_tui_config(kw: Dict[str, Any], c: tui_config.ConfigTUI) -> None:
         c.entries_fmt = entries_fmt
     if feed_entries_fmt := kw.get("feed_entries_fmt"):
         c.feed_entries_fmt = feed_entries_fmt
+    if hide_feed := kw.get("hide_feed"):
+        c.hide_feed = hide_feed
     if last_update_fmt := kw.get("last_update_fmt"):
         c.last_update_fmt = last_update_fmt
     if status_fmt := kw.get("status_fmt"):
