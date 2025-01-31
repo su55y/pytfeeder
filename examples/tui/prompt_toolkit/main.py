@@ -36,7 +36,6 @@ from pytfeeder.tui import config as tui_config
 
 LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
 DEFAULT_UPDATE_INTERVAL_MINS = 30
-DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 DEFAULT_DATETIME_FMT = "%b %d"
@@ -128,7 +127,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--feed-entries-fmt",
         metavar="STR",
-        help=f"feed entries format (default: {DEFAULT_FEED_ENTRIES_FMT!r})",
+        help=f"feed entries format (default: {tui_config.DEFAULT_FEED_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--entries-fmt",
@@ -340,7 +339,7 @@ class App:
         self.help_index = 0
         self.last_index = -1
 
-        self.feed_entries_fmt = self.feeder.config.feed_entries_fmt
+        self.feed_entries_fmt = self.feeder.config.tui.feed_entries_fmt
         self.datetime_fmt = self.feeder.config.datetime_fmt
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
@@ -948,6 +947,8 @@ def update_tui_config(kw: Dict[str, Any], c: tui_config.ConfigTUI) -> None:
         c.channels_fmt = channels_fmt
     if entries_fmt := kw.get("entries_fmt"):
         c.entries_fmt = entries_fmt
+    if feed_entries_fmt := kw.get("feed_entries_fmt"):
+        c.feed_entries_fmt = feed_entries_fmt
     if last_update_fmt := kw.get("last_update_fmt"):
         c.last_update_fmt = last_update_fmt
     if status_fmt := kw.get("status_fmt"):
@@ -988,8 +989,6 @@ if __name__ == "__main__":
         feeder.config.alphabetic_sort = alphabetic_sort
     if datetime_fmt := kwargs.get("datetime_fmt"):
         feeder.config.datetime_fmt = datetime_fmt
-    if feed_entries_fmt := kwargs.get("feed_entries_fmt"):
-        feeder.config.feed_entries_fmt = feed_entries_fmt
 
     update_label = None
     update_interval_mins = (
