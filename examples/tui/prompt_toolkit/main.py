@@ -36,7 +36,6 @@ from pytfeeder.tui import config as tui_config
 
 LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
 DEFAULT_UPDATE_INTERVAL_MINS = 30
-DEFAULT_NEW_MARK = "[+]"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
@@ -179,7 +178,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--new-mark",
-        default=DEFAULT_NEW_MARK,
+        default=tui_config.DEFAULT_NEW_MARK,
         metavar="STR",
         help="new mark format (default: %(default)r)",
     )
@@ -317,7 +316,6 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
-        new_mark: str = DEFAULT_NEW_MARK,
         update_label: Optional[str] = None,
         **_,
     ) -> None:
@@ -339,6 +337,7 @@ class App:
 
         self.feed_entries_fmt = self.feeder.config.tui.feed_entries_fmt
         self.datetime_fmt = self.feeder.config.datetime_fmt
+        new_mark = self.c.new_mark
         self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
