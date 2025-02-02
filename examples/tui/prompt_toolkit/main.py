@@ -982,12 +982,10 @@ if __name__ == "__main__":
     if args.feed_limit > 0:
         feeder.config.feed_limit = args.feed_limit
 
-    kwargs = dict(vars(args))
-    update_tui_config(kwargs, feeder.config.tui)
-    if (alphabetic_sort := kwargs.get("alphabetic_sort")) is not None:
-        feeder.config.alphabetic_sort = alphabetic_sort
-    if datetime_fmt := kwargs.get("datetime_fmt"):
-        feeder.config.datetime_fmt = datetime_fmt
+    if args.alphabetic_sort:
+        feeder.config.alphabetic_sort = args.alphabetic_sort
+    if args.datetime_fmt:
+        feeder.config.datetime_fmt = args.datetime_fmt
 
     update_label = None
     update_interval_mins = (
@@ -1015,9 +1013,7 @@ if __name__ == "__main__":
                 new = after - before
                 update_label = f"{after - before} new entries"
 
-    kwargs["update_label"] = update_label
-
-    pager = App(feeder, **kwargs)
+    pager = App(feeder, update_label)
 
     kb = KeyBindings()
 
