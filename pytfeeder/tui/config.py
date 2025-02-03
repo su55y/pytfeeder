@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
@@ -7,6 +7,7 @@ DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_LAST_UPDATE_FMT = "%D %T"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
+DEFAULT_UPDATE_INTERVAL_MINS = 30
 
 
 @dataclass
@@ -19,7 +20,7 @@ class ConfigTUI:
     last_update_fmt: str = DEFAULT_LAST_UPDATE_FMT
     new_mark: str = DEFAULT_NEW_MARK
     status_fmt: str = DEFAULT_STATUS_FMT
-    update_interval: Optional[int] = None
+    update_interval: int = DEFAULT_UPDATE_INTERVAL_MINS
     macro1: str = ""
     macro2: str = ""
     macro3: str = ""
