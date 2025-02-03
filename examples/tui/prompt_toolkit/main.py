@@ -316,7 +316,7 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
-        update_label: Optional[str] = None,
+        update_status_msg: Optional[str] = None,
         **_,
     ) -> None:
         self.feeder = feeder
@@ -441,8 +441,8 @@ class App:
             ]
         )
 
-        if update_label:
-            self._status_msg = f"{update_label}; "
+        if update_status_msg:
+            self._status_msg = f"{update_status_msg}; "
             self._status_msg_time = time.perf_counter()
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
@@ -987,7 +987,7 @@ if __name__ == "__main__":
     if args.datetime_fmt:
         feeder.config.datetime_fmt = args.datetime_fmt
 
-    update_label = None
+    update_status_msg = None
     update_interval_mins = (
         args.update_interval
         or feeder.config.tui.update_interval
@@ -1003,17 +1003,17 @@ if __name__ == "__main__":
         try:
             asyncio.run(feeder.sync_entries())
         except Exception as e:
-            update_label = "Update failed: %s" % e
-            print(update_label)
+            update_status_msg = "Update failed: %s" % e
+            print(update_status_msg)
         else:
             update_lock_file()
             after = feeder.unviewed_count()
             if before < after:
                 feeder.update_channels()
                 new = after - before
-                update_label = f"{after - before} new entries"
+                update_status_msg = f"{after - before} new entries"
 
-    pager = App(feeder, update_label)
+    pager = App(feeder, update_status_msg)
 
     kb = KeyBindings()
 
