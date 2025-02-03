@@ -32,12 +32,11 @@ from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.tui import config as tui_config
+from pytfeeder.consts import DEFAULT_DATETIME_FMT
 
 
 LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
-DEFAULT_UPDATE_INTERVAL_MINS = 30
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
-DEFAULT_DATETIME_FMT = "%b %d"
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens.
 macros args:
@@ -192,7 +191,7 @@ def parse_args() -> argparse.Namespace:
         "--update-interval",
         metavar="INT",
         type=int,
-        help=f"Update interval in minutes (default: {DEFAULT_UPDATE_INTERVAL_MINS})",
+        help=f"Update interval in minutes (default: {tui_config.DEFAULT_UPDATE_INTERVAL_MINS})",
     )
     parser.add_argument(
         "-U", "--update", action="store_true", help="Update all feeds on startup"
@@ -988,11 +987,7 @@ if __name__ == "__main__":
         feeder.config.datetime_fmt = args.datetime_fmt
 
     update_status_msg = None
-    update_interval_mins = (
-        args.update_interval
-        or feeder.config.tui.update_interval
-        or DEFAULT_UPDATE_INTERVAL_MINS
-    )
+    update_interval_mins = args.update_interval or feeder.config.tui.update_interval
     if (
         args.update
         or feeder.config.tui.always_update
