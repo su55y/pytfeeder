@@ -983,8 +983,11 @@ if __name__ == "__main__":
 
     if args.alphabetic_sort:
         feeder.config.alphabetic_sort = args.alphabetic_sort
+
     if args.datetime_fmt:
         feeder.config.datetime_fmt = args.datetime_fmt
+
+    update_tui_config(dict(vars(args)), feeder.config.tui)
 
     update_status_msg = None
     update_interval_mins = args.update_interval or feeder.config.tui.update_interval
