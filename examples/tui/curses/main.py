@@ -7,7 +7,7 @@ from enum import Enum, IntEnum, auto
 from pathlib import Path
 import subprocess as sp
 import time
-from typing import List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
@@ -15,15 +15,11 @@ from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.tui import config as tui_config
+from pytfeeder.consts import DEFAULT_DATETIME_FMT
 
 
 LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
-DEFAULT_UPDATE_INTERVAL_MINS = 30
-DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
-DEFAULT_NEW_MARK = "[+]"
-DEFAULT_STATUS_FMT = "{msg}{index}{title}{keybinds}"
-DEFAULT_DATETIME_FMT = "%b %d"
-DEFAULT_LAST_UPDATE_FMT = "%D %T"
+DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens.
 macros args:
@@ -88,7 +84,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-A",
-        "--alphabetic",
+        "--alphabetic-sort",
         action="store_true",
         help="sort channels in alphabetic order, instead of order by config",
     )
@@ -117,7 +113,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--feed-entries-fmt",
         metavar="STR",
-        help=f"feed entries format (default: {DEFAULT_FEED_ENTRIES_FMT!r})",
+        help=f"feed entries format (default: {tui_config.DEFAULT_FEED_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
@@ -141,7 +137,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--last-update-fmt",
         metavar="STR",
-        help=f"{{last_update}} status key datetime format (default: {DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
+        help=f"{{last_update}} status key datetime format (default: {tui_config.DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--macro1",
@@ -165,21 +161,21 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--new-mark",
-        default=DEFAULT_NEW_MARK,
+        default=tui_config.DEFAULT_NEW_MARK,
         metavar="STR",
         help="new mark format (default: %(default)r)",
     )
     parser.add_argument(
         "--status-fmt",
         metavar="STR",
-        help=f"status bar format (default: {DEFAULT_STATUS_FMT})",
+        help=f"status bar format (default: {tui_config.DEFAULT_STATUS_FMT!r})",
     )
     parser.add_argument(
         "-u",
         "--update-interval",
         metavar="INT",
         type=int,
-        help=f"Update interval in minutes (default: {DEFAULT_UPDATE_INTERVAL_MINS})",
+        help=f"Update interval in minutes (default: {tui_config.DEFAULT_UPDATE_INTERVAL_MINS})",
     )
     parser.add_argument(
         "-U", "--update", action="store_true", help="Update all feeds on startup"
@@ -331,37 +327,12 @@ class CLIType(Enum):
 
 
 class App:
-    def __init__(
-        self,
-        feeder: Feeder,
-        channels_fmt: str = tui_config.DEFAULT_CHANNELS_FMT,
-        feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT,
-        entries_fmt: str = tui_config.DEFAULT_ENTRIES_FMT,
-        new_mark: str = DEFAULT_NEW_MARK,
-        status_fmt: str = DEFAULT_STATUS_FMT,
-        datetime_fmt: str = DEFAULT_DATETIME_FMT,
-        hide_feed: bool = False,
-        alphabetic_sort: bool = False,
-        macro1: str = "",
-        macro2: str = "",
-        macro3: str = "",
-        macro4: str = "",
-        update_label: Optional[str] = None,
-        last_update_fmt: str = DEFAULT_LAST_UPDATE_FMT,
-        **_,
-    ) -> None:
+    def __init__(self, feeder: Feeder, update_status_msg: Optional[str] = None) -> None:
         self.feeder = feeder
-
-        self.hide_feed = hide_feed
-        self.alphabetic_sort = alphabetic_sort
+        self.c = self.feeder.config.tui
         self.channels = list()
         self._set_channels()
 
-        self.channels_fmt = channels_fmt
-        self.feed_entries_fmt = feed_entries_fmt
-        self.entries_fmt = entries_fmt
-        self.status_fmt = status_fmt
-        self.datetime_fmt = datetime_fmt
         self.filtered = False
         self.gravity = Gravity.DOWN
         self.index = 0
@@ -371,7 +342,6 @@ class App:
         self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
-        self.new_mark = new_mark
         self.scroll_top = 0
         self.selected_data = None
         self.state = PageState.CHANNELS
@@ -381,26 +351,25 @@ class App:
         self._status_msg_time = 0
         self._is_feed = False
         self.macros = {
-            Key.F1: macro1,
-            Key.F2: macro2,
-            Key.F3: macro3,
-            Key.F4: macro4,
+            Key.F1: self.c.macro1,
+            Key.F2: self.c.macro2,
+            Key.F3: self.c.macro3,
+            Key.F4: self.c.macro4,
         }
         self._last_update = ""
-        self._last_update_fmt = last_update_fmt
         self.refresh_last_update()
-        if update_label:
-            self._status_msg = update_label
+        if update_status_msg:
+            self._status_msg = update_status_msg
             self._status_msg_time = time.perf_counter()
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
         if channels:
             self.feeder.channels = channels
 
-        if self.alphabetic_sort:
+        if self.feeder.config.alphabetic_sort:
             self.feeder.channels.sort(key=lambda c: c.title)
 
-        if self.hide_feed:
+        if self.c.hide_feed:
             self.channels = self.feeder.channels
         else:
             feed_channel = Channel(
@@ -572,16 +541,16 @@ class App:
             self.lines[self.scroll_top : self.scroll_top + max_rows]
         ):
             color_pair = Color.NONE
-            new_mark = " " * len(self.new_mark)
+            new_mark = " " * len(self.c.new_mark)
             text = "-"
             index = f"{i + 1 + self.scroll_top:{index_len}d}"
 
             if isinstance(line.data, Entry):
                 if line.data.is_viewed is False:
-                    new_mark = self.new_mark
+                    new_mark = self.c.new_mark
                     color_pair = Color.NEW
-                updated = line.data.updated.strftime(self.datetime_fmt)
-                fmt = self.feed_entries_fmt if self._is_feed else self.entries_fmt
+                updated = line.data.updated.strftime(self.feeder.config.datetime_fmt)
+                fmt = self.c.feed_entries_fmt if self._is_feed else self.c.entries_fmt
                 text = fmt.format(
                     index=index,
                     new_mark=new_mark,
@@ -592,9 +561,9 @@ class App:
 
             elif isinstance(line.data, Channel):
                 if line.data.have_updates:
-                    new_mark = self.new_mark
+                    new_mark = self.c.new_mark
                     color_pair = Color.NEW
-                text = self.channels_fmt.format(
+                text = self.c.channels_fmt.format(
                     index=index, new_mark=new_mark, title=line.data.title
                 )
 
@@ -805,7 +774,7 @@ class App:
         except:
             pass
         else:
-            self._last_update = dt_str.strftime(self._last_update_fmt)
+            self._last_update = dt_str.strftime(self.c.last_update_fmt)
 
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
@@ -956,7 +925,7 @@ class App:
             self._status_msg_time = 0
 
         return " ".join(
-            self.status_fmt.format(
+            self.c.status_fmt.format(
                 msg=self._status_msg,
                 index=self._status_index,
                 title=title,
@@ -988,6 +957,29 @@ class App:
         return list(map(Line, self.feeder.channel_feed(channel_id)))
 
 
+def update_tui_config(kw: Dict[str, Any], c: tui_config.ConfigTUI) -> None:
+    if channels_fmt := kw.get("channels_fmt"):
+        c.channels_fmt = channels_fmt
+    if entries_fmt := kw.get("entries_fmt"):
+        c.entries_fmt = entries_fmt
+    if feed_entries_fmt := kw.get("feed_entries_fmt"):
+        c.feed_entries_fmt = feed_entries_fmt
+    if hide_feed := kw.get("hide_feed"):
+        c.hide_feed = hide_feed
+    if last_update_fmt := kw.get("last_update_fmt"):
+        c.last_update_fmt = last_update_fmt
+    if status_fmt := kw.get("status_fmt"):
+        c.status_fmt = status_fmt
+    if m1 := kw.get("macro1"):
+        c.macro1 = m1
+    if m2 := kw.get("macro2"):
+        c.macro2 = m2
+    if m3 := kw.get("macro3"):
+        c.macro1 = m3
+    if m4 := kw.get("macro4"):
+        c.macro1 = m4
+
+
 if __name__ == "__main__":
     args = parse_args()
     config_path = args.config
@@ -998,6 +990,9 @@ if __name__ == "__main__":
         config.storage_path.parent.mkdir(parents=True)
 
     feeder = Feeder(config, Storage(config.storage_path))
+    if len(feeder.channels) == 0:
+        print(f"No channels found in config {config_path}")
+        exit(0)
 
     if args.limit > 0:
         feeder.config.channel_feed_limit = args.limit
@@ -1005,16 +1000,16 @@ if __name__ == "__main__":
     if args.feed_limit > 0:
         feeder.config.feed_limit = args.feed_limit
 
-    if len(feeder.channels) == 0:
-        print(f"No channels found in config {config_path}")
-        exit(0)
+    if args.alphabetic_sort:
+        feeder.config.alphabetic_sort = args.alphabetic_sort
 
-    update_label = None
-    update_interval_mins = (
-        args.update_interval
-        or config.tui.update_interval
-        or DEFAULT_UPDATE_INTERVAL_MINS
-    )
+    if args.datetime_fmt:
+        feeder.config.datetime_fmt = args.datetime_fmt
+
+    update_tui_config(dict(vars(args)), feeder.config.tui)
+
+    update_status_msg = None
+    update_interval_mins = args.update_interval or feeder.config.tui.update_interval
     if (
         args.update
         or config.tui.always_update
@@ -1025,45 +1020,18 @@ if __name__ == "__main__":
         try:
             asyncio.run(feeder.sync_entries())
         except Exception as e:
-            update_label = "Update failed: %s" % e
-            print(update_label)
+            update_status_msg = "Update failed: %s" % e
+            print(update_status_msg)
         else:
             update_lock_file()
             after = feeder.unviewed_count()
             if before < after:
                 feeder.update_channels()
                 new = after - before
-                update_label = f"{after - before} new entries"
-
-    kwargs = dict(vars(args))
-    kwargs["alphabetic_sort"] = kwargs.get("alphabetic_sort") or config.alphabetic_sort
-    kwargs["channels_fmt"] = kwargs.get("channels_fmt") or (
-        config.tui.channels_fmt or tui_config.DEFAULT_CHANNELS_FMT
-    )
-    kwargs["entries_fmt"] = kwargs.get("entries_fmt") or (
-        config.tui.entries_fmt or tui_config.DEFAULT_ENTRIES_FMT
-    )
-    kwargs["datetime_fmt"] = kwargs.get("datetime_fmt") or (
-        config.datetime_fmt or DEFAULT_DATETIME_FMT
-    )
-    kwargs["feed_entries_fmt"] = kwargs.get("feed_entries_fmt") or (
-        config.feed_entries_fmt or DEFAULT_FEED_ENTRIES_FMT
-    )
-
-    kwargs["macro1"] = kwargs.get("macro1") or config.tui.macro1
-    kwargs["macro2"] = kwargs.get("macro2") or config.tui.macro2
-    kwargs["macro3"] = kwargs.get("macro3") or config.tui.macro3
-    kwargs["macro4"] = kwargs.get("macro4") or config.tui.macro4
-    kwargs["update_label"] = update_label
-    kwargs["last_update_fmt"] = kwargs.get("last_update_fmt") or (
-        config.tui.last_update_fmt or DEFAULT_LAST_UPDATE_FMT
-    )
-    kwargs["status_fmt"] = (
-        kwargs.get("status_fmt") or (config.tui.status_fmt) or DEFAULT_STATUS_FMT
-    )
+                update_status_msg = f"{after - before} new entries"
 
     try:
-        _ = App(feeder, **kwargs).start()
+        _ = App(feeder, update_status_msg).start()
     except Exception as e:
         print(e)
         exit(1)
