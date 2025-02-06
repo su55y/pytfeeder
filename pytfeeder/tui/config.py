@@ -1,26 +1,20 @@
 from dataclasses import dataclass
 from typing import Any, Dict
 
-DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
-DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
-DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
-DEFAULT_LAST_UPDATE_FMT = "%D %T"
-DEFAULT_NEW_MARK = "[+]"
-DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
-DEFAULT_UPDATE_INTERVAL_MINS = 30
+from . import consts
 
 
 @dataclass
 class ConfigTUI:
     always_update: bool = False
-    channels_fmt: str = DEFAULT_CHANNELS_FMT
-    entries_fmt: str = DEFAULT_ENTRIES_FMT
-    feed_entries_fmt: str = DEFAULT_FEED_ENTRIES_FMT
+    channels_fmt: str = consts.DEFAULT_CHANNELS_FMT
+    entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
+    feed_entries_fmt: str = consts.DEFAULT_FEED_ENTRIES_FMT
     hide_feed: bool = False
-    last_update_fmt: str = DEFAULT_LAST_UPDATE_FMT
-    new_mark: str = DEFAULT_NEW_MARK
-    status_fmt: str = DEFAULT_STATUS_FMT
-    update_interval: int = DEFAULT_UPDATE_INTERVAL_MINS
+    last_update_fmt: str = consts.DEFAULT_LAST_UPDATE_FMT
+    new_mark: str = consts.DEFAULT_NEW_MARK
+    status_fmt: str = consts.DEFAULT_STATUS_FMT
+    update_interval: int = consts.DEFAULT_UPDATE_INTERVAL_MINS
     macro1: str = ""
     macro2: str = ""
     macro3: str = ""

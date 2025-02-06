@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import curses
 from dataclasses import dataclass
@@ -9,178 +8,15 @@ import subprocess as sp
 import time
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.tui import config as tui_config
-from pytfeeder.consts import DEFAULT_DATETIME_FMT
-
+from pytfeeder.tui.args import parse_args, format_keybindings
+from pytfeeder.tui.consts import DEFAULT_KEYBINDS
 
 LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
-DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
-OPTIONS_DESCRIPTION = """
-macros available only in entries screens.
-macros args:
-    $1 - id
-    $2 - title
-
-channels-fmt keys:
-    {index}         - line index
-    {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
-    {title}         - title of the channel
-
-entries-fmt keys:
-    {index}         - line index
-    {new_mark}      - new-mark if unviewed, otherwise `' '*len(new_mark)`
-    {title}         - title of the entry
-    {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
-    {channel_title} - title of the channel
-
-status-fmt keys:
-    {index}         - current line index
-    {msg}           - status message
-    {title}         - current feed title
-    {last_update}   - time of last update (optionally formatted with `--last-update-fmt`)
-"""
-HELP_KEYBINDINGS = [
-    ("h, Left", "Return to previous screen/Quit"),
-    ("j, Down, Tab, n", "Move to the next entry"),
-    ("k, Up, S-Tab, p", "Move to the previous entry"),
-    ("l, Right, Enter", "Open feed/entry"),
-    ("gg, Home", "Move to the top of list"),
-    ("G, End", "Move to the bottom of list"),
-    ("J", "Move to the next feed"),
-    ("K", "Move to the prev feed"),
-    ("a", "Mark entry/feed viewed"),
-    ("A", "Mark all enties/feeds viewed"),
-    ("r", "Reload/sync feeds"),
-    ("d", "Download video"),
-    ("D", "Download all NEW (from current page)"),
-    ("/", "Open filter"),
-    ("h", "Cancel filter"),
-    ("c", "Clear screen"),
-    ("0-9", "Jump to line {index}"),
-    ("F1-F4", "Execute macro 1-4"),
-    ("q", "Quit"),
-]
-
-
-def format_keybindings() -> List[str]:
-    max_keys_w = max(len(keys) for keys, _ in HELP_KEYBINDINGS)
-    tab = " " * 4
-    return [f"{tab}{keys:<{max_keys_w}}{tab}{desc}" for keys, desc in HELP_KEYBINDINGS]
-
-
-def parse_args() -> argparse.Namespace:
-    def format_epilog() -> str:
-        keybinds_str = "\n".join(format_keybindings())
-        return f"{OPTIONS_DESCRIPTION}\n\nkeybindings:\n{keybinds_str}\n"
-
-    parser = argparse.ArgumentParser(
-        epilog=format_epilog(),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "-A",
-        "--alphabetic-sort",
-        action="store_true",
-        help="sort channels in alphabetic order, instead of order by config",
-    )
-    parser.add_argument(
-        "--channels-fmt",
-        metavar="STR",
-        help=f"channels format (default: {tui_config.DEFAULT_CHANNELS_FMT!r})",
-    )
-    parser.add_argument(
-        "-c",
-        "--config",
-        metavar="PATH",
-        default=default_config_path(),
-        help="config path (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--datetime-fmt",
-        metavar="STR",
-        help=f"entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
-    )
-    parser.add_argument(
-        "--entries-fmt",
-        metavar="STR",
-        help=f"entries format (default: {tui_config.DEFAULT_ENTRIES_FMT!r})",
-    )
-    parser.add_argument(
-        "--feed-entries-fmt",
-        metavar="STR",
-        help=f"feed entries format (default: {tui_config.DEFAULT_FEED_ENTRIES_FMT!r})",
-    )
-    parser.add_argument(
-        "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
-    )
-    parser.add_argument(
-        "-l",
-        "--limit",
-        default=0,
-        type=int,
-        metavar="INT",
-        help="Channels feed limit. Overrides config value (default: None)",
-    )
-    parser.add_argument(
-        "-L",
-        "--feed-limit",
-        default=0,
-        type=int,
-        metavar="INT",
-        help="Feed limit. Overrides config value (default: None)",
-    )
-    parser.add_argument(
-        "--last-update-fmt",
-        metavar="STR",
-        help=f"{{last_update}} status key datetime format (default: {tui_config.DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
-    )
-    parser.add_argument(
-        "--macro1",
-        metavar="STR",
-        help="F1 macro",
-    )
-    parser.add_argument(
-        "--macro2",
-        metavar="STR",
-        help="F2 macro",
-    )
-    parser.add_argument(
-        "--macro3",
-        metavar="STR",
-        help="F4 macro",
-    )
-    parser.add_argument(
-        "--macro4",
-        metavar="STR",
-        help="F4 macro",
-    )
-    parser.add_argument(
-        "--new-mark",
-        default=tui_config.DEFAULT_NEW_MARK,
-        metavar="STR",
-        help="new mark format (default: %(default)r)",
-    )
-    parser.add_argument(
-        "--status-fmt",
-        metavar="STR",
-        help=f"status bar format (default: {tui_config.DEFAULT_STATUS_FMT!r})",
-    )
-    parser.add_argument(
-        "-u",
-        "--update-interval",
-        metavar="INT",
-        type=int,
-        help=f"Update interval in minutes (default: {tui_config.DEFAULT_UPDATE_INTERVAL_MINS})",
-    )
-    parser.add_argument(
-        "-U", "--update", action="store_true", help="Update all feeds on startup"
-    )
-    return parser.parse_args()
 
 
 def play_video(id: str) -> None:
@@ -337,7 +173,7 @@ class App:
         self.gravity = Gravity.DOWN
         self.index = 0
         self.is_pad_active = False
-        self.keybinds_str = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
+        self.keybinds_str = DEFAULT_KEYBINDS
         self.last_channel_index = -1
         self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
