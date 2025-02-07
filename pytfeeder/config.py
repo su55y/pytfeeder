@@ -122,7 +122,7 @@ class Config:
         if unviewed_first := config_dict.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
         if tui_object := config_dict.get("tui"):
-            self.tui.parse_kwargs(tui_object)
+            self.tui.parse_config_file(tui_object)
 
     def dump(self, config_file: str) -> None:
         data = {

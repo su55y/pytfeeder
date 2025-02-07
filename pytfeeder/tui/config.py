@@ -20,7 +20,7 @@ class ConfigTUI:
     macro3: str = ""
     macro4: str = ""
 
-    def parse_kwargs(self, kw: Dict[str, Any]) -> None:
+    def parse_config_file(self, kw: Dict[str, Any]) -> None:
         if always_update := kw.get("always_update"):
             self.always_update = bool(always_update)
         if channels_fmt := kw.get("channels_fmt"):
@@ -47,6 +47,28 @@ class ConfigTUI:
             self.macro3 = macro3
         if macro4 := kw.get("macro4"):
             self.macro4 = macro4
+
+    def parse_args(self, kw: Dict[str, Any]) -> None:
+        if channels_fmt := kw.get("channels_fmt"):
+            self.channels_fmt = channels_fmt
+        if entries_fmt := kw.get("entries_fmt"):
+            self.entries_fmt = entries_fmt
+        if feed_entries_fmt := kw.get("feed_entries_fmt"):
+            self.feed_entries_fmt = feed_entries_fmt
+        if hide_feed := kw.get("hide_feed"):
+            self.hide_feed = hide_feed
+        if last_update_fmt := kw.get("last_update_fmt"):
+            self.last_update_fmt = last_update_fmt
+        if status_fmt := kw.get("status_fmt"):
+            self.status_fmt = status_fmt
+        if m1 := kw.get("macro1"):
+            self.macro1 = m1
+        if m2 := kw.get("macro2"):
+            self.macro2 = m2
+        if m3 := kw.get("macro3"):
+            self.macro1 = m3
+        if m4 := kw.get("macro4"):
+            self.macro1 = m4
 
     def __repr__(self) -> str:
         repr_str = "tui:\n"

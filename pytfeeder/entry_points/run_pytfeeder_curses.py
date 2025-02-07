@@ -793,29 +793,6 @@ class App:
         return list(map(Line, self.feeder.channel_feed(channel_id)))
 
 
-def update_tui_config(kw: Dict[str, Any], c: tui_config.ConfigTUI) -> None:
-    if channels_fmt := kw.get("channels_fmt"):
-        c.channels_fmt = channels_fmt
-    if entries_fmt := kw.get("entries_fmt"):
-        c.entries_fmt = entries_fmt
-    if feed_entries_fmt := kw.get("feed_entries_fmt"):
-        c.feed_entries_fmt = feed_entries_fmt
-    if hide_feed := kw.get("hide_feed"):
-        c.hide_feed = hide_feed
-    if last_update_fmt := kw.get("last_update_fmt"):
-        c.last_update_fmt = last_update_fmt
-    if status_fmt := kw.get("status_fmt"):
-        c.status_fmt = status_fmt
-    if m1 := kw.get("macro1"):
-        c.macro1 = m1
-    if m2 := kw.get("macro2"):
-        c.macro2 = m2
-    if m3 := kw.get("macro3"):
-        c.macro1 = m3
-    if m4 := kw.get("macro4"):
-        c.macro1 = m4
-
-
 def main():
     args = parse_args()
     config_path = args.config
@@ -842,7 +819,7 @@ def main():
     if args.datetime_fmt:
         feeder.config.datetime_fmt = args.datetime_fmt
 
-    update_tui_config(dict(vars(args)), feeder.config.tui)
+    feeder.config.tui.parse_args(dict(vars(args)))
 
     update_status_msg = None
     update_interval_mins = args.update_interval or feeder.config.tui.update_interval
