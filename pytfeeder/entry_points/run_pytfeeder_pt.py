@@ -32,26 +32,8 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.tui import config as tui_config
 from pytfeeder.tui.args import parse_args, format_keybindings
-from pytfeeder.tui.consts import DEFAULT_KEYBINDS
-
-
-LOCK_FILE = Path("/tmp/pytfeeder_update.lock")
-
-
-def update_lock_file():
-    LOCK_FILE.write_text(dt.datetime.now().strftime("%s"))
-
-
-def is_update_interval_expired(mins: int) -> bool:
-    if not LOCK_FILE.exists():
-        return True
-
-    last_update = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
-    if last_update < (dt.datetime.now() - dt.timedelta(minutes=mins)):
-        update_lock_file()
-        return True
-
-    return False
+from pytfeeder.tui.consts import DEFAULT_KEYBINDS, DEFAULT_LOCK_FILE
+from pytfeeder.tui.updates import is_update_interval_expired, update_lock_file
 
 
 def play_video(id: str) -> None:
@@ -154,11 +136,13 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
+        lock_file: Path = Path(DEFAULT_LOCK_FILE),
         update_status_msg: Optional[str] = None,
         **_,
     ) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
+        self.lock_file = lock_file
 
         self.alphabetic_sort = self.feeder.config.alphabetic_sort
         self.channels = list()
@@ -762,12 +746,12 @@ class App:
         else:
             self._status_msg = "no updates; "
         self._status_msg_time = time.perf_counter()
-        update_lock_file()
+        update_lock_file(self.lock_file)
         self.refresh_last_update()
 
     def refresh_last_update(self) -> None:
         try:
-            dt_str = dt.datetime.fromtimestamp(float(LOCK_FILE.read_text()))
+            dt_str = dt.datetime.fromtimestamp(float(self.lock_file.read_text()))
         except:
             pass
         else:
@@ -805,12 +789,14 @@ def main():
 
     feeder.config.tui.parse_args(dict(vars(args)))
 
+    lock_file = Path(DEFAULT_LOCK_FILE)
+
     update_status_msg = None
     update_interval_mins = args.update_interval or feeder.config.tui.update_interval
     if (
         args.update
         or feeder.config.tui.always_update
-        or is_update_interval_expired(update_interval_mins)
+        or is_update_interval_expired(lock_file, update_interval_mins)
     ):
         print("updating...")
         before = feeder.unviewed_count()
@@ -820,14 +806,14 @@ def main():
             update_status_msg = "Update failed: %s" % e
             print(update_status_msg)
         else:
-            update_lock_file()
+            update_lock_file(lock_file)
             after = feeder.unviewed_count()
             if before < after:
                 feeder.update_channels()
                 new = after - before
                 update_status_msg = f"{after - before} new entries"
 
-    pager = App(feeder, update_status_msg)
+    pager = App(feeder, lock_file, update_status_msg)
 
     kb = KeyBindings()
 
