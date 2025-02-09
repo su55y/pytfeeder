@@ -1,4 +1,3 @@
-import asyncio
 import datetime as dt
 from enum import Enum, auto
 from pathlib import Path
@@ -30,10 +29,9 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
-from pytfeeder.tui import config as tui_config
 from pytfeeder.tui.args import parse_args, format_keybindings
 from pytfeeder.tui.consts import DEFAULT_KEYBINDS, DEFAULT_LOCK_FILE
-from pytfeeder.tui.updates import is_update_interval_expired, update_lock_file
+from pytfeeder.tui.updates import is_update_interval_expired, update_lock_file, update
 
 
 def play_video(id: str) -> None:
@@ -799,19 +797,7 @@ def main():
         or is_update_interval_expired(lock_file, update_interval_mins)
     ):
         print("updating...")
-        before = feeder.unviewed_count()
-        try:
-            asyncio.run(feeder.sync_entries())
-        except Exception as e:
-            update_status_msg = "Update failed: %s" % e
-            print(update_status_msg)
-        else:
-            update_lock_file(lock_file)
-            after = feeder.unviewed_count()
-            if before < after:
-                feeder.update_channels()
-                new = after - before
-                update_status_msg = f"{after - before} new entries"
+        update_status_msg = update(feeder, lock_file)
 
     pager = App(feeder, lock_file, update_status_msg)
 
