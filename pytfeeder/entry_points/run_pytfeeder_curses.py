@@ -795,19 +795,9 @@ def main():
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    if args.limit > 0:
-        feeder.config.channel_feed_limit = args.limit
-
-    if args.feed_limit > 0:
-        feeder.config.feed_limit = args.feed_limit
-
-    if args.alphabetic_sort:
-        feeder.config.alphabetic_sort = args.alphabetic_sort
-
-    if args.datetime_fmt:
-        feeder.config.datetime_fmt = args.datetime_fmt
-
-    feeder.config.tui.parse_args(dict(vars(args)))
+    kwargs = dict(vars(args))
+    feeder.config.parse_args(kwargs)
+    feeder.config.tui.parse_args(kwargs)
 
     lock_file = Path(DEFAULT_LOCK_FILE)
 

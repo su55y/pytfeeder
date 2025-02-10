@@ -1,7 +1,7 @@
 from dataclasses import dataclass, asdict
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from os.path import expandvars
 
 import yaml
@@ -123,6 +123,16 @@ class Config:
             self.unviewed_first = bool(unviewed_first)
         if tui_object := config_dict.get("tui"):
             self.tui.parse_config_file(tui_object)
+
+    def parse_args(self, kw: Dict[str, Any]) -> None:
+        if limit := kw.get("limit"):
+            self.channel_feed_limit = limit
+        if feed_limit := kw.get("feed_limit"):
+            self.feed_limit = feed_limit
+        if alphabetic_sort := kw.get("alphabetic_sort"):
+            self.alphabetic_sort = alphabetic_sort
+        if datetime_fmt := kw.get("datetime_fmt"):
+            self.datetime_fmt = datetime_fmt
 
     def dump(self, config_file: str) -> None:
         data = {
