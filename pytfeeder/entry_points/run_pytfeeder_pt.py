@@ -106,10 +106,23 @@ Lines = Union[List[Channel], List[Entry]]
 
 class FilterContainer(ConditionalContainer):
     def __init__(self, pager: "App"):
+        kb = KeyBindings()
+
+        @kb.add("escape")
+        @kb.add("c-c")
+        def _escape(_) -> None:
+            pager.filter_buffer.reset()
+            if pager._app_link:
+                pager._app_link.layout.focus(pager.main_window)
+                pager._app_link.vi_state.input_mode = InputMode.NAVIGATION
+                pager._app_link = None
+
         super(FilterContainer, self).__init__(
             Window(
                 BufferControl(
-                    buffer=pager.filter_buffer, input_processors=[BeforeInput("/")]
+                    buffer=pager.filter_buffer,
+                    input_processors=[BeforeInput("/")],
+                    key_bindings=kb,
                 ),
                 height=1,
             ),
@@ -119,10 +132,23 @@ class FilterContainer(ConditionalContainer):
 
 class JumpContainer(ConditionalContainer):
     def __init__(self, pager: "App"):
+        kb = KeyBindings()
+
+        @kb.add("escape")
+        @kb.add("c-c")
+        def _escape(_) -> None:
+            pager.jump_buffer.reset()
+            if pager._app_link:
+                pager._app_link.layout.focus(pager.main_window)
+                pager._app_link.vi_state.input_mode = InputMode.NAVIGATION
+                pager._app_link = None
+
         super(JumpContainer, self).__init__(
             Window(
                 BufferControl(
-                    buffer=pager.jump_buffer, input_processors=[BeforeInput(":")]
+                    buffer=pager.jump_buffer,
+                    input_processors=[BeforeInput(":")],
+                    key_bindings=kb,
                 ),
                 height=1,
             ),
