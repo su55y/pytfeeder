@@ -5,7 +5,7 @@ import subprocess as sp
 import time
 from typing import List, Optional, Tuple, Union
 
-from prompt_toolkit.filters import has_focus
+from prompt_toolkit.filters import FilterOrBool, has_focus
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
@@ -104,34 +104,8 @@ class PageState(Enum):
 Lines = Union[List[Channel], List[Entry]]
 
 
-class FilterContainer(ConditionalContainer):
-    def __init__(self, pager: "App"):
-        kb = KeyBindings()
-
-        @kb.add("escape")
-        @kb.add("c-c")
-        def _escape(_) -> None:
-            pager.filter_buffer.reset()
-            if pager._app_link:
-                pager._app_link.layout.focus(pager.main_window)
-                pager._app_link.vi_state.input_mode = InputMode.NAVIGATION
-                pager._app_link = None
-
-        super(FilterContainer, self).__init__(
-            Window(
-                BufferControl(
-                    buffer=pager.filter_buffer,
-                    input_processors=[BeforeInput("/")],
-                    key_bindings=kb,
-                ),
-                height=1,
-            ),
-            filter=has_focus(pager.filter_buffer),
-        )
-
-
-class JumpContainer(ConditionalContainer):
-    def __init__(self, pager: "App"):
+class PromptContainer(ConditionalContainer):
+    def __init__(self, pager: "App", buffer: Buffer, prompt_text: str = "/"):
         kb = KeyBindings()
 
         @kb.add("escape")
@@ -143,16 +117,16 @@ class JumpContainer(ConditionalContainer):
                 pager._app_link.vi_state.input_mode = InputMode.NAVIGATION
                 pager._app_link = None
 
-        super(JumpContainer, self).__init__(
+        super(PromptContainer, self).__init__(
             Window(
                 BufferControl(
-                    buffer=pager.jump_buffer,
-                    input_processors=[BeforeInput(":")],
+                    buffer=buffer,
+                    input_processors=[BeforeInput(prompt_text)],
                     key_bindings=kb,
                 ),
                 height=1,
             ),
-            filter=has_focus(pager.jump_buffer),
+            filter=has_focus(buffer),
         )
 
 
@@ -282,8 +256,8 @@ class App:
                 self.main_window,
                 self.help_window,
                 self.toolbar_window,
-                FilterContainer(self),
-                JumpContainer(self),
+                PromptContainer(self, self.filter_buffer),
+                PromptContainer(self, self.jump_buffer, ":"),
             ]
         )
 
