@@ -6,7 +6,7 @@ from os.path import expandvars
 
 import yaml
 
-from .defaults import default_cachedir_path
+from .defaults import default_cachedir_path, default_lockfile_path
 from .models import Channel
 from .consts import (
     DEFAULT_ROFI_CHANNELS_FMT,
@@ -48,6 +48,7 @@ class Config:
     rofi_entries_fmt: str
     unviewed_first: bool
     tui: ConfigTUI
+    update_lock_file: Path
     channel_feed_limit: Optional[int] = None
     feed_limit: Optional[int] = None
 
@@ -68,6 +69,7 @@ class Config:
         alphabetic_sort: Optional[bool] = None,
         unviewed_first: Optional[bool] = None,
         tui: ConfigTUI = ConfigTUI(),
+        update_lock_file: Optional[Path] = None,
     ) -> None:
         self.channels = channels or []
         self.feed_limit = feed_limit
@@ -82,6 +84,7 @@ class Config:
         self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ROFI_ENTRIES_FMT
         self.alphabetic_sort = alphabetic_sort or False
         self.unviewed_first = unviewed_first or False
+        self.update_lock_file = update_lock_file or default_lockfile_path()
         self.tui = tui
         if config_file:
             config_file = expand_path(config_file)
@@ -121,6 +124,8 @@ class Config:
             self.alphabetic_sort = bool(alphabetic_sort)
         if unviewed_first := config_dict.get("unviewed_first"):
             self.unviewed_first = bool(unviewed_first)
+        if update_lock_file := config_dict.get("update_lock_file"):
+            self.update_lock_file = expand_path(update_lock_file)
         if tui_object := config_dict.get("tui"):
             self.tui.parse_config_file(tui_object)
 

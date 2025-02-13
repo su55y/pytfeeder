@@ -19,3 +19,8 @@ def default_cachedir_path() -> Path:
     else:
         cache_home = Path.home().joinpath(".cache")
     return cache_home.joinpath("pytfeeder")
+
+
+@cache
+def default_lockfile_path() -> Path:
+    return Path("/tmp/pytfeeder_update.lock")

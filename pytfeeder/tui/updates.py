@@ -21,7 +21,7 @@ def is_update_interval_expired(file: Path, mins: int) -> bool:
     return False
 
 
-def update(feeder: Feeder, lock_file: Path) -> Optional[str]:
+def update(feeder: Feeder) -> Optional[str]:
     import asyncio
 
     update_status_msg = None
@@ -32,7 +32,7 @@ def update(feeder: Feeder, lock_file: Path) -> Optional[str]:
         update_status_msg = "Update failed: %s" % e
         print(update_status_msg)
     else:
-        update_lock_file(lock_file)
+        update_lock_file(feeder.config.update_lock_file)
         after = feeder.unviewed_count()
         if before < after:
             feeder.update_channels()

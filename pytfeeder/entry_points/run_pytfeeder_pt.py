@@ -5,7 +5,7 @@ import subprocess as sp
 import time
 from typing import List, Optional, Tuple, Union
 
-from prompt_toolkit.filters import FilterOrBool, has_focus
+from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
@@ -134,13 +134,11 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
-        lock_file: Path = Path(DEFAULT_LOCK_FILE),
         update_status_msg: Optional[str] = None,
         **_,
     ) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
-        self.lock_file = lock_file
 
         self.alphabetic_sort = self.feeder.config.alphabetic_sort
         self.channels = list()
@@ -744,12 +742,14 @@ class App:
         else:
             self._status_msg = "no updates; "
         self._status_msg_time = time.perf_counter()
-        update_lock_file(self.lock_file)
+        update_lock_file(self.feeder.config.update_lock_file)
         self.refresh_last_update()
 
     def refresh_last_update(self) -> None:
         try:
-            dt_str = dt.datetime.fromtimestamp(float(self.lock_file.read_text()))
+            dt_str = dt.datetime.fromtimestamp(
+                float(self.feeder.config.update_lock_file.read_text())
+            )
         except:
             pass
         else:
@@ -777,19 +777,19 @@ def main():
     feeder.config.parse_args(kwargs)
     feeder.config.tui.parse_args(kwargs)
 
-    lock_file = Path(DEFAULT_LOCK_FILE)
-
     update_status_msg = None
     update_interval_mins = args.update_interval or feeder.config.tui.update_interval
     if (
         args.update
         or feeder.config.tui.always_update
-        or is_update_interval_expired(lock_file, update_interval_mins)
+        or is_update_interval_expired(
+            feeder.config.update_lock_file, update_interval_mins
+        )
     ):
         print("updating...")
-        update_status_msg = update(feeder, lock_file)
+        update_status_msg = update(feeder)
 
-    pager = App(feeder, lock_file, update_status_msg)
+    pager = App(feeder, update_status_msg)
 
     kb = KeyBindings()
 
