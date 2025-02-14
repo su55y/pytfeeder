@@ -61,6 +61,8 @@ class ConfigTUI:
             self.last_update_fmt = last_update_fmt
         if status_fmt := kw.get("status_fmt"):
             self.status_fmt = status_fmt
+        if (update_interval := kw.get("update_interval")) is not None:
+            self.update_interval = update_interval
         if m1 := kw.get("macro1"):
             self.macro1 = m1
         if m2 := kw.get("macro2"):

@@ -3,19 +3,20 @@ from pathlib import Path
 from typing import Optional
 
 from pytfeeder.feeder import Feeder
+from pytfeeder.config import Config
 
 
 def update_lock_file(file: Path) -> None:
     file.write_text(dt.datetime.now().strftime("%s"))
 
 
-def is_update_interval_expired(file: Path, mins: int) -> bool:
-    if not file.exists():
+def is_update_interval_expired(c: Config) -> bool:
+    if not c.update_lock_file.exists():
         return True
 
-    last_update = dt.datetime.fromtimestamp(float(file.read_text()))
-    if last_update < (dt.datetime.now() - dt.timedelta(minutes=mins)):
-        update_lock_file(file)
+    last_update = dt.datetime.fromtimestamp(float(c.update_lock_file.read_text()))
+    if last_update < (dt.datetime.now() - dt.timedelta(minutes=c.tui.update_interval)):
+        update_lock_file(c.update_lock_file)
         return True
 
     return False

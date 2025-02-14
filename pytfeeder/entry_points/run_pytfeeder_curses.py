@@ -800,13 +800,10 @@ def main():
     feeder.config.tui.parse_args(kwargs)
 
     update_status_msg = None
-    update_interval_mins = args.update_interval or feeder.config.tui.update_interval
     if (
         args.update
         or config.tui.always_update
-        or is_update_interval_expired(
-            feeder.config.update_lock_file, update_interval_mins
-        )
+        or is_update_interval_expired(feeder.config)
     ):
         print("updating...")
         update_status_msg = update(feeder)

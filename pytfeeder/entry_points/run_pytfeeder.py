@@ -17,7 +17,7 @@ from pytfeeder.utils import fetch_channel_info, human_readable_size
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(epilog="last modification: 12.02.2025")
+    parser = argparse.ArgumentParser(epilog="last modification: 14.02.2025")
     parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
