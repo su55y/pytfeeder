@@ -11,12 +11,12 @@ def update_lock_file(file: Path) -> None:
 
 
 def is_update_interval_expired(c: Config) -> bool:
-    if not c.update_lock_file.exists():
+    if not c.lock_file.exists():
         return True
 
-    last_update = dt.datetime.fromtimestamp(float(c.update_lock_file.read_text()))
+    last_update = dt.datetime.fromtimestamp(float(c.lock_file.read_text()))
     if last_update < (dt.datetime.now() - dt.timedelta(minutes=c.tui.update_interval)):
-        update_lock_file(c.update_lock_file)
+        update_lock_file(c.lock_file)
         return True
 
     return False
@@ -33,7 +33,7 @@ def update(feeder: Feeder) -> Optional[str]:
         update_status_msg = "Update failed: %s" % e
         print(update_status_msg)
     else:
-        update_lock_file(feeder.config.update_lock_file)
+        update_lock_file(feeder.config.lock_file)
         after = feeder.unviewed_count()
         if before < after:
             feeder.update_channels()

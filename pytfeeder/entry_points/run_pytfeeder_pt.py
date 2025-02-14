@@ -741,13 +741,13 @@ class App:
         else:
             self._status_msg = "no updates; "
         self._status_msg_time = time.perf_counter()
-        update_lock_file(self.feeder.config.update_lock_file)
+        update_lock_file(self.feeder.config.lock_file)
         self.refresh_last_update()
 
     def refresh_last_update(self) -> None:
         try:
             dt_str = dt.datetime.fromtimestamp(
-                float(self.feeder.config.update_lock_file.read_text())
+                float(self.feeder.config.lock_file.read_text())
             )
         except:
             pass
