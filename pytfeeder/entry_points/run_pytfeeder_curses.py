@@ -3,7 +3,6 @@ import curses
 from dataclasses import dataclass
 import datetime as dt
 from enum import Enum, IntEnum, auto
-from pathlib import Path
 import subprocess as sp
 import time
 from typing import List, Literal, Optional, Union
@@ -14,7 +13,7 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.tui.args import parse_args, format_keybindings
 from pytfeeder.tui.consts import DEFAULT_KEYBINDS, DEFAULT_LOCK_FILE
-from pytfeeder.tui.updates import is_update_interval_expired, update_lock_file, update
+from pytfeeder.tui.updates import Updater
 
 
 def play_video(id: str) -> None:
@@ -148,12 +147,14 @@ class App:
     def __init__(
         self,
         feeder: Feeder,
+        updater: Updater,
         update_status_msg: Optional[str] = None,
     ) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
         self.channels = list()
         self._set_channels()
+        self.updater = updater
 
         self.filtered = False
         self.gravity = Gravity.DOWN
@@ -587,7 +588,7 @@ class App:
             self._status_msg = "no updates"
         self._status_msg_time = time.perf_counter()
 
-        update_lock_file(self.feeder.config.lock_file)
+        self.updater.update_lock_file()
         self.refresh_last_update()
 
     def refresh_last_update(self) -> None:
@@ -800,16 +801,13 @@ def main():
     feeder.config.tui.parse_args(kwargs)
 
     update_status_msg = None
-    if (
-        args.update
-        or config.tui.always_update
-        or is_update_interval_expired(feeder.config)
-    ):
+    updater = Updater(feeder)
+    if args.update or config.tui.always_update or updater.is_update_interval_expired():
         print("updating...")
-        update_status_msg = update(feeder)
+        update_status_msg = updater.update()
 
     try:
-        _ = App(feeder, update_status_msg).start()
+        _ = App(feeder, updater, update_status_msg).start()
     except Exception as e:
         print(e)
         exit(1)

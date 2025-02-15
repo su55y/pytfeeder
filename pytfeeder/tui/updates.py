@@ -1,42 +1,47 @@
 import datetime as dt
-from pathlib import Path
 from typing import Optional
 
 from pytfeeder.feeder import Feeder
-from pytfeeder.config import Config
 
 
-def update_lock_file(file: Path) -> None:
-    file.write_text(dt.datetime.now().strftime("%s"))
+class Updater:
+    def __init__(self, feeder: Feeder) -> None:
+        self.feeder = feeder
 
+    def update_lock_file(self) -> None:
+        self.feeder.config.lock_file.write_text(dt.datetime.now().strftime("%s"))
 
-def is_update_interval_expired(c: Config) -> bool:
-    if not c.lock_file.exists():
-        return True
+    def is_update_interval_expired(self) -> bool:
+        if not self.feeder.config.lock_file.exists():
+            return True
 
-    last_update = dt.datetime.fromtimestamp(float(c.lock_file.read_text()))
-    if last_update < (dt.datetime.now() - dt.timedelta(minutes=c.tui.update_interval)):
-        update_lock_file(c.lock_file)
-        return True
+        last_update = dt.datetime.fromtimestamp(
+            float(self.feeder.config.lock_file.read_text())
+        )
+        if last_update < (
+            dt.datetime.now()
+            - dt.timedelta(minutes=self.feeder.config.tui.update_interval)
+        ):
+            self.update_lock_file()
+            return True
 
-    return False
+        return False
 
+    def update(self) -> Optional[str]:
+        import asyncio
 
-def update(feeder: Feeder) -> Optional[str]:
-    import asyncio
+        update_status_msg = None
+        before = self.feeder.unviewed_count()
+        try:
+            asyncio.run(self.feeder.sync_entries())
+        except Exception as e:
+            update_status_msg = "Update failed: %s" % e
+            print(update_status_msg)
+        else:
+            self.update_lock_file()
+            after = self.feeder.unviewed_count()
+            if before < after:
+                self.feeder.update_channels()
+                update_status_msg = f"{after - before} new entries"
 
-    update_status_msg = None
-    before = feeder.unviewed_count()
-    try:
-        asyncio.run(feeder.sync_entries())
-    except Exception as e:
-        update_status_msg = "Update failed: %s" % e
-        print(update_status_msg)
-    else:
-        update_lock_file(feeder.config.lock_file)
-        after = feeder.unviewed_count()
-        if before < after:
-            feeder.update_channels()
-            update_status_msg = f"{after - before} new entries"
-
-    return update_status_msg
+        return update_status_msg
