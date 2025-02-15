@@ -30,7 +30,7 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.tui.args import parse_args, format_keybindings
 from pytfeeder.tui.consts import DEFAULT_KEYBINDS, DEFAULT_LOCK_FILE
-from pytfeeder.tui.updates import Updater
+from pytfeeder.tui.updater import Updater
 
 
 def play_video(id: str) -> None:
