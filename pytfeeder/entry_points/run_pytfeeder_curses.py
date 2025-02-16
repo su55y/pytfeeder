@@ -144,12 +144,7 @@ class CLIType(Enum):
 
 
 class App:
-    def __init__(
-        self,
-        feeder: Feeder,
-        updater: Updater,
-        update_status_msg: Optional[str] = None,
-    ) -> None:
+    def __init__(self, feeder: Feeder, updater: Updater) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
         self.channels = list()
@@ -181,8 +176,8 @@ class App:
         }
         self._last_update = ""
         self.refresh_last_update()
-        if update_status_msg:
-            self._status_msg = update_status_msg
+        if msg := self.updater.status_msg:
+            self._status_msg = msg
             self._status_msg_time = time.perf_counter()
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
@@ -800,14 +795,13 @@ def main():
     feeder.config.parse_args(kwargs)
     feeder.config.tui.parse_args(kwargs)
 
-    update_status_msg = None
     updater = Updater(feeder)
     if args.update or config.tui.always_update or updater.is_update_interval_expired():
         print("updating...")
-        update_status_msg = updater.update()
+        err = updater.update()
 
     try:
-        _ = App(feeder, updater, update_status_msg).start()
+        _ = App(feeder, updater).start()
     except Exception as e:
         print(e)
         exit(1)

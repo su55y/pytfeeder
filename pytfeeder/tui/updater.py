@@ -7,6 +7,15 @@ from pytfeeder.feeder import Feeder
 class Updater:
     def __init__(self, feeder: Feeder) -> None:
         self.feeder = feeder
+        self._status_msg = ""
+
+    @property
+    def status_msg(self) -> str:
+        msg = ""
+        if self._status_msg:
+            msg = self._status_msg
+            self._status_msg = ""
+        return msg
 
     def update_lock_file(self) -> None:
         self.feeder.config.lock_file.write_text(dt.datetime.now().strftime("%s"))
@@ -27,21 +36,17 @@ class Updater:
 
         return False
 
-    def update(self) -> Optional[str]:
+    def update(self) -> Optional[Exception]:
         import asyncio
 
-        update_status_msg = None
         before = self.feeder.unviewed_count()
         try:
             asyncio.run(self.feeder.sync_entries())
         except Exception as e:
-            update_status_msg = "Update failed: %s" % e
-            print(update_status_msg)
+            self._status_msg = "Update failed: %s" % e
         else:
             self.update_lock_file()
             after = self.feeder.unviewed_count()
             if before < after:
                 self.feeder.update_channels()
-                update_status_msg = f"{after - before} new entries"
-
-        return update_status_msg
+                self._status_msg = f"{after - before} new entries"

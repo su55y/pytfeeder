@@ -130,13 +130,7 @@ class PromptContainer(ConditionalContainer):
 
 
 class App:
-    def __init__(
-        self,
-        feeder: Feeder,
-        updater: Updater,
-        update_status_msg: Optional[str] = None,
-        **_,
-    ) -> None:
+    def __init__(self, feeder: Feeder, updater: Updater) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
         self.updater = updater
@@ -260,8 +254,8 @@ class App:
             ]
         )
 
-        if update_status_msg:
-            self._status_msg = f"{update_status_msg}; "
+        if msg := self.updater.status_msg:
+            self._status_msg = f"{msg}; "
             self._status_msg_time = time.perf_counter()
 
     def _set_channels(self, channels: List[Channel] = list()) -> None:
@@ -778,7 +772,6 @@ def main():
     feeder.config.parse_args(kwargs)
     feeder.config.tui.parse_args(kwargs)
 
-    update_status_msg = None
     updater = Updater(feeder)
     if (
         args.update
@@ -786,9 +779,9 @@ def main():
         or updater.is_update_interval_expired()
     ):
         print("updating...")
-        update_status_msg = updater.update()
+        err = updater.update()
 
-    pager = App(feeder, updater, update_status_msg)
+    pager = App(feeder, updater)
 
     kb = KeyBindings()
 
