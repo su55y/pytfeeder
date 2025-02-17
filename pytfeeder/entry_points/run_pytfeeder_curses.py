@@ -11,71 +11,10 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
+from pytfeeder.utils import notify, download_video, download_all, play_video
 from pytfeeder.tui.args import parse_args, format_keybindings
 from pytfeeder.tui.consts import DEFAULT_KEYBINDS, DEFAULT_LOCK_FILE
 from pytfeeder.tui.updater import Updater
-
-
-def play_video(id: str) -> None:
-    sp.Popen(
-        [
-            "setsid",
-            "-f",
-            "mpv",
-            "https://youtu.be/%s" % id,
-            "--ytdl-raw-options=retries=infinite",
-        ],
-        stdout=sp.DEVNULL,
-        stderr=sp.DEVNULL,
-    )
-
-
-def notify(msg: str) -> bool:
-    if not msg:
-        return True
-    cmd = ["notify-send", "-i", "youtube", "-a", "pytfeeder", msg]
-    p = sp.run(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
-    if p.returncode != 0:
-        return False
-    return True
-
-
-def download_video(entry: Entry, send_notification=True) -> Optional[str]:
-    p = sp.check_output(
-        [
-            "tsp",
-            "yt-dlp",
-            f"https://youtu.be/{entry.id}",
-            "-o",
-            "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
-        ],
-        shell=False,
-    )
-
-    if send_notification:
-        _ = notify(f"⬇️Start downloading {entry.title!r}...")
-
-    _ = sp.run(
-        [
-            "tsp",
-            "-D",
-            p.decode(),
-            "notify-send",
-            "-i",
-            "youtube",
-            "-a",
-            "pytfeeder",
-            f"✅Download done: {entry.title}",
-        ],
-        stdout=sp.DEVNULL,
-        stderr=sp.DEVNULL,
-    )
-
-
-def download_all(entries: List[Entry]) -> Optional[str]:
-    _ = notify(f"⬇️Start downloading {len(entries)} entries...")
-    for e in entries:
-        download_video(e, send_notification=False)
 
 
 @dataclass
