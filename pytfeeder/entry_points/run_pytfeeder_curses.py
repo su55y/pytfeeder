@@ -797,8 +797,10 @@ def main():
 
     updater = Updater(feeder)
     if args.update or config.tui.always_update or updater.is_update_interval_expired():
-        print("updating...")
-        err = updater.update()
+        print("Updating...")
+        if err := updater.update():
+            print("Update failed: %s" % err)
+            exit(1)
 
     try:
         _ = App(feeder, updater).start()
