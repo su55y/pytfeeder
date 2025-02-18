@@ -101,7 +101,7 @@ class App:
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.scroll_top = 0
         self.selected_data = None
-        self.state = PageState.CHANNELS
+        self.page_state = PageState.CHANNELS
         self._g_pressed = False
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self._status_msg = ""
@@ -174,7 +174,7 @@ class App:
                 case Key.h | curses.KEY_LEFT:
                     if len(self.lines) > 0:
                         screen.clear()
-                    match self.state:
+                    match self.page_state:
                         case PageState.CHANNELS:
                             if not self.filtered:
                                 exit(0)
@@ -221,17 +221,17 @@ class App:
                 case Key.A:
                     self.mark_viewed_all()
                 case Key.J:
-                    if self.state == PageState.ENTRIES and not self.filtered:
+                    if self.page_state == PageState.ENTRIES and not self.filtered:
                         self.move_next()
                         screen.clear()
                 case Key.K:
-                    if self.state == PageState.ENTRIES and not self.filtered:
+                    if self.page_state == PageState.ENTRIES and not self.filtered:
                         self.move_prev()
                         screen.clear()
                 case Key.QUESTION_MARK:
                     self.switch_to_pad(screen)
                 case Key.d:
-                    if self.state != PageState.ENTRIES:
+                    if self.page_state != PageState.ENTRIES:
                         continue
                     if len(self.lines) == 0:
                         continue
@@ -251,7 +251,7 @@ class App:
                 case Key.D:
                     self.selected_data = self.lines[self.index].data
                     if not (
-                        self.state == PageState.ENTRIES
+                        self.page_state == PageState.ENTRIES
                         and isinstance(self.selected_data, Entry)
                     ):
                         continue
@@ -267,7 +267,7 @@ class App:
                     exit(0)
 
     def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
-        if self.state != PageState.ENTRIES:
+        if self.page_state != PageState.ENTRIES:
             return
         if len(self.lines) == 0:
             return
@@ -451,8 +451,8 @@ class App:
         else:
             self.selected_data = self.lines[self.index].data
 
-        if self.state == PageState.CHANNELS:
-            self.state = PageState.ENTRIES
+        if self.page_state == PageState.CHANNELS:
+            self.page_state = PageState.ENTRIES
             self.filtered = False
             if last_channel_index == -1:
                 self.last_page_index = self.index
@@ -460,7 +460,7 @@ class App:
             self.last_channel_index = self.index
             self.index = 0
             self.scroll_top = 0
-        elif self.state == PageState.ENTRIES:
+        elif self.page_state == PageState.ENTRIES:
             if not isinstance(self.selected_data, Entry):
                 raise Exception(
                     "unexpected selected data type %s: %r"
@@ -478,7 +478,7 @@ class App:
         self.scroll_top = 0
 
     def move_left_entries(self) -> None:
-        self.state = PageState.CHANNELS
+        self.page_state = PageState.CHANNELS
         if not self.filtered:
             self.lines = list(map(Line, self.channels))
             self.index = min(self.last_page_index, len(self.lines) - 1)
@@ -491,7 +491,7 @@ class App:
     def reload(self) -> None:
         after = 0
         before = self.feeder.unviewed_count()
-        if self.state == PageState.ENTRIES and self.selected_data.channel_id != "feed":  # type: ignore
+        if self.page_state == PageState.ENTRIES and self.selected_data.channel_id != "feed":  # type: ignore
             before = self.feeder.unviewed_count(self.selected_data.channel_id)  # type: ignore
 
         try:
@@ -502,10 +502,10 @@ class App:
             return
 
         self._set_channels(self.feeder.update_channels())
-        if self.state == PageState.CHANNELS:
+        if self.page_state == PageState.CHANNELS:
             self.lines = list(map(Line, self.channels))
             after = self.feeder.unviewed_count()
-        elif self.state == PageState.ENTRIES:
+        elif self.page_state == PageState.ENTRIES:
             self.index = 0
             self.lines = self.lines_by_id(
                 channel_id=self.channels[self.last_channel_index].channel_id
@@ -540,7 +540,7 @@ class App:
             return
         keyword = keyword.lower()
         self.lines = list(filter(lambda v: keyword in v.data.title.lower(), self.lines))
-        if self.state == PageState.CHANNELS:
+        if self.page_state == PageState.CHANNELS:
             self.last_page_index = self.index
         self.index = 0
         self.scroll_top = 0
@@ -628,12 +628,16 @@ class App:
     def mark_viewed_all(self) -> None:
         self.selected_data = self.lines[self.index].data
 
-        if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
+        if self.page_state == PageState.CHANNELS and isinstance(
+            self.selected_data, Channel
+        ):
             self.feeder.mark_as_viewed(
                 unviewed=all(not c.have_updates for c in self.feeder.channels)
             )
             self._set_channels(self.feeder.update_channels())
-        elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
+        elif self.page_state == PageState.ENTRIES and isinstance(
+            self.selected_data, Entry
+        ):
             if self.channels[self.last_page_index].channel_id == "feed":
                 unviewed = all(not c.have_updates for c in self.channels)
                 self.feeder.mark_as_viewed(unviewed=unviewed)
@@ -652,7 +656,9 @@ class App:
 
     def mark_viewed(self) -> None:
         self.selected_data = self.lines[self.index].data
-        if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
+        if self.page_state == PageState.CHANNELS and isinstance(
+            self.selected_data, Channel
+        ):
             if self.selected_data.channel_id == "feed":
                 return
             unviewed = not self.selected_data.have_updates
@@ -660,7 +666,9 @@ class App:
                 channel_id=self.selected_data.channel_id, unviewed=unviewed
             )
             self.selected_data.have_updates = unviewed
-        elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
+        elif self.page_state == PageState.ENTRIES and isinstance(
+            self.selected_data, Entry
+        ):
             unviewed = self.selected_data.is_viewed
             self.feeder.mark_as_viewed(id=self.selected_data.id, unviewed=unviewed)
             self.selected_data.is_viewed = not unviewed

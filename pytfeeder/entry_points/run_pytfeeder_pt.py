@@ -82,8 +82,8 @@ class App:
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self.is_help_opened = False
         self.is_feed_opened = False
-        self.state = PageState.CHANNELS
-        self.selected_line = 0
+        self.page_state = PageState.CHANNELS
+        self.index = 0
         self.help_index = 0
         self.last_index = -1
 
@@ -143,7 +143,7 @@ class App:
                 self._filter = buf.text
                 self._title_fmt = "%d found" % len(self.page_lines)
                 self._keybinds_fmt = f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
-                self.selected_line = 0
+                self.index = 0
             buf.text = ""
             return True
 
@@ -165,7 +165,7 @@ class App:
                 if number > len(self.page_lines) or number < 1:
                     return False
 
-                self.selected_line = number - 1
+                self.index = number - 1
 
             buf.text = ""
             return True
@@ -215,13 +215,17 @@ class App:
             self.channels = [feed_channel, *self.feeder.channels]
 
     def mark_viewed_all(self) -> None:
-        self.selected_data = self.page_lines[self.selected_line]
-        if self.state == PageState.CHANNELS and isinstance(self.selected_data, Channel):
+        self.selected_data = self.page_lines[self.index]
+        if self.page_state == PageState.CHANNELS and isinstance(
+            self.selected_data, Channel
+        ):
             self.feeder.mark_as_viewed(
                 unviewed=all(not c.have_updates for c in self.feeder.channels)
             )
             self._set_channels(self.feeder.update_channels())
-        elif self.state == PageState.ENTRIES and isinstance(self.selected_data, Entry):
+        elif self.page_state == PageState.ENTRIES and isinstance(
+            self.selected_data, Entry
+        ):
             if self.channels[self.last_index].channel_id == "feed":
                 unviewed = all(not c.have_updates for c in self.channels)
                 self.feeder.mark_as_viewed(unviewed=unviewed)
@@ -239,8 +243,8 @@ class App:
                     self.page_lines[i].is_viewed = not unviewed  # type: ignore
 
     def mark_viewed(self) -> None:
-        self.selected_data = self.page_lines[self.selected_line]
-        if self.state == PageState.CHANNELS:
+        self.selected_data = self.page_lines[self.index]
+        if self.page_state == PageState.CHANNELS:
             if not isinstance(self.selected_data, Channel):
                 return
             if self.selected_data.channel_id == "feed":
@@ -250,13 +254,13 @@ class App:
                 channel_id=self.selected_data.channel_id, unviewed=unviewed
             )
             self.selected_data.have_updates = unviewed
-        elif self.state == PageState.ENTRIES:
+        elif self.page_state == PageState.ENTRIES:
             if not isinstance(self.selected_data, Entry):
                 return
             unviewed = self.selected_data.is_viewed
             self.feeder.mark_as_viewed(id=self.selected_data.id, unviewed=unviewed)
             self.selected_data.is_viewed = not unviewed
-            self.selected_line = (self.selected_line + 1) % len(self.page_lines)
+            self.index = (self.index + 1) % len(self.page_lines)
 
     def set_entries_by_id(self, channel_id: str) -> None:
         if channel_id == "feed":
@@ -269,14 +273,14 @@ class App:
     def reset_filter(self) -> None:
         self._filter = None
         self._keybinds_fmt = DEFAULT_KEYBINDS
-        if self.state is PageState.ENTRIES:
+        if self.page_state == PageState.ENTRIES:
             self._title_fmt = self.channels[self.last_index].title
-        elif self.state is PageState.CHANNELS:
+        elif self.page_state == PageState.CHANNELS:
             self._title_fmt = ""
 
     @property
     def page_lines(self) -> Lines:
-        match self.state:
+        match self.page_state:
             case PageState.CHANNELS:
                 if self._filter:
                     return [
@@ -299,7 +303,7 @@ class App:
     def _get_formatted_text(self) -> AnyFormattedText:
         result = []
         for i, entry in enumerate(self.page_lines):
-            if i == self.selected_line:
+            if i == self.index:
                 result.append([("[SetCursorPosition]", "")])
             if isinstance(entry, Entry):
                 result.append(self._format_entry(i, entry))
@@ -347,7 +351,7 @@ class App:
         if self.is_help_opened:
             return ""
 
-        index = self.selected_line + 1
+        index = self.index + 1
         if len(self.page_lines) == 0:
             index = 0
         num_fmt = f"%{len(str(len(self.page_lines)))}d"
@@ -424,7 +428,7 @@ class App:
         @kb.add("s-tab")
         def _go_up(_) -> None:
             if len(self.page_lines) > 1:
-                self.selected_line = (self.selected_line - 1) % len(self.page_lines)
+                self.index = (self.index - 1) % len(self.page_lines)
 
         @kb.add("j")
         @kb.add("down")
@@ -432,7 +436,7 @@ class App:
         @kb.add("tab")
         def _go_down(_) -> None:
             if len(self.page_lines) > 1:
-                self.selected_line = (self.selected_line + 1) % len(self.page_lines)
+                self.index = (self.index + 1) % len(self.page_lines)
 
         @kb.add("l")
         @kb.add("enter")
@@ -440,14 +444,14 @@ class App:
         def _choose_line(event: KeyPressEvent) -> None:
             if len(self.page_lines) == 0:
                 return
-            match self.state:
+            match self.page_state:
                 case PageState.CHANNELS:
-                    if self.selected_line >= len(self.channels):
+                    if self.index >= len(self.channels):
                         return
                     if self._filter:
-                        if len(self.page_lines) < self.selected_line + 1:
+                        if len(self.page_lines) < self.index + 1:
                             return
-                        channel = self.page_lines[self.selected_line]
+                        channel = self.page_lines[self.index]
                         last_index = 0
                         for i in range(len(self.channels)):
                             if channel.channel_id == self.channels[i].channel_id:
@@ -456,18 +460,18 @@ class App:
 
                         self.reset_filter()
                     else:
-                        channel = self.channels[self.selected_line]
-                        self.last_index = self.selected_line
+                        channel = self.channels[self.index]
+                        self.last_index = self.index
                     self.set_entries_by_id(channel.channel_id)
-                    self.state = PageState.ENTRIES
-                    self.selected_line = 0
+                    self.page_state = PageState.ENTRIES
+                    self.index = 0
                     self._title_fmt = channel.title
                 case PageState.ENTRIES:
-                    if self.selected_line >= len(self.entries):
+                    if self.index >= len(self.entries):
                         return
-                    entry_id = self.entries[self.selected_line].id
-                    title = self.entries[self.selected_line].title
-                    is_viewed = self.entries[self.selected_line].is_viewed
+                    entry_id = self.entries[self.index].id
+                    title = self.entries[self.index].title
+                    is_viewed = self.entries[self.index].is_viewed
                     self.feeder.mark_as_viewed(id=entry_id)
                     play_video(entry_id)
                     if not is_viewed:
@@ -485,25 +489,25 @@ class App:
                 self.reset_filter()
                 return
 
-            match self.state:
+            match self.page_state:
                 case PageState.CHANNELS:
                     event.app.exit()
                 case PageState.ENTRIES:
-                    self.state = PageState.CHANNELS
+                    self.page_state = PageState.CHANNELS
                     self.entries = []
-                    self.selected_line = self.last_index
+                    self.index = self.last_index
                     self.last_index = -1
                     self._title_fmt = ""
 
         @kb.add("g", "g")
         @kb.add("home")
         def _go_top(_) -> None:
-            self.selected_line = 0
+            self.index = 0
 
         @kb.add("G")
         @kb.add("end")
         def _go_bottom(_) -> None:
-            self.selected_line = max(0, len(self.page_lines) - 1)
+            self.index = max(0, len(self.page_lines) - 1)
 
         def move_index(prev: bool = False) -> int:
             if prev:
@@ -515,12 +519,12 @@ class App:
             return min(len(self.channels) - 1, self.last_index + 1)
 
         def do_move(prev: bool = False) -> None:
-            if not (self.state == PageState.ENTRIES and self._filter is None):
+            if not (self.page_state == PageState.ENTRIES and self._filter is None):
                 return
             index = move_index(prev)
             self.last_index = index
             self.set_entries_by_id(self.channels[index].channel_id)
-            self.selected_line = 0
+            self.index = 0
             self._title_fmt = self.channels[index].title
 
         @kb.add("J")
@@ -566,7 +570,7 @@ class App:
                 return
             if len(event.key_sequence) != 1:
                 return
-            if self.state != PageState.ENTRIES:
+            if self.page_state != PageState.ENTRIES:
                 return
 
             macro = self.macros.get(key := event.key_sequence.pop().key)
@@ -578,7 +582,7 @@ class App:
             self._status_msg = f"Executing macro {key!r}...; "
             self._status_msg_time = time.perf_counter()
 
-            self.selected_data = self.page_lines[self.selected_line]
+            self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
                 return
 
@@ -599,12 +603,12 @@ class App:
 
         @kb.add("d")
         def _download(_) -> None:
-            if self.state != PageState.ENTRIES:
+            if self.page_state != PageState.ENTRIES:
                 return
             if len(self.page_lines) == 0:
                 return
 
-            self.selected_data = self.page_lines[self.selected_line]
+            self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
                 return
             download_video(self.selected_data)
@@ -613,11 +617,11 @@ class App:
 
         @kb.add("D")
         def _download_all(_) -> None:
-            if self.state != PageState.ENTRIES:
+            if self.page_state != PageState.ENTRIES:
                 return
             if len(self.page_lines) == 0:
                 return
-            self.selected_data = self.page_lines[self.selected_line]
+            self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
                 return
             entries = [l for l in self.page_lines if l.is_viewed is False]  # type: ignore
@@ -651,7 +655,7 @@ class App:
         after = 0
         before = self.feeder.unviewed_count()
         channel_id = ""
-        if self.state == PageState.ENTRIES:
+        if self.page_state == PageState.ENTRIES:
             channel_id = self.channels[self.last_index].channel_id
             if channel_id != "feed":
                 before = self.feeder.unviewed_count(channel_id)
@@ -664,8 +668,8 @@ class App:
 
         self._set_channels(self.feeder.update_channels())
         after = self.feeder.unviewed_count()
-        if self.state == PageState.ENTRIES:
-            self.selected_line = 0
+        if self.page_state == PageState.ENTRIES:
+            self.index = 0
             self.set_entries_by_id(channel_id)
             if channel_id != "feed":
                 after = self.feeder.unviewed_count(channel_id)
