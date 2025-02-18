@@ -12,9 +12,10 @@ from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.utils import notify, download_video, download_all, play_video
-from pytfeeder.tui.args import parse_args, format_keybindings
-from pytfeeder.tui.consts import DEFAULT_KEYBINDS, DEFAULT_LOCK_FILE
+from pytfeeder.tui.args import parse_args
+from pytfeeder.tui.consts import DEFAULT_KEYBINDS
 from pytfeeder.tui.updater import Updater
+from pytfeeder.tui.props import TuiProps, PageState
 
 
 @dataclass
@@ -72,27 +73,23 @@ class Color(IntEnum):
     NEW = 2
 
 
-class PageState(Enum):
-    CHANNELS = auto()
-    ENTRIES = auto()
-
-
 class CLIType(Enum):
     FILTER = auto()
     JUMP = auto()
 
 
-class App:
+class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
+        super().__init__()
         self.feeder = feeder
         self.c = self.feeder.config.tui
-        self.channels = list()
-        self._set_channels()
         self.updater = updater
+        self.channels = list()
+        self._set_channels(self.feeder, self.c.hide_feed)
+        self.refresh_last_update()
 
         self.filtered = False
         self.gravity = Gravity.DOWN
-        self.index = 0
         self.is_pad_active = False
         self.keybinds_str = DEFAULT_KEYBINDS
         self.last_channel_index = -1
@@ -101,11 +98,7 @@ class App:
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.scroll_top = 0
         self.selected_data = None
-        self.page_state = PageState.CHANNELS
         self._g_pressed = False
-        self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
-        self._status_msg = ""
-        self._status_msg_time = 0
         self._is_feed = False
         self.macros = {
             Key.F1: self.c.macro1,
@@ -113,28 +106,9 @@ class App:
             Key.F3: self.c.macro3,
             Key.F4: self.c.macro4,
         }
-        self._last_update = ""
-        self.refresh_last_update()
         if msg := self.updater.status_msg:
             self._status_msg = msg
             self._status_msg_time = time.perf_counter()
-
-    def _set_channels(self, channels: List[Channel] = list()) -> None:
-        if channels:
-            self.feeder.channels = channels
-
-        if self.feeder.config.alphabetic_sort:
-            self.feeder.channels.sort(key=lambda c: c.title)
-
-        if self.c.hide_feed:
-            self.channels = self.feeder.channels
-        else:
-            feed_channel = Channel(
-                title="Feed",
-                channel_id="feed",
-                have_updates=bool(self.feeder.unviewed_count()),
-            )
-            self.channels = [feed_channel, *self.feeder.channels]
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -501,7 +475,9 @@ class App:
             self._status_msg_time = time.perf_counter()
             return
 
-        self._set_channels(self.feeder.update_channels())
+        self._set_channels(
+            self.feeder, self.c.hide_feed, channels=self.feeder.update_channels()
+        )
         if self.page_state == PageState.CHANNELS:
             self.lines = list(map(Line, self.channels))
             after = self.feeder.unviewed_count()
@@ -634,7 +610,9 @@ class App:
             self.feeder.mark_as_viewed(
                 unviewed=all(not c.have_updates for c in self.feeder.channels)
             )
-            self._set_channels(self.feeder.update_channels())
+            self._set_channels(
+                self.feeder, self.c.hide_feed, self.feeder.update_channels()
+            )
         elif self.page_state == PageState.ENTRIES and isinstance(
             self.selected_data, Entry
         ):
