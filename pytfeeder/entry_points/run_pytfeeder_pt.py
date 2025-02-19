@@ -65,12 +65,11 @@ class PromptContainer(ConditionalContainer):
 
 class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        super().__init__()
         self.feeder = feeder
-        self.c = self.feeder.config.tui
+        super().__init__(self.feeder.config.tui)
         self.updater = updater
 
-        self._set_channels(self.feeder, self.c.hide_feed)
+        self._set_channels(self.feeder)
         self.refresh_last_update()
 
         self.entries: List[Entry] = []
@@ -193,9 +192,7 @@ class App(TuiProps):
             self.feeder.mark_as_viewed(
                 unviewed=all(not c.have_updates for c in self.feeder.channels)
             )
-            self._set_channels(
-                self.feeder, self.c.hide_feed, channels=self.feeder.update_channels()
-            )
+            self._set_channels(self.feeder, channels=self.feeder.update_channels())
         elif self.page_state == PageState.ENTRIES and isinstance(
             self.selected_data, Entry
         ):
@@ -639,9 +636,7 @@ class App(TuiProps):
             self._status_msg = "reload failed; "
             return
 
-        self._set_channels(
-            self.feeder, self.c.hide_feed, channels=self.feeder.update_channels()
-        )
+        self._set_channels(self.feeder, channels=self.feeder.update_channels())
         after = self.feeder.unviewed_count()
         if self.page_state == PageState.ENTRIES:
             self.index = 0

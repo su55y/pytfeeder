@@ -3,6 +3,7 @@ from typing import List
 
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Channel
+from .config import ConfigTUI
 from .args import format_keybindings
 
 
@@ -12,7 +13,8 @@ class PageState(Enum):
 
 
 class TuiProps:
-    def __init__(self) -> None:
+    def __init__(self, tui_config: ConfigTUI) -> None:
+        self.c = tui_config
         self.channels = list()
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self.page_state = PageState.CHANNELS
@@ -21,19 +23,14 @@ class TuiProps:
         self._status_msg_time = 0
         self._last_update = ""
 
-    def _set_channels(
-        self,
-        feeder: Feeder,
-        hide_feed: bool = False,
-        channels: List[Channel] = list(),
-    ) -> None:
+    def _set_channels(self, feeder: Feeder, channels: List[Channel] = list()) -> None:
         if channels:
             feeder.channels = channels
 
         if feeder.config.alphabetic_sort:
             feeder.channels.sort(key=lambda c: c.title)
 
-        if hide_feed:
+        if self.c.hide_feed:
             self.channels = feeder.channels
         else:
             feed_channel = Channel(
