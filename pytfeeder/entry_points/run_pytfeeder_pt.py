@@ -73,7 +73,6 @@ class App(TuiProps):
         self.refresh_last_update()
 
         self.entries: List[Entry] = []
-        self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self.is_help_opened = False
         self.is_feed_opened = False
         self.help_index = 0

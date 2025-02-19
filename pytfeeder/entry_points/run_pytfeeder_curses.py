@@ -342,13 +342,12 @@ class App(TuiProps):
         pad = curses.newpad(len(self.help_lines) + 1, max_x)
         help_status = " Help [j,Down,k,Up]: navigate, [h,q,Left]: close help"
 
-        def draw_pad():
-            for i, line in enumerate(self.help_lines):
-                text = f"{line}"
-                pad.addnstr(i, 0, text, min(len(text), max_x), curses.color_pair(2))
-            pad.addnstr(len(self.help_lines), 0, "~", 1, curses.color_pair(2))
+        for i, line in enumerate(self.help_lines):
+            text = f"{line}"
+            pad.addnstr(i, 0, text, min(len(text), max_x), curses.color_pair(2))
 
-        draw_pad()
+        pad.addnstr(len(self.help_lines), 0, "~", 1, curses.color_pair(2))
+
         pad.refresh(pad_pos, 0, 0, 0, max_y - 2, max_x - 1)
         screen.refresh()
 
