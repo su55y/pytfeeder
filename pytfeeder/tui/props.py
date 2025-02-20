@@ -22,6 +22,7 @@ class TuiProps:
         self._status_msg = ""
         self._status_msg_time = 0
         self._last_update = ""
+        self._is_feed_opened = False
 
     def _set_channels(self, feeder: Feeder, channels: List[Channel] = list()) -> None:
         if channels:

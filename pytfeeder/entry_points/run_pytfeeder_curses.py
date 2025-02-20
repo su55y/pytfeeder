@@ -98,7 +98,6 @@ class App(TuiProps):
         self.scroll_top = 0
         self.selected_data = None
         self._g_pressed = False
-        self._is_feed = False
         self.macros = {
             Key.F1: self.c.macro1,
             Key.F2: self.c.macro2,
@@ -280,7 +279,11 @@ class App(TuiProps):
                     new_mark = self.c.new_mark
                     color_pair = Color.NEW
                 updated = line.data.updated.strftime(self.feeder.config.datetime_fmt)
-                fmt = self.c.feed_entries_fmt if self._is_feed else self.c.entries_fmt
+                fmt = (
+                    self.c.feed_entries_fmt
+                    if self._is_feed_opened
+                    else self.c.entries_fmt
+                )
                 text = fmt.format(
                     index=index,
                     new_mark=new_mark,
@@ -690,9 +693,9 @@ class App(TuiProps):
 
     def lines_by_id(self, channel_id: str) -> List[Line]:
         if channel_id == "feed":
-            self._is_feed = True
+            self._is_feed_opened = True
             return list(map(Line, self.feeder.feed()))
-        self._is_feed = False
+        self._is_feed_opened = False
         return list(map(Line, self.feeder.channel_feed(channel_id)))
 
 

@@ -74,7 +74,6 @@ class App(TuiProps):
 
         self.entries: List[Entry] = []
         self.is_help_opened = False
-        self.is_feed_opened = False
         self.help_index = 0
         self.last_index = -1
 
@@ -233,10 +232,10 @@ class App(TuiProps):
 
     def set_entries_by_id(self, channel_id: str) -> None:
         if channel_id == "feed":
-            self.is_feed_opened = True
+            self._is_feed_opened = True
             self.entries = self.feeder.feed()
         else:
-            self.is_feed_opened = False
+            self._is_feed_opened = False
             self.entries = self.feeder.channel_feed(channel_id)
 
     def reset_filter(self) -> None:
@@ -335,7 +334,7 @@ class App(TuiProps):
         return f"{index:{index_len}d}"
 
     def _format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
-        fmt = self.feed_entries_fmt if self.is_feed_opened else self.c.entries_fmt
+        fmt = self.feed_entries_fmt if self._is_feed_opened else self.c.entries_fmt
         line = fmt.format(
             index=self._entry_index(i),
             new_mark=self.new_marks[not entry.is_viewed],
