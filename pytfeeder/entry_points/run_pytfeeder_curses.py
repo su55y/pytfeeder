@@ -458,6 +458,7 @@ class App(TuiProps):
             self.index = min(self.last_page_index, len(self.lines) - 1)
             self.last_page_index = -1
             self.scroll_top = 0
+            self.gravity = Gravity.DOWN
         else:
             self.move_right(self.last_channel_index)
             self.last_channel_index = self.last_page_index
