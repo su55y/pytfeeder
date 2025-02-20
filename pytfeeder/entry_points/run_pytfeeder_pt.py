@@ -28,7 +28,7 @@ from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.utils import notify, download_video, download_all, play_video
-from pytfeeder.tui.args import parse_args, format_keybindings
+from pytfeeder.tui.args import parse_args
 from pytfeeder.tui.consts import DEFAULT_KEYBINDS
 from pytfeeder.tui.updater import Updater
 from pytfeeder.tui.props import TuiProps, PageState
@@ -79,8 +79,6 @@ class App(TuiProps):
 
         self.feed_entries_fmt = self.feeder.config.tui.feed_entries_fmt
         self.datetime_fmt = self.feeder.config.datetime_fmt
-        new_mark = self.c.new_mark
-        self.new_marks = {0: " " * len(new_mark), 1: new_mark}
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
 

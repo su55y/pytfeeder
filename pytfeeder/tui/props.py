@@ -19,6 +19,7 @@ class TuiProps:
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self.page_state = PageState.CHANNELS
         self.index = 0
+        self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self._status_msg = ""
         self._status_msg_time = 0
         self._last_update = ""

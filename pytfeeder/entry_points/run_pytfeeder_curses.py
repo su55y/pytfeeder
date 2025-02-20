@@ -270,13 +270,11 @@ class App(TuiProps):
             self.lines[self.scroll_top : self.scroll_top + max_rows]
         ):
             color_pair = Color.NONE
-            new_mark = " " * len(self.c.new_mark)
             text = "-"
             index = f"{i + 1 + self.scroll_top:{index_len}d}"
 
             if isinstance(line.data, Entry):
                 if line.data.is_viewed is False:
-                    new_mark = self.c.new_mark
                     color_pair = Color.NEW
                 updated = line.data.updated.strftime(self.feeder.config.datetime_fmt)
                 fmt = (
@@ -286,7 +284,7 @@ class App(TuiProps):
                 )
                 text = fmt.format(
                     index=index,
-                    new_mark=new_mark,
+                    new_mark=self.new_marks[not line.data.is_viewed],
                     updated=updated,
                     title=line.data.title,
                     channel_title=f"{self.feeder.channel_title(line.data.channel_id):^{self.max_len_chan_title}s}",
@@ -294,10 +292,11 @@ class App(TuiProps):
 
             elif isinstance(line.data, Channel):
                 if line.data.have_updates:
-                    new_mark = self.c.new_mark
                     color_pair = Color.NEW
                 text = self.c.channels_fmt.format(
-                    index=index, new_mark=new_mark, title=line.data.title
+                    index=index,
+                    new_mark=self.new_marks[line.data.have_updates],
+                    title=line.data.title,
                 )
 
             if line.is_active:
