@@ -106,7 +106,7 @@ class App(TuiProps):
         }
         if msg := self.updater.status_msg:
             self._status_msg = msg
-            self._status_msg_time = time.perf_counter()
+            self._status_msg_lifetime = time.perf_counter()
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -161,7 +161,7 @@ class App(TuiProps):
                         self.filtered = False
                 case Key.r:
                     self._status_msg = "updating..."
-                    self._status_msg_time = time.perf_counter()
+                    self._status_msg_lifetime = time.perf_counter()
                     self.draw(screen)
                     self.reload()
                 case curses.KEY_HOME:
@@ -201,7 +201,7 @@ class App(TuiProps):
                         self.move_prev()
                         screen.clear()
                 case Key.QUESTION_MARK:
-                    self.switch_to_pad(screen)
+                    self.open_help(screen)
                 case Key.d:
                     if self.page_state != PageState.ENTRIES:
                         continue
@@ -216,7 +216,7 @@ class App(TuiProps):
                     err = download_video(selected_data)
                     if err:
                         self._status_msg = f"download failed: {err}"
-                        self._status_msg_time = time.perf_counter()
+                        self._status_msg_lifetime = time.perf_counter()
                     else:
                         if not selected_data.is_viewed:
                             self.mark_viewed()
@@ -252,7 +252,7 @@ class App(TuiProps):
             return
 
         self._status_msg = f"Executing macro {Key(key).name}..."
-        self._status_msg_time = time.perf_counter()
+        self._status_msg_lifetime = time.perf_counter()
         sp.Popen(
             [macro, self.selected_data.id, self.selected_data.title],
             stdout=sp.DEVNULL,
@@ -337,7 +337,7 @@ class App(TuiProps):
         for i in range(len(self.lines)):
             self.lines[i].is_active = i == self.index
 
-    def switch_to_pad(self, screen: "curses._CursesWindow") -> None:
+    def open_help(self, screen: "curses._CursesWindow") -> None:
         screen.clear()
         max_y, max_x = screen.getmaxyx()
         pad_pos = 0
@@ -473,7 +473,7 @@ class App(TuiProps):
             asyncio.run(self.feeder.sync_entries())
         except:
             self._status_msg = "reload failed"
-            self._status_msg_time = time.perf_counter()
+            self._status_msg_lifetime = time.perf_counter()
             return
 
         self._set_channels(self.feeder, channels=self.feeder.update_channels())
@@ -495,7 +495,7 @@ class App(TuiProps):
             self._status_msg = f"{new} new updates"
         else:
             self._status_msg = "no updates"
-        self._status_msg_time = time.perf_counter()
+        self._status_msg_lifetime = time.perf_counter()
 
         self.updater.update_lock_file()
         self.refresh_last_update()
@@ -661,10 +661,10 @@ class App(TuiProps):
             title = "%d found " % len(self.lines)
         if (
             len(self._status_msg) > 0
-            and (time.perf_counter() - self._status_msg_time) > 3
+            and (time.perf_counter() - self._status_msg_lifetime) > 3
         ):
             self._status_msg = ""
-            self._status_msg_time = 0
+            self._status_msg_lifetime = 0
 
         return " ".join(
             self.c.status_fmt.format(

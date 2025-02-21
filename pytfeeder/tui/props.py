@@ -21,7 +21,7 @@ class TuiProps:
         self.index = 0
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self._status_msg = ""
-        self._status_msg_time = 0
+        self._status_msg_lifetime = 0
         self._last_update = ""
         self._is_feed_opened = False
 

@@ -95,15 +95,15 @@ class App(TuiProps):
         self._keybinds_fmt = DEFAULT_KEYBINDS
         self._title_fmt = ""
 
-        self.bottom_toolbar = FormattedTextControl(
-            text=self._get_toolbar_text,
+        self.bottom_statusbar = FormattedTextControl(
+            text=self._get_statusbar_text,
             focusable=False,
         )
-        self.toolbar_window = Window(
+        self.statusbar_window = Window(
             always_hide_cursor=True,
             height=Dimension.exact(1),
-            content=self.bottom_toolbar,
-            style="class:toolbar",
+            content=self.bottom_statusbar,
+            style="class:statusbar",
         )
 
         self.main_window = Window(
@@ -170,7 +170,7 @@ class App(TuiProps):
             [
                 self.main_window,
                 self.help_window,
-                self.toolbar_window,
+                self.statusbar_window,
                 PromptContainer(self, self.filter_buffer),
                 PromptContainer(self, self.jump_buffer, ":"),
             ]
@@ -178,7 +178,7 @@ class App(TuiProps):
 
         if msg := self.updater.status_msg:
             self._status_msg = f"{msg}; "
-            self._status_msg_time = time.perf_counter()
+            self._status_msg_lifetime = time.perf_counter()
 
     def mark_viewed_all(self) -> None:
         self.selected_data = self.page_lines[self.index]
@@ -289,7 +289,7 @@ class App(TuiProps):
 
         return merge_formatted_text(result)
 
-    def _get_toolbar_text(self) -> str:
+    def _get_statusbar_text(self) -> str:
         if self.is_help_opened:
             self._status_msg = ""
             self._title_fmt = "Help"
@@ -297,10 +297,10 @@ class App(TuiProps):
 
         if (
             len(self._status_msg) > 0
-            and (time.perf_counter() - self._status_msg_time) > 3
+            and (time.perf_counter() - self._status_msg_lifetime) > 3
         ):
             self._status_msg = ""
-            self._status_msg_time = 0
+            self._status_msg_lifetime = 0
 
         return " ".join(
             self.c.status_fmt.format(
@@ -542,11 +542,11 @@ class App(TuiProps):
             macro = self.macros.get(key := event.key_sequence.pop().key)
             if not macro or len(macro) == 0:
                 self._status_msg = f"Macro {key!r} not found; "
-                self._status_msg_time = time.perf_counter()
+                self._status_msg_lifetime = time.perf_counter()
                 return
 
             self._status_msg = f"Executing macro {key!r}...; "
-            self._status_msg_time = time.perf_counter()
+            self._status_msg_lifetime = time.perf_counter()
 
             self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
@@ -611,7 +611,7 @@ class App(TuiProps):
         @kb.add("r")
         async def _reload(event: KeyPressEvent) -> None:
             self._status_msg = "reloading...; "
-            self._status_msg_time = time.perf_counter()
+            self._status_msg_lifetime = time.perf_counter()
             event.app.invalidate()
             await self._reload_method()
 
@@ -645,7 +645,7 @@ class App(TuiProps):
             self._status_msg = f"{new} new updates; "
         else:
             self._status_msg = "no updates; "
-        self._status_msg_time = time.perf_counter()
+        self._status_msg_lifetime = time.perf_counter()
         self.updater.update_lock_file()
         self.refresh_last_update()
 
@@ -709,8 +709,8 @@ def main():
                     "select-box cursor-line": "nounderline bg:orange fg:black",
                     "entry": "white",
                     "new_entry": "#ffb71a",
-                    "toolbar": "bg:orange fg:black",
-                    "toolbar.text": "",
+                    "statusbar": "bg:orange fg:black",
+                    "statusbar.text": "",
                 },
             ),
             key_bindings=kb,
