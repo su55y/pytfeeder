@@ -28,34 +28,34 @@ def parse_args() -> argparse.Namespace:
         "-A",
         "--alphabetic-sort",
         action="store_true",
-        help="sort channels in alphabetic order, instead of order by config",
+        help="Sort channels in alphabetic order, instead of order by config",
     )
     parser.add_argument(
         "--channels-fmt",
         metavar="STR",
-        help=f"channels format (default: {consts.DEFAULT_CHANNELS_FMT!r})",
+        help=f"Channels format (default: {consts.DEFAULT_CHANNELS_FMT!r})",
     )
     parser.add_argument(
         "-c",
         "--config",
         metavar="PATH",
         default=default_config_path(),
-        help="config path (default: %(default)s)",
+        help="Config path (default: %(default)s)",
     )
     parser.add_argument(
         "--datetime-fmt",
         metavar="STR",
-        help=f"entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
+        help=f"Entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--feed-entries-fmt",
         metavar="STR",
-        help=f"feed entries format (default: {consts.DEFAULT_FEED_ENTRIES_FMT!r})",
+        help=f"Feed entries format (default: {consts.DEFAULT_FEED_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--entries-fmt",
         metavar="STR",
-        help=f"entries format (default: {consts.DEFAULT_ENTRIES_FMT!r})",
+        help=f"Entries format (default: {consts.DEFAULT_ENTRIES_FMT!r})",
     )
     parser.add_argument(
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
@@ -104,12 +104,18 @@ def parse_args() -> argparse.Namespace:
         "--new-mark",
         default=consts.DEFAULT_NEW_MARK,
         metavar="STR",
-        help="new mark format (default: %(default)r)",
+        help="New mark format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "-N",
+        "--unviewed-first",
+        action="store_true",
+        help="Prioritize unviewed entries over newer viewed",
     )
     parser.add_argument(
         "--status-fmt",
         metavar="STR",
-        help=f"status bar format (default: {consts.DEFAULT_STATUS_FMT!r})",
+        help=f"Status bar format (default: {consts.DEFAULT_STATUS_FMT!r})",
     )
     parser.add_argument(
         "-u",

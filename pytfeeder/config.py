@@ -138,6 +138,8 @@ class Config:
             self.alphabetic_sort = alphabetic_sort
         if datetime_fmt := kw.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
+        if unviewed_first := kw.get("unviewed_first"):
+            self.unviewed_first = unviewed_first
 
     def dump(self, config_file: str) -> None:
         data = {
