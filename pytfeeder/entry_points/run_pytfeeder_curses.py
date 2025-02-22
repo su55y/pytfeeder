@@ -86,6 +86,8 @@ class App(TuiProps):
         self.channels = list()
         self._set_channels(self.feeder)
         self.refresh_last_update()
+        if "{unviewed_count}" in self.c.channels_fmt:
+            self.unviewed_method = lambda c_id: self.feeder.unviewed_count(c_id)
 
         self.filtered = False
         self.gravity = Gravity.DOWN
@@ -297,6 +299,7 @@ class App(TuiProps):
                     index=index,
                     new_mark=self.new_marks[line.data.have_updates],
                     title=line.data.title,
+                    unviewed_count=self.unviewed_method(line.data.channel_id),
                 )
 
             if line.is_active:

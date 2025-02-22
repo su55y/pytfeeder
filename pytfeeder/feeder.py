@@ -69,6 +69,8 @@ class Feeder:
             self.stor.mark_all_entries_as_viewed(unviewed)
 
     def unviewed_count(self, channel_id: Optional[str] = None) -> int:
+        if channel_id == "feed":
+            return self.stor.select_unviewed()
         return self.stor.select_unviewed(channel_id)
 
     def clean_cache(self, force=False) -> None:
