@@ -15,13 +15,14 @@ macros args:
     $2 - title
 
 channels-fmt keys:
-    {index}         - line index
-    {new_mark}      - new-mark if have updates, otherwise `' '*len(new_mark)`
-    {title}         - title of the channel
+    {index}           - line index
+    {new_mark}        - show mark if have updates, otherwise `' '*len(new_mark)`
+    {title}           - title of the channel
+    {unwatched_count} - count of unwatched entries
 
 entries-fmt keys:
     {index}         - line index
-    {new_mark}      - new-mark if unviewed, otherwise `' '*len(new_mark)`
+    {new_mark}      - show mark if unwatched, otherwise `' '*len(new_mark)`
     {title}         - title of the entry
     {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
     {channel_title} - title of the channel
@@ -42,8 +43,8 @@ HELP_KEYBINDINGS = [
     ("G, End", "Move to the bottom of list"),
     ("J", "Move to the next feed"),
     ("K", "Move to the prev feed"),
-    ("a", "Mark entry/feed viewed"),
-    ("A", "Mark all enties/feeds viewed"),
+    ("a", "Mark entry/feed as watched"),
+    ("A", "Mark all enties/feeds as watched"),
     ("r", "Reload/sync feeds"),
     ("d", "Download video"),
     ("D", "Download all NEW (from current page)"),
