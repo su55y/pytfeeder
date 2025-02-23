@@ -42,16 +42,17 @@ log_fmt: '[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)'
 log_level: none
 
 # defines sorting order, boolean
-unviewed_first: false
+unwatched_first: false
 
 # tui config
 tui:
   # sync feeds on start, boolean
   always_update: false
   # channels print format, available keys:
-  # -- id             - 24 characters long channel id
-  # -- title          - channel title
-  # -- new_mark       - mark if have updates, otherwise whitespace
+  # -- id              - 24 characters long channel id
+  # -- title           - channel title
+  # -- new_mark        - mark if have updates, otherwise whitespace
+  # -- unwatched_count - count of unwatched entries
   channels_fmt: ''
   # entries print format, available keys:
   # -- index          - line index

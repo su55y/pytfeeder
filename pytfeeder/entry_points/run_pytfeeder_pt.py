@@ -71,8 +71,8 @@ class App(TuiProps):
 
         self._set_channels(self.feeder)
         self.refresh_last_update()
-        if "{unviewed_count}" in self.c.channels_fmt:
-            self.unviewed_method = lambda c_id: self.feeder.unviewed_count(c_id)
+        if "{unwatched_count}" in self.c.channels_fmt:
+            self.unwatched_method = lambda c_id: self.feeder.unviewed_count(c_id)
 
         self.entries: List[Entry] = []
         self.is_help_opened = False
@@ -349,7 +349,7 @@ class App(TuiProps):
             index=self._entry_index(i),
             new_mark=self.new_marks[channel.have_updates],
             title=channel.title,
-            unviewed_count=self.unviewed_method(channel.channel_id),
+            unwatched_count=self.unwatched_method(channel.channel_id),
         )
         return [(f"class:{self.classnames[channel.have_updates]}", line)]
 

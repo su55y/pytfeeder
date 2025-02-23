@@ -24,7 +24,7 @@ class TuiProps:
         self._status_msg_lifetime = 0
         self._last_update = ""
         self._is_feed_opened = False
-        self.unviewed_method = lambda _: 0
+        self.unwatched_method = lambda _: 0
 
     def _set_channels(self, feeder: Feeder, channels: List[Channel] = list()) -> None:
         if channels:

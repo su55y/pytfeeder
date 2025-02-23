@@ -46,7 +46,7 @@ class Config:
     storage_path: Path
     rofi_channels_fmt: str
     rofi_entries_fmt: str
-    unviewed_first: bool
+    unwatched_first: bool
     tui: ConfigTUI
     lock_file: Path
     channel_feed_limit: Optional[int] = None
@@ -67,7 +67,7 @@ class Config:
         rofi_entries_fmt: Optional[str] = None,
         rofi_channels_fmt: Optional[str] = None,
         alphabetic_sort: Optional[bool] = None,
-        unviewed_first: Optional[bool] = None,
+        unwatched_first: Optional[bool] = None,
         tui: ConfigTUI = ConfigTUI(),
         lock_file: Optional[Path] = None,
     ) -> None:
@@ -83,7 +83,7 @@ class Config:
         self.rofi_channels_fmt = rofi_channels_fmt or DEFAULT_ROFI_CHANNELS_FMT
         self.rofi_entries_fmt = rofi_entries_fmt or DEFAULT_ROFI_ENTRIES_FMT
         self.alphabetic_sort = alphabetic_sort or False
-        self.unviewed_first = unviewed_first or False
+        self.unwatched_first = unwatched_first or False
         self.lock_file = lock_file or default_lockfile_path()
         self.tui = tui
         if config_file:
@@ -122,8 +122,8 @@ class Config:
             self.rofi_entries_fmt = rofi_entries_fmt
         if alphabetic_sort := config_dict.get("alphabetic_sort"):
             self.alphabetic_sort = bool(alphabetic_sort)
-        if unviewed_first := config_dict.get("unviewed_first"):
-            self.unviewed_first = bool(unviewed_first)
+        if unwatched_first := config_dict.get("unwatched_first"):
+            self.unwatched_first = bool(unwatched_first)
         if lock_file := config_dict.get("lock_file"):
             self.lock_file = expand_path(lock_file)
         if tui_object := config_dict.get("tui"):
@@ -138,8 +138,8 @@ class Config:
             self.alphabetic_sort = alphabetic_sort
         if datetime_fmt := kw.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
-        if unviewed_first := kw.get("unviewed_first"):
-            self.unviewed_first = unviewed_first
+        if unwatched_first := kw.get("unwatched_first"):
+            self.unwatched_first = unwatched_first
 
     def dump(self, config_file: str) -> None:
         data = {
@@ -153,7 +153,7 @@ class Config:
             "log_level": self.log_level,
             "rofi_channels_fmt": self.rofi_channels_fmt,
             "rofi_entries_fmt": self.rofi_entries_fmt,
-            "unviewed_first": self.unviewed_first,
+            "unwatched_first": self.unwatched_first,
             "tui": asdict(self.tui),
         }
         with open(config_file, "w") as f:
@@ -176,6 +176,6 @@ class Config:
         repr_str += f"log_level: {self.log_level}\n"
         repr_str += f"rofi_channels_fmt: {self.rofi_channels_fmt!r}\n"
         repr_str += f"rofi_entries_fmt: {self.rofi_entries_fmt!r}\n"
-        repr_str += f"unviewed_first: {self.unviewed_first}\n"
+        repr_str += f"unwatched_first: {self.unwatched_first}\n"
         repr_str += repr(self.tui)
         return repr_str.strip()

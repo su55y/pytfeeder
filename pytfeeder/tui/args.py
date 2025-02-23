@@ -108,9 +108,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-N",
-        "--unviewed-first",
+        "--unwatched-first",
         action="store_true",
-        help="Prioritize unviewed entries over newer viewed",
+        help="Prioritize unwatched entries over new ones already watched",
     )
     parser.add_argument(
         "--status-fmt",
