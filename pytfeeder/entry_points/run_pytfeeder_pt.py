@@ -79,7 +79,6 @@ class App(TuiProps):
         self.help_index = 0
         self.last_index = -1
 
-        self.feed_entries_fmt = self.feeder.config.tui.feed_entries_fmt
         self.datetime_fmt = self.feeder.config.datetime_fmt
         self.classnames = {0: "entry", 1: "new_entry"}
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
@@ -334,8 +333,7 @@ class App(TuiProps):
         return f"{index:{index_len}d}"
 
     def _format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
-        fmt = self.feed_entries_fmt if self._is_feed_opened else self.c.entries_fmt
-        line = fmt.format(
+        line = self.current_entry_format.format(
             index=self._entry_index(i),
             new_mark=self.new_marks[not entry.is_viewed],
             updated=entry.updated.strftime(self.datetime_fmt),

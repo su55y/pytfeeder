@@ -279,12 +279,7 @@ class App(TuiProps):
                 if line.data.is_viewed is False:
                     color_pair = Color.NEW
                 updated = line.data.updated.strftime(self.feeder.config.datetime_fmt)
-                fmt = (
-                    self.c.feed_entries_fmt
-                    if self._is_feed_opened
-                    else self.c.entries_fmt
-                )
-                text = fmt.format(
+                text = self.current_entry_format.format(
                     index=index,
                     new_mark=self.new_marks[not line.data.is_viewed],
                     updated=updated,
