@@ -46,13 +46,13 @@ class Feeder:
         return self.stor.select_entries(
             channel_id=channel_id,
             limit=limit or self.config.channel_feed_limit,
-            unviewed_first=self.config.unviewed_first,
+            unviewed_first=self.config.unwatched_first,
         )
 
     def feed(self, limit: Optional[int] = None) -> List[Entry]:
         return self.stor.select_entries(
             limit=limit or self.config.feed_limit,
-            unviewed_first=self.config.unviewed_first,
+            unviewed_first=self.config.unwatched_first,
         )
 
     def mark_as_viewed(
