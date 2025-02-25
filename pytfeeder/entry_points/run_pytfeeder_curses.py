@@ -11,7 +11,7 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
-from pytfeeder.utils import notify, download_video, download_all, play_video
+from pytfeeder.utils import download_video, download_all, play_video
 from pytfeeder.tui.args import parse_args
 from pytfeeder.tui.consts import DEFAULT_KEYBINDS
 from pytfeeder.tui.updater import Updater
@@ -438,10 +438,9 @@ class App(TuiProps):
                     "unexpected selected data type %s: %r"
                     % (type(self.selected_data), self.selected_data)
                 )
-            play_video(self.selected_data.id)
+            play_video(self.selected_data)
             if not self.selected_data.is_viewed:
                 self.mark_viewed()
-            notify(f"{self.selected_data.title} playing...")
 
     def move_left_channels(self) -> None:
         self.lines = list(map(Line, self.channels))

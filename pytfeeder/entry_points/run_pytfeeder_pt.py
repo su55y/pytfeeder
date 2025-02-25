@@ -27,7 +27,7 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
 from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
-from pytfeeder.utils import notify, download_video, download_all, play_video
+from pytfeeder.utils import download_video, download_all, play_video
 from pytfeeder.tui.args import parse_args
 from pytfeeder.tui.consts import DEFAULT_KEYBINDS
 from pytfeeder.tui.updater import Updater
@@ -434,16 +434,12 @@ class App(TuiProps):
                     self.index = 0
                     self._title_fmt = channel.title
                 case PageState.ENTRIES:
-                    if self.index >= len(self.entries):
+                    if self.index >= len(self.entries) or self.index < 0:
                         return
-                    entry_id = self.entries[self.index].id
-                    title = self.entries[self.index].title
-                    is_viewed = self.entries[self.index].is_viewed
-                    self.feeder.mark_as_viewed(id=entry_id)
-                    play_video(entry_id)
-                    if not is_viewed:
+                    self.feeder.mark_as_viewed(id=self.entries[self.index].id)
+                    play_video(self.entries[self.index])
+                    if not self.entries[self.index].is_viewed:
                         self.mark_viewed()
-                    notify(f"{title} playing...")
 
         @kb.add("h")
         @kb.add("left")

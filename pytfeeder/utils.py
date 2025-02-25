@@ -69,13 +69,14 @@ def download_video(entry: Entry, send_notification=True) -> Optional[str]:
     )
 
 
-def play_video(id: str) -> None:
+def play_video(entry: Entry) -> None:
+    notify(f"{entry.title} playing...")
     sp.Popen(
         [
             "setsid",
             "-f",
             "mpv",
-            "https://youtu.be/%s" % id,
+            "https://youtu.be/%s" % entry.id,
             "--ytdl-raw-options=retries=infinite",
         ],
         stdout=sp.DEVNULL,
