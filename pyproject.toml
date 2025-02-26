@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytfeeder"
+version = "1.4.0"
+dependencies = ["aiohttp", "PyYAML"]
+requires-python = ">= 3.7"
+
+[project.optional-dependencies]
+pt = ["prompt_toolkit"]
+ytdl = ["yt-dlp"]
+
+[project.scripts]
+pytfeeder = "pytfeeder.entry_points.run_pytfeeder:run"
+pytfeeder-curses = "pytfeeder.entry_points.run_pytfeeder_curses:main"
+pytfeeder-pt = "pytfeeder.entry_points.run_pytfeeder_pt:main"
