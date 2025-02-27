@@ -4,9 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytfeeder"
-version = "1.4.0"
+dynamic = ["version"]
 dependencies = ["aiohttp", "PyYAML"]
 requires-python = ">= 3.7"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pytfeeder*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pytfeeder.__version__"}
 
 [project.optional-dependencies]
 pt = ["prompt_toolkit"]

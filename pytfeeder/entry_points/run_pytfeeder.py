@@ -14,10 +14,11 @@ from pytfeeder.consts import (
     DEFAULT_DATETIME_FMT,
 )
 from pytfeeder.utils import fetch_channel_info, human_readable_size
+from pytfeeder import __version__
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(epilog="last modification: 25.02.2025")
+    parser = argparse.ArgumentParser()
     parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
@@ -97,6 +98,13 @@ def parse_args() -> argparse.Namespace:
         default="\n",
         metavar="STR",
         help="Line separator (default: %(default)r)",
+    )
+    rofi_args.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s v.{__version__}",
+        help="Show current version",
     )
 
     return parser.parse_args()
