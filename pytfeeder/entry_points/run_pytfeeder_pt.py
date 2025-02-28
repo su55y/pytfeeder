@@ -498,6 +498,27 @@ class App(TuiProps):
         def _go_prev(_) -> None:
             do_move(prev=True)
 
+        @kb.add("f")
+        def _follow(_) -> None:
+            if (
+                self.page_state != PageState.ENTRIES
+                or self.last_index != 0
+                or not self._is_feed_opened
+                or self._filter
+            ):
+                return
+            # find new last_index value
+            new_last_index = -1
+            for i in range(len(self.channels)):
+                if self.entries[self.index].channel_id == self.channels[i].channel_id:
+                    new_last_index = i
+            if new_last_index < 1:
+                return
+            self.set_entries_by_id(self.entries[self.index].channel_id)
+            self.last_index = new_last_index
+            self.index = 0
+            self._title_fmt = self.channels[self.last_index].title
+
         @kb.add("q")
         def _exit(event) -> None:
             event.app.exit()
