@@ -42,6 +42,7 @@ class Key(IntEnum):
     r = ord("r")
     d = ord("d")
     D = ord("D")
+    f = ord("f")
     F1 = 265
     F2 = 266
     F3 = 267
@@ -201,6 +202,9 @@ class App(TuiProps):
                 case Key.K:
                     if self.page_state == PageState.ENTRIES and not self.filtered:
                         self.move_prev()
+                        screen.clear()
+                case Key.f:
+                    if self.handle_follow():
                         screen.clear()
                 case Key.QUESTION_MARK:
                     self.open_help(screen)
@@ -416,6 +420,29 @@ class App(TuiProps):
         self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
         self.index = 0
         self.scroll_top = 0
+
+    def handle_follow(self) -> bool:
+        if (
+            self.page_state != PageState.ENTRIES
+            or not self._is_feed_opened
+            or self.last_channel_index != 0
+        ):
+            return False
+        new_last_channel_index = -1
+        for i in range(len(self.channels)):
+            if self.channels[i].channel_id == self.lines[self.index].data.channel_id:  # type: ignore
+                new_last_channel_index = i
+                break
+        if new_last_channel_index < 1:
+            return False
+        self.lines = self.lines_by_id(
+            self.lines[self.index].data.channel_id
+        )  # type: ignore
+        self.last_channel_index = new_last_channel_index
+        self.last_page_index = new_last_channel_index
+        self.index = 0
+        self.scroll_top = 0
+        return True
 
     def move_right(self, last_channel_index: int = -1) -> None:
         if last_channel_index > -1:
