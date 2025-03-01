@@ -1,4 +1,6 @@
+import datetime as dt
 from enum import Enum, auto
+from pathlib import Path
 from typing import List
 
 from pytfeeder.feeder import Feeder
@@ -47,3 +49,11 @@ class TuiProps:
                 have_updates=bool(feeder.unviewed_count()),
             )
             self.channels = [feed_channel, *feeder.channels]
+
+    def refresh_last_update(self, lock_path: Path) -> None:
+        try:
+            dt_str = dt.datetime.fromtimestamp(float(lock_path.read_text()))
+        except:
+            pass
+        else:
+            self._last_update = dt_str.strftime(self.c.last_update_fmt)

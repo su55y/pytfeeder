@@ -1,7 +1,6 @@
 import asyncio
 import curses
 from dataclasses import dataclass
-import datetime as dt
 from enum import Enum, IntEnum, auto
 import subprocess as sp
 import time
@@ -86,7 +85,7 @@ class App(TuiProps):
         self.updater = updater
         self.channels = list()
         self._set_channels(self.feeder)
-        self.refresh_last_update()
+        self.refresh_last_update(self.feeder.config.lock_file)
         if "{unwatched_count}" in self.c.channels_fmt:
             self.unwatched_method = lambda c_id: self.feeder.unviewed_count(c_id)
 
@@ -522,17 +521,7 @@ class App(TuiProps):
         self._status_msg_lifetime = time.perf_counter()
 
         self.updater.update_lock_file()
-        self.refresh_last_update()
-
-    def refresh_last_update(self) -> None:
-        try:
-            dt_str = dt.datetime.fromtimestamp(
-                float(self.feeder.config.lock_file.read_text())
-            )
-        except:
-            pass
-        else:
-            self._last_update = dt_str.strftime(self.c.last_update_fmt)
+        self.refresh_last_update(self.feeder.config.lock_file)
 
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
