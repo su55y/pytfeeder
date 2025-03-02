@@ -511,6 +511,7 @@ class App(TuiProps):
             for i in range(len(self.channels)):
                 if self.entries[self.index].channel_id == self.channels[i].channel_id:
                     new_last_index = i
+                    break
             if new_last_index < 1:
                 return
             self.set_entries_by_id(self.entries[self.index].channel_id)
