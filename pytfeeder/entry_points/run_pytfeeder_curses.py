@@ -398,27 +398,24 @@ class App(TuiProps):
         self.gravity = Gravity.DOWN
         self.index = len(self.lines) - 1
 
-    def move_next(self) -> None:
-        if self.last_channel_index == len(self.channels) - 1:
-            channel_index = 0
-        else:
-            channel_index = min(len(self.channels) - 1, self.last_channel_index + 1)
+    def move(self, channel_index: int) -> None:
         self.last_channel_index = channel_index
         self.last_page_index = channel_index
         self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
         self.index = 0
         self.scroll_top = 0
 
+    def move_next(self) -> None:
+        if self.last_channel_index == len(self.channels) - 1:
+            self.move(0)
+        else:
+            self.move(min(len(self.channels) - 1, self.last_channel_index + 1))
+
     def move_prev(self) -> None:
         if self.last_channel_index == 0:
-            channel_index = len(self.channels) - 1
+            self.move(len(self.channels) - 1)
         else:
-            channel_index = max(0, self.last_channel_index - 1)
-        self.last_channel_index = channel_index
-        self.last_page_index = channel_index
-        self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
-        self.index = 0
-        self.scroll_top = 0
+            self.move(max(0, self.last_channel_index - 1))
 
     def handle_follow(self) -> bool:
         if (
@@ -429,14 +426,12 @@ class App(TuiProps):
             return False
         new_last_channel_index = -1
         for i in range(len(self.channels)):
-            if self.channels[i].channel_id == self.lines[self.index].data.channel_id:  # type: ignore
+            if self.channels[i].channel_id == self.lines[self.index].data.channel_id:
                 new_last_channel_index = i
                 break
         if new_last_channel_index < 1:
             return False
-        self.lines = self.lines_by_id(
-            self.lines[self.index].data.channel_id
-        )  # type: ignore
+        self.lines = self.lines_by_id(self.lines[self.index].data.channel_id)
         self.last_channel_index = new_last_channel_index
         self.last_page_index = new_last_channel_index
         self.index = 0
