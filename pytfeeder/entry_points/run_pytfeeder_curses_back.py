@@ -281,7 +281,7 @@ class App(TuiProps):
             if isinstance(line.data, Entry):
                 if line.data.is_viewed is False:
                     color_pair = Color.NEW
-                updated = line.data.updated.strftime(self.c.datetime_fmt)
+                updated = line.data.updated.strftime(self.feeder.config.datetime_fmt)
                 text = self.current_entry_format.format(
                     index=index,
                     new_mark=self.new_marks[not line.data.is_viewed],
@@ -398,13 +398,6 @@ class App(TuiProps):
         self.gravity = Gravity.DOWN
         self.index = len(self.lines) - 1
 
-    def move(self, channel_index: int) -> None:
-        self.last_channel_index = channel_index
-        self.last_page_index = channel_index
-        self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
-        self.index = 0
-        self.scroll_top = 0
-
     def move_next(self) -> None:
         if self.last_channel_index == len(self.channels) - 1:
             self.move(0)
@@ -417,6 +410,13 @@ class App(TuiProps):
         else:
             self.move(max(0, self.last_channel_index - 1))
 
+    def move(self, channel_index: int) -> None:
+        self.last_channel_index = channel_index
+        self.last_page_index = channel_index
+        self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
+        self.index = 0
+        self.scroll_top = 0
+
     def handle_follow(self) -> bool:
         if (
             self.page_state != PageState.ENTRIES
@@ -426,12 +426,14 @@ class App(TuiProps):
             return False
         new_last_channel_index = -1
         for i in range(len(self.channels)):
-            if self.channels[i].channel_id == self.lines[self.index].data.channel_id:
+            if self.channels[i].channel_id == self.lines[self.index].data.channel_id:  # type: ignore
                 new_last_channel_index = i
                 break
         if new_last_channel_index < 1:
             return False
-        self.lines = self.lines_by_id(self.lines[self.index].data.channel_id)
+        self.lines = self.lines_by_id(
+            self.lines[self.index].data.channel_id
+        )  # type: ignore
         self.last_channel_index = new_last_channel_index
         self.last_page_index = new_last_channel_index
         self.index = 0
@@ -674,7 +676,9 @@ class App(TuiProps):
             self._status_msg = ""
             self._status_msg_lifetime = 0
 
-        return " ".join(
+        # DEBUG
+        debug_str = f"[lci:{self.last_channel_index:2d} lpi:{self.last_page_index:2d} i:{self.index:2d}] "
+        return debug_str + " ".join(
             self.c.status_fmt.format(
                 msg=self._status_msg,
                 index=self._status_index,

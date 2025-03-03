@@ -1,7 +1,6 @@
 import argparse
 from typing import List
 
-from pytfeeder.consts import DEFAULT_DATETIME_FMT
 from pytfeeder.defaults import default_config_path
 from . import consts
 
@@ -45,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--datetime-fmt",
         metavar="STR",
-        help=f"Entries `{{updated}}` datetime format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
+        help=f"Entries `{{updated}}` datetime format (default: {consts.DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--feed-entries-fmt",

@@ -8,9 +8,9 @@ from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
 from pytfeeder.rofi import RofiPrinter
 from pytfeeder.storage import Storage
-from pytfeeder.consts import (
-    DEFAULT_ROFI_ENTRIES_FMT,
-    DEFAULT_ROFI_CHANNELS_FMT,
+from pytfeeder.rofi.consts import (
+    DEFAULT_ENTRIES_FMT,
+    DEFAULT_CHANNELS_FMT,
     DEFAULT_DATETIME_FMT,
 )
 from pytfeeder.utils import fetch_channel_info, human_readable_size
@@ -76,7 +76,7 @@ def parse_args() -> argparse.Namespace:
         "--rofi-channels-fmt",
         type=lambda s: eval("'%s'" % s),
         metavar="STR",
-        help=f"Channels print format (default: {DEFAULT_ROFI_CHANNELS_FMT!r})",
+        help=f"Channels print format (default: {DEFAULT_CHANNELS_FMT!r})",
     )
     rofi_args.add_argument(
         "--datetime-fmt",
@@ -87,7 +87,7 @@ def parse_args() -> argparse.Namespace:
         "--rofi-entries-fmt",
         type=lambda s: eval("'%s'" % s),
         metavar="STR",
-        help=f"Entries print format (default: {DEFAULT_ROFI_ENTRIES_FMT!r}",
+        help=f"Entries print format (default: {DEFAULT_ENTRIES_FMT!r}",
     )
     rofi_args.add_argument("-f", "--feed", action="store_true", help="Prints feed")
     rofi_args.add_argument(
@@ -165,16 +165,15 @@ def storage_file_stats(storage_path: Path) -> str:
 
 def run():
     args = parse_args()
-
-    config_args = {"config_file": args.config_file}
-    if args.rofi:
-        config_args["datetime_fmt"] = args.datetime_fmt
-        config_args["rofi_entries_fmt"] = args.rofi_entries_fmt
-        config_args["rofi_channels_fmt"] = args.rofi_channels_fmt
-
-    config = Config(**config_args)
+    config = Config(config_file=args.config_file)
     if not config:
         exit(1)
+
+    kwargs = dict(vars(args))
+    config.parse_args(kwargs)
+
+    if args.rofi:
+        config.rofi.parse_args(kwargs)
 
     if args.print_config:
         print(config)
@@ -222,7 +221,7 @@ def run():
             print(feeder.unviewed_count() - before_update)
 
     if args.rofi:
-        printer = RofiPrinter(feeder=feeder, config=config, args=args)
+        printer = RofiPrinter(feeder=feeder)
 
         if args.clean_cache:
             printer.print_message("cache cleaned")

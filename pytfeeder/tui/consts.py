@@ -1,4 +1,5 @@
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
+DEFAULT_DATETIME_FMT = "%D %T"
 DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_LAST_UPDATE_FMT = "%D %T"

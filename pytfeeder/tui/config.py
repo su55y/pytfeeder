@@ -8,6 +8,7 @@ from . import consts
 class ConfigTUI:
     always_update: bool = False
     channels_fmt: str = consts.DEFAULT_CHANNELS_FMT
+    datetime_fmt: str = consts.DEFAULT_DATETIME_FMT
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_entries_fmt: str = consts.DEFAULT_FEED_ENTRIES_FMT
     hide_feed: bool = False
@@ -25,6 +26,8 @@ class ConfigTUI:
             self.always_update = bool(always_update)
         if channels_fmt := kw.get("channels_fmt"):
             self.channels_fmt = channels_fmt
+        if datetime_fmt := kw.get("datetime_fmt"):
+            self.datetime_fmt = datetime_fmt
         if entries_fmt := kw.get("entries_fmt"):
             self.entries_fmt = entries_fmt
         if feed_entries_fmt := kw.get("feed_entries_fmt"):
@@ -51,6 +54,8 @@ class ConfigTUI:
     def parse_args(self, kw: Dict[str, Any]) -> None:
         if channels_fmt := kw.get("channels_fmt"):
             self.channels_fmt = channels_fmt
+        if datetime_fmt := kw.get("datetime_fmt"):
+            self.datetime_fmt = datetime_fmt
         if entries_fmt := kw.get("entries_fmt"):
             self.entries_fmt = entries_fmt
         if feed_entries_fmt := kw.get("feed_entries_fmt"):
@@ -76,6 +81,7 @@ class ConfigTUI:
         repr_str = "tui:\n"
         repr_str += f"  always_update: {self.always_update}\n"
         repr_str += f"  channels_fmt: {self.channels_fmt!r}\n"
+        repr_str += f"  datetime_fmt: {self.datetime_fmt!r}\n"
         repr_str += f"  entries_fmt: {self.entries_fmt!r}\n"
         repr_str += f"  feed_entries_fmt: {self.feed_entries_fmt!r}\n"
         repr_str += f"  hide_feed: {self.hide_feed}\n"
