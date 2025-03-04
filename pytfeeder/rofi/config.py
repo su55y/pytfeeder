@@ -32,6 +32,8 @@ class ConfigRofi:
             self.separator = separator
 
     def parse_args(self, kw: Dict[str, Any]) -> None:
+        if alphabetic_sort := kw.get("alphabetic_sort"):
+            self.alphabetic_sort = alphabetic_sort
         if channel_feed_limit := kw.get("channel_feed_limit"):
             self.channel_feed_limit = channel_feed_limit
         if channels_fmt := kw.get("channels_fmt"):
@@ -42,6 +44,8 @@ class ConfigRofi:
             self.entries_fmt = entries_fmt
         if feed_limit := kw.get("feed_limit"):
             self.feed_limit = feed_limit
+        if (offset := int(kw.get("offset", 1))) > 1:
+            self.offset = offset
         if separator := kw.get("separator"):
             self.separator = separator
 
