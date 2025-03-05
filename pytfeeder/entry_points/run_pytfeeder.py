@@ -6,13 +6,7 @@ from pathlib import Path
 from pytfeeder.config import Config
 from pytfeeder.defaults import default_config_path
 from pytfeeder.feeder import Feeder
-from pytfeeder.rofi import RofiPrinter
 from pytfeeder.storage import Storage
-from pytfeeder.rofi.consts import (
-    DEFAULT_ENTRIES_FMT,
-    DEFAULT_CHANNELS_FMT,
-    DEFAULT_DATETIME_FMT,
-)
 from pytfeeder.utils import fetch_channel_info, human_readable_size
 from pytfeeder import __version__
 
@@ -33,12 +27,14 @@ def parse_args() -> argparse.Namespace:
         help="Deletes inactive channels and watched entries (with -F/--force deletes all entries)",
     )
     parser.add_argument(
-        "-F", "--force", action="store_true", help="Force remove all entries"
+        "-F",
+        "--force",
+        action="store_true",
+        help="Remove all entries when used with `--clean-cache`",
     )
     parser.add_argument(
         "-p", "--print-config", action="store_true", help="Prints config"
     )
-    parser.add_argument("-r", "--rofi", action="store_true", help="Rofi mode")
     parser.add_argument(
         "-s",
         "--sync",
@@ -50,61 +46,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
-    )
-    parser.add_argument(
-        "-v",
-        "--viewed",
-        metavar="ID",
-        help="Mark as viewed (Accepts entry/channel id or keyword 'all')",
-    )
-
-    rofi_args = parser.add_argument_group("rofi mode options")
-    rofi_args.add_argument(
-        "--active-offset",
-        type=int,
-        default=1,
-        metavar="INT",
-        help="Index offset to mark entries as active",
-    )
-    rofi_args.add_argument(
-        "-i",
-        "--channel-id",
-        metavar="ID",
-        help="Prints channel feed by given channel_id",
-    )
-    rofi_args.add_argument(
-        "--rofi-channels-fmt",
-        type=lambda s: eval("'%s'" % s),
-        metavar="STR",
-        help=f"Channels print format (default: {DEFAULT_CHANNELS_FMT!r})",
-    )
-    rofi_args.add_argument(
-        "--datetime-fmt",
-        metavar="STR",
-        help=f"Datetime key format (default: {DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
-    )
-    rofi_args.add_argument(
-        "--rofi-entries-fmt",
-        type=lambda s: eval("'%s'" % s),
-        metavar="STR",
-        help=f"Entries print format (default: {DEFAULT_ENTRIES_FMT!r}",
-    )
-    rofi_args.add_argument("-f", "--feed", action="store_true", help="Prints feed")
-    rofi_args.add_argument(
-        "-l", "--limit", type=int, metavar="INT", help="Use custom lines limit"
-    )
-    rofi_args.add_argument(
-        "--separator",
-        default="\n",
-        metavar="STR",
-        help="Line separator (default: %(default)r)",
-    )
-    rofi_args.add_argument(
-        "-V",
-        "--version",
-        action="version",
-        version=f"%(prog)s v.{__version__}",
-        help="Show current version",
     )
 
     return parser.parse_args()
@@ -172,9 +113,6 @@ def run():
     kwargs = dict(vars(args))
     config.parse_args(kwargs)
 
-    if args.rofi:
-        config.rofi.parse_args(kwargs)
-
     if args.print_config:
         print(config)
         exit(0)
@@ -205,35 +143,10 @@ def run():
     if args.clean_cache:
         feeder.clean_cache(args.force)
 
-    if args.viewed:
-        if args.viewed == "all":
-            feeder.mark_as_viewed()
-        elif len(args.viewed) == 24:
-            feeder.mark_as_viewed(channel_id=args.viewed)
-        elif len(args.viewed) == 11:
-            feeder.mark_as_viewed(id=args.viewed)
-
     before_update = 0
     if args.sync:
         before_update = feeder.unviewed_count()
         asyncio.run(feeder.sync_entries())
-        if not args.rofi:
-            print(feeder.unviewed_count() - before_update)
-
-    if args.rofi:
-        printer = RofiPrinter(feeder=feeder)
-
-        if args.clean_cache:
-            printer.print_message("cache cleaned")
-        if args.sync:
-            if new_entries := (feeder.unviewed_count() - before_update):
-                printer.print_message("%d new entries" % new_entries)
-        if args.channel_id:
-            printer.print_channel_feed(args.channel_id)
-        elif args.feed:
-            printer.print_feed()
-        else:
-            printer.print_channels()
-    else:
-        if args.unviewed:
-            print(feeder.unviewed_count())
+        print(feeder.unviewed_count() - before_update)
+    elif args.unviewed:
+        print(feeder.unviewed_count())

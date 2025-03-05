@@ -14,10 +14,10 @@ def parse_args(args=None) -> argparse.Namespace:
     )
     parser.add_argument(
         "-c",
-        "--config",
+        "--config-file",
         metavar="PATH",
         default=default_config_path(),
-        help="Config path (default: %(default)s)",
+        help="Config file path (default: %(default)s)",
     )
     parser.add_argument(
         "-l",
@@ -83,6 +83,12 @@ def parse_args(args=None) -> argparse.Namespace:
         default="\n",
         metavar="STR",
         help="Line separator (default: %(default)r)",
+    )
+    parser.add_argument(
+        "-s",
+        "--sync",
+        action="store_true",
+        help="Updates all feeds and prints new entries count",
     )
     parser.add_argument(
         "-v",
