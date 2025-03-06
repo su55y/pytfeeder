@@ -16,14 +16,12 @@ theme() {
 configuration {
   font: "NotoSans Nerd Font 16";
   kb-custom-1: "Ctrl+s";
-  kb-secondary-copy: "Ctrl+y";
-  kb-custom-2: "Ctrl+c";
-  kb-custom-3: "Ctrl+x";
-  kb-custom-4: "Ctrl+X";
+  kb-custom-2: "Ctrl+x";
+  kb-custom-3: "Ctrl+X";
   kb-move-front: "";
-  kb-custom-5: "Ctrl+a";
+  kb-custom-4: "Ctrl+a";
   kb-remove-char-forward: "Delete";
-  kb-custom-6: "Ctrl+d";
+  kb-custom-5: "Ctrl+d";
 }
 window {
   height: 90%;
