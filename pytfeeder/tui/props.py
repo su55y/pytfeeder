@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import List
 
 from pytfeeder.feeder import Feeder
-from pytfeeder.models import Channel
-from .config import ConfigTUI
+from pytfeeder.models import Channel, Entry
 from .args import format_keybindings
 
 
@@ -15,8 +14,9 @@ class PageState(Enum):
 
 
 class TuiProps:
-    def __init__(self, tui_config: ConfigTUI) -> None:
-        self.c = tui_config
+    def __init__(self, feeder: Feeder) -> None:
+        self.feeder = feeder
+        self.c = self.feeder.config.tui
         self.channels = list()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
@@ -29,30 +29,45 @@ class TuiProps:
         self._is_feed_opened = False
         self.unwatched_method = lambda _: 0
 
+    def feed(self) -> List[Entry]:
+        return self.feeder.feed(limit=self.c.feed_limit)
+
+    def channel_feed(self, channel_id: str) -> List[Entry]:
+        return self.feeder.channel_feed(
+            channel_id=channel_id,
+            limit=self.c.channel_feed_limit,
+        )
+
     @property
     def current_entry_format(self) -> str:
         return self.entry_formats[self._is_feed_opened]
 
-    def _set_channels(self, feeder: Feeder, channels: List[Channel] = list()) -> None:
-        if channels:
-            feeder.channels = channels
+    def update_channels(self) -> None:
+        self._set_channels(self.feeder.update_channels())
 
-        if feeder.config.alphabetic_sort:
-            feeder.channels.sort(key=lambda c: c.title)
+    def _set_channels(self, channels: List[Channel] = list()) -> None:
+        if channels:
+            self.feeder.channels = channels
+
+        # TODO: should be `self.feeder.config.tui.alphabetic_sort` aka `self.c.alphabetic_sort`
+        if self.feeder.config.alphabetic_sort:
+            self.feeder.channels.sort(key=lambda c: c.title)
 
         if self.c.hide_feed:
-            self.channels = feeder.channels
+            self.channels = self.feeder.channels
         else:
             feed_channel = Channel(
                 title="Feed",
                 channel_id="feed",
-                have_updates=bool(feeder.unviewed_count()),
+                have_updates=bool(self.feeder.unviewed_count()),
             )
-            self.channels = [feed_channel, *feeder.channels]
+            self.channels = [feed_channel, *self.feeder.channels]
 
-    def refresh_last_update(self, lock_path: Path) -> None:
+    def refresh_last_update(self) -> None:
         try:
-            dt_str = dt.datetime.fromtimestamp(float(lock_path.read_text()))
+            dt_str = dt.datetime.fromtimestamp(
+                float(self.feeder.config.lock_file.read_text())
+            )
         except:
             pass
         else:

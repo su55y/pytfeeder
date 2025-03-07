@@ -44,16 +44,12 @@ class Config:
     rofi: ConfigRofi
     tui: ConfigTUI
     lock_file: Path
-    channel_feed_limit: Optional[int] = None
-    feed_limit: Optional[int] = None
 
     def __init__(
         self,
         config_file: Optional[Union[Path, str]] = None,
         cache_dir: Optional[Path] = None,
         channels: Optional[List[Channel]] = None,
-        channel_feed_limit: Optional[int] = None,
-        feed_limit: Optional[int] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
         log_fmt: Optional[str] = None,
@@ -65,8 +61,6 @@ class Config:
         lock_file: Optional[Path] = None,
     ) -> None:
         self.channels = channels or []
-        self.feed_limit = feed_limit
-        self.channel_feed_limit = channel_feed_limit
         self.cache_dir = cache_dir or default_cachedir_path()
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
@@ -101,10 +95,6 @@ class Config:
             self.log_fmt = str(log_fmt)
         if isinstance((log_level := config_dict.get("log_level")), str):
             self.log_level = log_levels_map.get(log_level.lower(), logging.NOTSET)
-        if feed_limit := config_dict.get("feed_limit"):
-            self.feed_limit = int(feed_limit)
-        if channel_feed_limit := config_dict.get("channel_feed_limit"):
-            self.channel_feed_limit = int(channel_feed_limit)
         if alphabetic_sort := config_dict.get("alphabetic_sort"):
             self.alphabetic_sort = bool(alphabetic_sort)
         if unwatched_first := config_dict.get("unwatched_first"):
@@ -117,10 +107,6 @@ class Config:
             self.tui.parse_config_file(tui_object)
 
     def parse_args(self, kw: Dict[str, Any]) -> None:
-        if limit := kw.get("limit"):
-            self.channel_feed_limit = limit
-        if feed_limit := kw.get("feed_limit"):
-            self.feed_limit = feed_limit
         if alphabetic_sort := kw.get("alphabetic_sort"):
             self.alphabetic_sort = alphabetic_sort
         if unwatched_first := kw.get("unwatched_first"):
@@ -131,8 +117,6 @@ class Config:
             "alphabetic_sort": self.alphabetic_sort,
             "cache_dir": str(self.cache_dir),
             "channels": [c.dump() for c in self.channels],
-            "channel_feed_limit": self.channel_feed_limit,
-            "feed_limit": self.feed_limit,
             "log_fmt": self.log_fmt,
             "log_level": self.log_level,
             "unwatched_first": self.unwatched_first,
@@ -152,8 +136,6 @@ class Config:
                 f"  - {{ channel_id: {c.channel_id}, title: {c.title!r} }}\n"
                 for c in self.channels
             )
-        repr_str += f"channel_feed_limit: {self.channel_feed_limit}\n"
-        repr_str += f"feed_limit: {self.feed_limit}\n"
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
         repr_str += f"log_level: {self.log_level}\n"
         repr_str += f"unwatched_first: {self.unwatched_first}\n"

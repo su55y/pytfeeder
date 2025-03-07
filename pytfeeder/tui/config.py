@@ -8,9 +8,11 @@ from . import consts
 class ConfigTUI:
     always_update: bool = False
     channels_fmt: str = consts.DEFAULT_CHANNELS_FMT
+    channel_feed_limit: int = -1
     datetime_fmt: str = consts.DEFAULT_DATETIME_FMT
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_entries_fmt: str = consts.DEFAULT_FEED_ENTRIES_FMT
+    feed_limit: int = -1
     hide_feed: bool = False
     last_update_fmt: str = consts.DEFAULT_LAST_UPDATE_FMT
     new_mark: str = consts.DEFAULT_NEW_MARK
@@ -26,12 +28,16 @@ class ConfigTUI:
             self.always_update = bool(always_update)
         if channels_fmt := kw.get("channels_fmt"):
             self.channels_fmt = channels_fmt
+        if channel_feed_limit := kw.get("channel_feed_limit"):
+            self.channel_feed_limit = channel_feed_limit
         if datetime_fmt := kw.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
         if entries_fmt := kw.get("entries_fmt"):
             self.entries_fmt = entries_fmt
         if feed_entries_fmt := kw.get("feed_entries_fmt"):
             self.feed_entries_fmt = feed_entries_fmt
+        if feed_limit := kw.get("feed_limit"):
+            self.feed_limit = feed_limit
         if hide_feed := kw.get("hide_feed"):
             self.hide_feed = hide_feed
         if last_update_fmt := kw.get("last_update_fmt"):
@@ -54,12 +60,16 @@ class ConfigTUI:
     def parse_args(self, kw: Dict[str, Any]) -> None:
         if channels_fmt := kw.get("channels_fmt"):
             self.channels_fmt = channels_fmt
+        if channel_feed_limit := kw.get("channel_feed_limit"):
+            self.channel_feed_limit = channel_feed_limit
         if datetime_fmt := kw.get("datetime_fmt"):
             self.datetime_fmt = datetime_fmt
         if entries_fmt := kw.get("entries_fmt"):
             self.entries_fmt = entries_fmt
         if feed_entries_fmt := kw.get("feed_entries_fmt"):
             self.feed_entries_fmt = feed_entries_fmt
+        if feed_limit := kw.get("feed_limit"):
+            self.feed_limit = feed_limit
         if hide_feed := kw.get("hide_feed"):
             self.hide_feed = hide_feed
         if last_update_fmt := kw.get("last_update_fmt"):
@@ -80,10 +90,12 @@ class ConfigTUI:
     def __repr__(self) -> str:
         repr_str = "tui:\n"
         repr_str += f"  always_update: {self.always_update}\n"
+        repr_str += f"  channel_feed_limit: {self.channel_feed_limit}\n"
         repr_str += f"  channels_fmt: {self.channels_fmt!r}\n"
         repr_str += f"  datetime_fmt: {self.datetime_fmt!r}\n"
         repr_str += f"  entries_fmt: {self.entries_fmt!r}\n"
         repr_str += f"  feed_entries_fmt: {self.feed_entries_fmt!r}\n"
+        repr_str += f"  feed_limit: {self.feed_limit}\n"
         repr_str += f"  hide_feed: {self.hide_feed}\n"
         repr_str += f"  last_update_fmt: {self.last_update_fmt!r}\n"
         repr_str += f"  new_mark: {self.new_mark!r}\n"
