@@ -80,12 +80,10 @@ class CLIType(Enum):
 
 class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        self.feeder = feeder
-        super().__init__(self.feeder.config.tui)
         self.updater = updater
-        self.channels = list()
-        self._set_channels(self.feeder)
-        self.refresh_last_update(self.feeder.config.lock_file)
+        super().__init__(feeder)
+        self._set_channels()
+        self.refresh_last_update()
         if "{unwatched_count}" in self.c.channels_fmt:
             self.unwatched_method = lambda c_id: self.feeder.unviewed_count(c_id)
 
@@ -494,7 +492,7 @@ class App(TuiProps):
             self._status_msg_lifetime = time.perf_counter()
             return
 
-        self._set_channels(self.feeder, channels=self.feeder.update_channels())
+        self.update_channels()
         if self.page_state == PageState.CHANNELS:
             self.lines = list(map(Line, self.channels))
             after = self.feeder.unviewed_count()
@@ -516,7 +514,7 @@ class App(TuiProps):
         self._status_msg_lifetime = time.perf_counter()
 
         self.updater.update_lock_file()
-        self.refresh_last_update(self.feeder.config.lock_file)
+        self.refresh_last_update()
 
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
@@ -617,7 +615,7 @@ class App(TuiProps):
             self.feeder.mark_as_viewed(
                 unviewed=all(not c.have_updates for c in self.feeder.channels)
             )
-            self._set_channels(self.feeder, self.feeder.update_channels())
+            self.update_channels()
         elif self.page_state == PageState.ENTRIES and isinstance(
             self.selected_data, Entry
         ):
@@ -702,9 +700,9 @@ class App(TuiProps):
     def lines_by_id(self, channel_id: str) -> List[Line]:
         if channel_id == "feed":
             self._is_feed_opened = True
-            return list(map(Line, self.feeder.feed()))
+            return list(map(Line, self.feed()))
         self._is_feed_opened = False
-        return list(map(Line, self.feeder.channel_feed(channel_id)))
+        return list(map(Line, self.channel_feed(channel_id)))
 
 
 def main():

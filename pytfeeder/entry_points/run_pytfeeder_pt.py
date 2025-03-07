@@ -64,12 +64,10 @@ class PromptContainer(ConditionalContainer):
 
 class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        self.feeder = feeder
-        super().__init__(self.feeder.config.tui)
         self.updater = updater
-
-        self._set_channels(self.feeder)
-        self.refresh_last_update(self.feeder.config.lock_file)
+        super().__init__(feeder)
+        self._set_channels()
+        self.refresh_last_update()
         if "{unwatched_count}" in self.c.channels_fmt:
             self.unwatched_method = lambda c_id: self.feeder.unviewed_count(c_id)
 
@@ -187,7 +185,7 @@ class App(TuiProps):
             self.feeder.mark_as_viewed(
                 unviewed=all(not c.have_updates for c in self.feeder.channels)
             )
-            self._set_channels(self.feeder, channels=self.feeder.update_channels())
+            self.update_channels()
         elif self.page_state == PageState.ENTRIES and isinstance(
             self.selected_data, Entry
         ):
@@ -230,10 +228,10 @@ class App(TuiProps):
     def set_entries_by_id(self, channel_id: str) -> None:
         if channel_id == "feed":
             self._is_feed_opened = True
-            self.entries = self.feeder.feed()
+            self.entries = self.feed()
         else:
             self._is_feed_opened = False
-            self.entries = self.feeder.channel_feed(channel_id)
+            self.entries = self.channel_feed(channel_id)
 
     def reset_filter(self) -> None:
         self._filter = None
@@ -649,7 +647,7 @@ class App(TuiProps):
             self._status_msg = "reload failed; "
             return
 
-        self._set_channels(self.feeder, channels=self.feeder.update_channels())
+        self.update_channels()
         after = self.feeder.unviewed_count()
         if self.page_state == PageState.ENTRIES:
             self.index = 0
@@ -664,7 +662,7 @@ class App(TuiProps):
             self._status_msg = "no updates; "
         self._status_msg_lifetime = time.perf_counter()
         self.updater.update_lock_file()
-        self.refresh_last_update(self.feeder.config.lock_file)
+        self.refresh_last_update()
 
     def __pt_container__(self) -> HSplit:
         return self.container
