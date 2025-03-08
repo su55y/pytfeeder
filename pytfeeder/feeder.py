@@ -42,17 +42,26 @@ class Feeder:
     def channel_title(self, channel_id: str) -> str:
         return c.title if (c := self.channel(channel_id)) else "Unknown"
 
-    def channel_feed(self, channel_id: str, limit: Optional[int] = None) -> List[Entry]:
+    def channel_feed(
+        self,
+        channel_id: str,
+        limit: Optional[int] = None,
+        unwatched_first: Optional[bool] = None,
+    ) -> List[Entry]:
         return self.stor.select_entries(
             channel_id=channel_id,
             limit=limit,
-            unviewed_first=self.config.unwatched_first,
+            unviewed_first=unwatched_first,
         )
 
-    def feed(self, limit: Optional[int] = None) -> List[Entry]:
+    def feed(
+        self,
+        limit: Optional[int] = None,
+        unwatched_first: Optional[bool] = None,
+    ) -> List[Entry]:
         return self.stor.select_entries(
             limit=limit,
-            unviewed_first=self.config.unwatched_first,
+            unviewed_first=unwatched_first,
         )
 
     def mark_as_viewed(
