@@ -14,6 +14,7 @@ class ConfigRofi:
     feed_limit: int = -1
     offset: int = consts.DEFAULT_OFFSET
     separator: str = consts.DEFAULT_SEPARATOR
+    unwatched_first: bool = False
 
     def parse_config_file(self, kw: Dict[str, Any]) -> None:
         if alphabetic_sort := kw.get("alphabetic_sort"):
@@ -30,6 +31,8 @@ class ConfigRofi:
             self.feed_limit = feed_limit
         if separator := kw.get("separator"):
             self.separator = separator
+        if unwatched_first := kw.get("unwatched_first"):
+            self.unwatched_first = bool(unwatched_first)
 
     def parse_args(self, kw: Dict[str, Any]) -> None:
         if alphabetic_sort := kw.get("alphabetic_sort"):
@@ -48,6 +51,8 @@ class ConfigRofi:
             self.offset = offset
         if separator := kw.get("separator"):
             self.separator = separator
+        if unwatched_first := kw.get("unwatched_first"):
+            self.unwatched_first = bool(unwatched_first)
 
     def __repr__(self) -> str:
         repr_str = "rofi:\n"

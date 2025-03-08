@@ -682,9 +682,7 @@ def main():
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    kwargs = dict(vars(args))
-    feeder.config.parse_args(kwargs)
-    feeder.config.tui.parse_args(kwargs)
+    feeder.config.tui.parse_args(dict(vars(args)))
 
     updater = Updater(feeder)
     if (

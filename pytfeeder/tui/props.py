@@ -1,6 +1,5 @@
 import datetime as dt
 from enum import Enum, auto
-from pathlib import Path
 from typing import List
 
 from pytfeeder.feeder import Feeder
@@ -30,12 +29,15 @@ class TuiProps:
         self.unwatched_method = lambda _: 0
 
     def feed(self) -> List[Entry]:
-        return self.feeder.feed(limit=self.c.feed_limit)
+        return self.feeder.feed(
+            limit=self.c.feed_limit, unwatched_first=self.c.unwatched_first
+        )
 
     def channel_feed(self, channel_id: str) -> List[Entry]:
         return self.feeder.channel_feed(
             channel_id=channel_id,
             limit=self.c.channel_feed_limit,
+            unwatched_first=self.c.unwatched_first,
         )
 
     @property
@@ -49,8 +51,7 @@ class TuiProps:
         if channels:
             self.feeder.channels = channels
 
-        # TODO: should be `self.feeder.config.tui.alphabetic_sort` aka `self.c.alphabetic_sort`
-        if self.feeder.config.alphabetic_sort:
+        if self.c.alphabetic_sort:
             self.feeder.channels.sort(key=lambda c: c.title)
 
         if self.c.hide_feed:
