@@ -682,7 +682,7 @@ def main():
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    feeder.config.tui.parse_args(dict(vars(args)))
+    feeder.config.tui.update(vars(args))
 
     updater = Updater(feeder)
     if (

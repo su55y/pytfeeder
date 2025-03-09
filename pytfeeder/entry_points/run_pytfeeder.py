@@ -110,9 +110,6 @@ def run():
     if not config:
         exit(1)
 
-    kwargs = dict(vars(args))
-    config.parse_args(kwargs)
-
     if args.print_config:
         print(config)
         exit(0)

@@ -99,9 +99,7 @@ def main():
     if not config:
         exit(1)
 
-    kwargs = dict(vars(args))
-    config.parse_args(kwargs)
-    config.rofi.parse_args(kwargs)
+    config.rofi.update(vars(args))
 
     if not config.cache_dir.exists():
         config.cache_dir.mkdir(parents=True)

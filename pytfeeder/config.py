@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+import dataclasses as dc
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -26,7 +26,7 @@ def expand_path(path: Union[Path, str]) -> Path:
     return Path(expandvars(path)).expanduser()
 
 
-@dataclass
+@dc.dataclass
 class Config:
     """Configuration settings
 
@@ -92,9 +92,9 @@ class Config:
         if lock_file := config_dict.get("lock_file"):
             self.lock_file = expand_path(lock_file)
         if rofi_object := config_dict.get("rofi"):
-            self.rofi.parse_config_file(rofi_object)
+            self.rofi.update(rofi_object)
         if tui_object := config_dict.get("tui"):
-            self.tui.parse_config_file(tui_object)
+            self.tui.update(tui_object)
 
     def dump(self, config_file: str) -> None:
         data = {
@@ -102,8 +102,8 @@ class Config:
             "channels": [c.dump() for c in self.channels],
             "log_fmt": self.log_fmt,
             "log_level": self.log_level,
-            "rofi": asdict(self.rofi),
-            "tui": asdict(self.tui),
+            "rofi": dc.asdict(self.rofi),
+            "tui": dc.asdict(self.tui),
         }
         with open(config_file, "w") as f:
             yaml.safe_dump(data, f, allow_unicode=True)

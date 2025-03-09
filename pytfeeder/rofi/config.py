@@ -16,43 +16,10 @@ class ConfigRofi:
     separator: str = consts.DEFAULT_SEPARATOR
     unwatched_first: bool = False
 
-    def parse_config_file(self, kw: Dict[str, Any]) -> None:
-        if alphabetic_sort := kw.get("alphabetic_sort"):
-            self.alphabetic_sort = bool(alphabetic_sort)
-        if channel_feed_limit := kw.get("channel_feed_limit"):
-            self.channel_feed_limit = channel_feed_limit
-        if channels_fmt := kw.get("channels_fmt"):
-            self.channels_fmt = channels_fmt
-        if datetime_fmt := kw.get("datetime_fmt"):
-            self.datetime_fmt = datetime_fmt
-        if entries_fmt := kw.get("entries_fmt"):
-            self.entries_fmt = entries_fmt
-        if feed_limit := kw.get("feed_limit"):
-            self.feed_limit = feed_limit
-        if separator := kw.get("separator"):
-            self.separator = separator
-        if unwatched_first := kw.get("unwatched_first"):
-            self.unwatched_first = bool(unwatched_first)
-
-    def parse_args(self, kw: Dict[str, Any]) -> None:
-        if alphabetic_sort := kw.get("alphabetic_sort"):
-            self.alphabetic_sort = alphabetic_sort
-        if channel_feed_limit := kw.get("channel_feed_limit"):
-            self.channel_feed_limit = channel_feed_limit
-        if channels_fmt := kw.get("channels_fmt"):
-            self.channels_fmt = channels_fmt
-        if datetime_fmt := kw.get("datetime_fmt"):
-            self.datetime_fmt = datetime_fmt
-        if entries_fmt := kw.get("entries_fmt"):
-            self.entries_fmt = entries_fmt
-        if feed_limit := kw.get("feed_limit"):
-            self.feed_limit = feed_limit
-        if (offset := int(kw.get("offset", 1))) > 1:
-            self.offset = offset
-        if separator := kw.get("separator"):
-            self.separator = separator
-        if unwatched_first := kw.get("unwatched_first"):
-            self.unwatched_first = bool(unwatched_first)
+    def update(self, kwargs: Dict[str, Any]) -> None:
+        for k, v in kwargs.items():
+            if k in vars(self).keys() and v:
+                setattr(self, k, v)
 
     def __repr__(self) -> str:
         repr_str = "rofi:\n"
