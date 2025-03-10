@@ -124,6 +124,6 @@ def parse_args() -> argparse.Namespace:
         help=f"Update interval in minutes (default: {consts.DEFAULT_UPDATE_INTERVAL_MINS})",
     )
     parser.add_argument(
-        "-U", "--update", action="store_true", help="Update all feeds on startup"
+        "-U", "--always-update", action="store_true", help="Update all feeds on startup"
     )
     return parser.parse_args()

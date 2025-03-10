@@ -685,15 +685,6 @@ def main():
     feeder.config.tui.update(vars(args))
 
     updater = Updater(feeder)
-    if (
-        args.update
-        or feeder.config.tui.always_update
-        or updater.is_update_interval_expired()
-    ):
-        print("Updating...")
-        if err := updater.update():
-            print("Update failed: %s" % err)
-            exit(1)
 
     pager = App(feeder, updater)
 

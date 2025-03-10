@@ -8,6 +8,11 @@ class Updater:
     def __init__(self, feeder: Feeder) -> None:
         self.feeder = feeder
         self._status_msg = ""
+        if self.feeder.config.tui.always_update or self.is_update_interval_expired():
+            print("Updating...")
+            if err := self.update():
+                print("Update failed: %s" % err)
+                exit(1)
 
     @property
     def status_msg(self) -> str:
