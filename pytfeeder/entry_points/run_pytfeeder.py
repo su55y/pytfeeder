@@ -47,6 +47,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
     )
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
 
     return parser.parse_args()
 
