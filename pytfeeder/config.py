@@ -119,5 +119,6 @@ class Config:
             )
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
         repr_str += f"log_level: {self.log_level}\n"
-        repr_str += repr(self.tui)
+        repr_str += f"{repr(self.rofi).strip()}\n"
+        repr_str += f"{repr(self.tui).strip()}\n"
         return repr_str.strip()

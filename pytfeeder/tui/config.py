@@ -46,8 +46,8 @@ class ConfigTUI:
         repr_str += f"  status_fmt: {self.status_fmt!r}\n"
         repr_str += f"  unwatched_first: {self.unwatched_first}\n"
         repr_str += f"  update_interval: {self.update_interval}\n"
-        repr_str += f"  macro1: {self.macro1}\n"
-        repr_str += f"  macro2: {self.macro2}\n"
-        repr_str += f"  macro3: {self.macro3}\n"
-        repr_str += f"  macro4: {self.macro4}\n"
+        repr_str += f"  macro1: {self.macro1!r}\n"
+        repr_str += f"  macro2: {self.macro2!r}\n"
+        repr_str += f"  macro3: {self.macro3!r}\n"
+        repr_str += f"  macro4: {self.macro4!r}\n"
         return repr_str
