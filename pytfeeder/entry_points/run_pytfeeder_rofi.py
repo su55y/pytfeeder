@@ -13,6 +13,7 @@ class RofiPrinter:
         self.c = self.feeder.config.rofi
         if self.c.alphabetic_sort:
             self.feeder.channels.sort(key=lambda c: c.title)
+        self.__message_printed = False
 
     def print_channels(self) -> None:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
@@ -90,7 +91,9 @@ class RofiPrinter:
             print("\000active\037%s" % ",".join(highlight), end=self.c.separator)
 
     def print_message(self, message: str) -> None:
-        print("\000message\037%s" % message, end=self.c.separator)
+        if not self.__message_printed:
+            print("\000message\037%s" % message, end=self.c.separator)
+        self.__message_printed = True
 
 
 def main():
@@ -123,7 +126,6 @@ def main():
     printer = RofiPrinter(feeder=feeder)
 
     if args.sync:
-        # TODO: change messages to notifications
         if new_entries := (feeder.unviewed_count() - before_update):
             printer.print_message("%d new entries" % new_entries)
         else:
