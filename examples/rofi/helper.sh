@@ -26,15 +26,15 @@ err_msg() {
 
 start_menu() {
     printf "\000markup-rows\037true\n"
-    printf "feed\r%s new entries\000info\037feed\n" "$(pytfeeder -u)"
-    pytfeeder-rofi --channels-fmt '{title}\r{unviewed_count} new entries\000info\037{id}' "$@"
+    printf "Feed\r<i><b>%s</b> new entries</i>\000info\037feed\n" "$(pytfeeder -u)"
+    pytfeeder-rofi --channels-fmt '{title}\r<i><b>{unviewed_count}</b> new entries</i>\000info\037{id}' "$@"
     printf "\000new-selection\0370\n"
 }
 
 print_feed() {
     printf "back\000info\037main\n"
     printf "\000markup-rows\037true\n"
-    pytfeeder-rofi -f --entries-fmt '{title}\r<b><i>{channel_title}</i></b>\000info\037{id}\037meta\037{meta}' "$@"
+    pytfeeder-rofi "$@" -f --entries-fmt '{title}\r<b><i>{channel_title}</i></b> {updated}\000info\037{id}\037meta\037{meta}' --datetime-fmt '<i>%d %B</i>'
 }
 
 print_channel_feed() {
