@@ -72,13 +72,6 @@ def parse_args(args=None) -> argparse.Namespace:
         help="Prioritize unwatched entries over new ones already watched",
     )
     parser.add_argument(
-        "--offset",
-        type=int,
-        default=1,
-        metavar="INT",
-        help="Index offset to mark entries as active",
-    )
-    parser.add_argument(
         "--separator",
         default="\n",
         metavar="STR",

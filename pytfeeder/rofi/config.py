@@ -12,7 +12,6 @@ class ConfigRofi:
     datetime_fmt: str = consts.DEFAULT_DATETIME_FMT
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_limit: int = -1
-    offset: int = consts.DEFAULT_OFFSET
     separator: str = consts.DEFAULT_SEPARATOR
     unwatched_first: bool = False
 
@@ -29,7 +28,6 @@ class ConfigRofi:
         repr_str += f"  datetime_fmt: {self.datetime_fmt!r}\n"
         repr_str += f"  entries_fmt: {self.entries_fmt!r}\n"
         repr_str += f"  feed_limit: {self.feed_limit}\n"
-        repr_str += f"  offset: {self.offset}\n"
         repr_str += f"  separator: {self.separator!r}\n"
 
         return repr_str

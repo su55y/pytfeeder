@@ -18,23 +18,19 @@ class RofiPrinter:
     def print_channels(self) -> None:
         self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
         print("\000data\037main", end=self.c.separator)
-        highlight = []
         unviewed_count = lambda _: 0
         if "{unviewed_count}" in self.c.channels_fmt:
             unviewed_count = lambda channel_id: self.feeder.unviewed_count(channel_id)
-        for i, channel in enumerate(self.feeder.channels):
+        for channel in self.feeder.channels:
             print(
                 self.c.channels_fmt.format(
                     id=channel.channel_id,
                     title=channel.title,
                     unviewed_count=unviewed_count(channel.channel_id),
+                    active=["false", "true"][channel.have_updates],
                 ),
                 end=self.c.separator,
             )
-            if channel.have_updates:
-                highlight.append(str(i + self.c.offset))
-        if highlight:
-            print("\000active\037%s" % ",".join(highlight), end=self.c.separator)
 
     def print_feed(self) -> None:
         print("\000data\037feed", end=self.c.separator)
@@ -66,11 +62,7 @@ class RofiPrinter:
             self.print_entries(entries)
 
     def print_entries(self, entries: List[Entry]) -> None:
-        highlight = []
-        for i, entry in enumerate(entries):
-            if not entry.is_viewed:
-                highlight.append(str(i + self.c.offset))
-
+        for entry in entries:
             channel_title = self.feeder.channel_title(entry.channel_id)
             meta = channel_title
             if len(parts := meta.split()):
@@ -83,12 +75,10 @@ class RofiPrinter:
                     channel_title=channel_title,
                     meta=meta,
                     updated=entry.updated.strftime(self.c.datetime_fmt),
+                    active=["true", "false"][entry.is_viewed],
                 ),
                 end=self.c.separator,
             )
-
-        if highlight:
-            print("\000active\037%s" % ",".join(highlight), end=self.c.separator)
 
     def print_message(self, message: str) -> None:
         if not self.__message_printed:
