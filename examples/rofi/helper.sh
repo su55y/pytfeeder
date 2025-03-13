@@ -27,14 +27,17 @@ err_msg() {
 start_menu() {
     printf "\000markup-rows\037true\n"
     printf "Feed\r<i><b>%s</b> new entries</i>\000info\037feed\n" "$(pytfeeder -u)"
-    pytfeeder-rofi --channels-fmt '{title}\r<i><b>{unviewed_count}</b> new entries</i>\000info\037{id}' "$@"
+    pytfeeder-rofi "$@" \
+        --channels-fmt '{title}\r<i><b>{unviewed_count}</b> new entries</i>\000info\037{id}\037active\037{active}'
     printf "\000new-selection\0370\n"
 }
 
 print_feed() {
     printf "back\000info\037main\n"
     printf "\000markup-rows\037true\n"
-    pytfeeder-rofi "$@" -f --entries-fmt '{title}\r<b><i>{channel_title}</i></b> {updated}\000info\037{id}\037meta\037{meta}' --datetime-fmt '<i>%d %B</i>'
+    pytfeeder-rofi "$@" -f \
+        --entries-fmt '{title}\r<b><i>{channel_title}</i></b> {updated}\000info\037{id}\037meta\037{meta}\037active\037{active}' \
+        --datetime-fmt '<i>%d %B</i>'
 }
 
 print_channel_feed() {
@@ -42,7 +45,9 @@ print_channel_feed() {
     channel_id="$1"
     shift
     printf "back\000info\037main\n"
-    pytfeeder-rofi -i="$channel_id" "$@" --entries-fmt '{title}\r<b>{updated}</b>\000info\037{id}\037meta\037{meta}' --datetime-fmt '<i>%d %B</i>'
+    pytfeeder-rofi "$@" -i="$channel_id" \
+        --entries-fmt '{title}\r<b>{updated}</b>\000info\037{id}\037meta\037{meta}\037active\037{active}' \
+        --datetime-fmt '<i>%d %B</i>'
 }
 
 play() {
@@ -101,7 +106,7 @@ case $ROFI_RETV in
         print_channel_feed "$ROFI_DATA" "-v=$ROFI_INFO"
         ;;
     esac
-    [ "$ROFI_RETV" -eq 15 ] && download_vid "$ROFI_INFO" "$1" >/dev/null 2>&1
+    [ "$ROFI_RETV" -eq 14 ] && download_vid "$ROFI_INFO" "$1" >/dev/null 2>&1
     ;;
 # kb-custom-4 (Ctrl-X) -- mark current feed entries as viewed
 12)
