@@ -106,6 +106,12 @@ def parse_args() -> argparse.Namespace:
         help="New mark format (default: %(default)r)",
     )
     parser.add_argument(
+        "-n",
+        "--no-update",
+        action="store_true",
+        help="Never update on startup",
+    )
+    parser.add_argument(
         "-N",
         "--unwatched-first",
         action="store_true",
