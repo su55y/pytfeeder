@@ -1,10 +1,8 @@
-from functools import cache
 from pathlib import Path
 from os import getenv
 from tempfile import gettempdir
 
 
-@cache
 def default_config_path() -> Path:
     if xdg_config_home := getenv("XDG_CONFIG_HOME"):
         config_home = Path(xdg_config_home)
@@ -13,7 +11,6 @@ def default_config_path() -> Path:
     return config_home.joinpath("pytfeeder/config.yaml")
 
 
-@cache
 def default_cachedir_path() -> Path:
     if xdg_cache_home := getenv("XDG_CACHE_HOME"):
         cache_home = Path(xdg_cache_home)
@@ -22,6 +19,5 @@ def default_cachedir_path() -> Path:
     return cache_home.joinpath("pytfeeder")
 
 
-@cache
 def default_lockfile_path() -> Path:
     return Path(gettempdir()) / "pytfeeder_update.lock"
