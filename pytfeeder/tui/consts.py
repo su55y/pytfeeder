@@ -7,7 +7,6 @@ DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
 DEFAULT_UPDATE_INTERVAL_MINS = 30
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
-DEFAULT_LOCK_FILE = "/tmp/pytfeeder_update.lock"
 
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens.

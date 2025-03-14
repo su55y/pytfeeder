@@ -1,6 +1,7 @@
 from functools import cache
 from pathlib import Path
 from os import getenv
+from tempfile import gettempdir
 
 
 @cache
@@ -23,4 +24,4 @@ def default_cachedir_path() -> Path:
 
 @cache
 def default_lockfile_path() -> Path:
-    return Path("/tmp/pytfeeder_update.lock")
+    return Path(gettempdir()) / "pytfeeder_update.lock"
