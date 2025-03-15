@@ -66,27 +66,18 @@ def init_logger(config: Config):
 
 
 def entries_stats(feeder: Feeder) -> str:
-    stats = "entries count: %d (%d new)\n" % (
+    stats_str = "new entries count: %d (%d new)\n" % (
         feeder.stor.select_entries_count(),
         feeder.unviewed_count(),
     )
     max_title_len = max(len(c.title) for c in feeder.config.channels)
-    entries_stats_dict = {
-        c.title: (
-            feeder.stor.select_entries_count(c.channel_id),
-            feeder.unviewed_count(c.channel_id),
-        )
-        for c in feeder.config.channels
-    }
-    max_num_len = max(len(str(c)) for c, _ in entries_stats_dict.values())
-    entries_stats_lines = []
-    for title, (count, new) in entries_stats_dict.items():
-        entries_stats_lines.append(
-            f"  - {title + ':': <{max_title_len + 3}}{count:{max_num_len}d} ({new})"
-        )
-
-    stats += "\n".join(entries_stats_lines)
-    return stats
+    channels_map = {c.channel_id: c.title for c in feeder.config.channels}
+    stats = feeder.stor.select_stats()
+    max_count_number_len = max(len(str(c)) for _, c, _ in stats)
+    for channel_id, count, new in stats:
+        title = channels_map.get(channel_id, channel_id)
+        stats_str += f"  - {title + ':': <{max_title_len + 3}}{count:{max_count_number_len}d} ({new})\n"
+    return stats_str
 
 
 def storage_file_stats(storage_path: Path) -> str:
@@ -94,19 +85,14 @@ def storage_file_stats(storage_path: Path) -> str:
     import pwd
 
     stat = storage_path.stat()
-    user = "%s/%s" % (stat.st_uid, pwd.getpwuid(stat.st_uid)[0])
-    st_atime = datetime.fromtimestamp(stat.st_atime)
-    st_mtime = datetime.fromtimestamp(stat.st_mtime)
-    st_ctime = datetime.fromtimestamp(stat.st_ctime)
-    size = human_readable_size(stat.st_size)
-
-    return "{tab}Uid: {user}\n{tab}Size: {size}\n{tab}Change: {ctime}\n{tab}Modify: {mtime}\n{tab}Access: {atime}".format(
+    return "{tab}Path:   {path}\n{tab}Uid:    {user}\n{tab}Size:   {size}\n{tab}Change: {ctime}\n{tab}Modify: {mtime}\n{tab}Access: {atime}".format(
         tab="  - ",
-        user=user,
-        size=size,
-        ctime=st_ctime,
-        mtime=st_mtime,
-        atime=st_atime,
+        path=storage_path,
+        user="%s/%s" % (stat.st_uid, pwd.getpwuid(stat.st_uid)[0]),
+        size=human_readable_size(stat.st_size),
+        ctime=datetime.fromtimestamp(stat.st_atime),
+        mtime=datetime.fromtimestamp(stat.st_mtime),
+        atime=datetime.fromtimestamp(stat.st_ctime),
     )
 
 
@@ -138,9 +124,8 @@ def run():
     feeder = Feeder(config, Storage(config.storage_path))
 
     if args.storage_stats:
-        print("storage stats:\n")
-        print(entries_stats(feeder))
-        print("\nfile stats:\n" + storage_file_stats(config.storage_path))
+        print("storage stats:\n" + entries_stats(feeder))
+        print("file stats:\n" + storage_file_stats(config.storage_path))
         exit(0)
 
     if args.clean_cache:

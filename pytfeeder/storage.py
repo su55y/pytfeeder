@@ -3,8 +3,7 @@ import datetime as dt
 import logging
 from pathlib import Path
 import sqlite3
-from typing import List, Optional
-
+from typing import List, Optional, Tuple
 from .models import Entry
 
 TB_ENTRIES = """
@@ -149,3 +148,11 @@ class Storage:
             self.log.debug(query)
             cursor.execute(query)
             self.log.debug("%d entries removed" % cursor.rowcount)
+
+    def select_stats(self) -> List[Tuple[str, int, int]]:
+        with self.get_cursor() as cursor:
+            query = "SELECT channel_id, COUNT(channel_id) AS c1, SUM(is_viewed = 0) FROM tb_entries GROUP BY channel_id ORDER BY c1 DESC;"
+            self.log.debug(query)
+            rows = cursor.execute(query).fetchall()
+            self.log.debug("selected %d rows" % len(rows))
+            return rows
