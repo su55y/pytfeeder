@@ -677,12 +677,12 @@ def main():
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
 
+    config.tui.update(vars(args))
+
     feeder = Feeder(config, Storage(config.storage_path))
     if len(feeder.channels) == 0:
         print(f"No channels found in config {config_path}")
         exit(0)
-
-    feeder.config.tui.update(vars(args))
 
     updater = Updater(feeder)
 
