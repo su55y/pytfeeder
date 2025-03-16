@@ -8,7 +8,15 @@ def default_config_path() -> Path:
         config_home = Path(xdg_config_home)
     else:
         config_home = Path.home().joinpath(".config")
-    return config_home.joinpath("pytfeeder/config.yaml")
+    return config_home.joinpath("pytfeeder", "config.yaml")
+
+
+def default_channels_filepath() -> Path:
+    if xdg_config_home := getenv("XDG_CONFIG_HOME"):
+        config_home = Path(xdg_config_home)
+    else:
+        config_home = Path.home().joinpath(".config")
+    return config_home.joinpath("pytfeeder", "channels.yaml")
 
 
 def default_cachedir_path() -> Path:

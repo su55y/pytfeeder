@@ -1,13 +1,19 @@
 import dataclasses as dc
 import logging
+from os.path import expandvars
 from pathlib import Path
 from typing import Dict, List, Optional, Union
-from os.path import expandvars
+import shutil
+import time
 
 import yaml
 
 
-from .defaults import default_cachedir_path, default_lockfile_path
+from .defaults import (
+    default_cachedir_path,
+    default_channels_filepath,
+    default_lockfile_path,
+)
 from .models import Channel
 from .consts import DEFAULT_LOG_FMT
 from pytfeeder.rofi import ConfigRofi
@@ -26,6 +32,14 @@ def expand_path(path: Union[Path, str]) -> Path:
     return Path(expandvars(path)).expanduser()
 
 
+def load_channels(path: Path) -> List[Channel]:
+    try:
+        return [Channel(**c) for c in yaml.safe_load(path.open())]
+    except Exception as e:
+        print(f"Can't load channels: {e!s}")
+        exit(1)
+
+
 @dc.dataclass
 class Config:
     """Configuration settings
@@ -35,6 +49,7 @@ class Config:
     """
 
     channels: List[Channel]
+    channels_filepath: Path
     log_level: int
     log_file: Path
     log_fmt: str
@@ -46,6 +61,7 @@ class Config:
     def __init__(
         self,
         config_file: Optional[Union[Path, str]] = None,
+        channels_filepath: Optional[Path] = None,
         cache_dir: Optional[Path] = None,
         channels: Optional[List[Channel]] = None,
         log_level: Optional[int] = None,
@@ -57,6 +73,7 @@ class Config:
         lock_file: Optional[Path] = None,
     ) -> None:
         self.channels = channels or []
+        self.channels_filepath = channels_filepath or default_channels_filepath()
         self.cache_dir = cache_dir or default_cachedir_path()
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
@@ -80,7 +97,10 @@ class Config:
             print("Invalid config format (type: %s)" % type(config_dict))
             exit(1)
 
-        self.channels = [Channel(**c) for c in config_dict.get("channels", [])]
+        if channels_filepath := config_dict.get("channels_filepath"):
+            self.channels_filepath = expand_path(channels_filepath)
+        self.channels = load_channels(self.channels_filepath)
+
         if cache_dir := config_dict.get("cache_dir"):
             self.cache_dir = expand_path(cache_dir)
             self.log_file = self.cache_dir.joinpath("pytfeeder.log")
@@ -96,10 +116,25 @@ class Config:
         if tui_object := config_dict.get("tui"):
             self.tui.update(tui_object)
 
-    def dump(self, config_file: str) -> None:
+    def dump_channels(self) -> None:
+        try:
+            _ = shutil.copyfile(
+                self.channels_filepath,
+                self.channels_filepath.parent / f"channels{round(time.time())}.bak",
+            )
+            yaml.safe_dump(
+                [c.dump() for c in self.channels],
+                self.channels_filepath.open("w"),
+                allow_unicode=True,
+            )
+        except Exception as e:
+            print(f"Can't dump channels: {e!s}")
+            exit(1)
+
+    def __dump(self, config_file: str) -> None:
         data = {
             "cache_dir": str(self.cache_dir),
-            "channels": [c.dump() for c in self.channels],
+            "channels_filepath": str(self.channels_filepath),
             "log_fmt": self.log_fmt,
             "log_level": self.log_level,
             "rofi": dc.asdict(self.rofi),

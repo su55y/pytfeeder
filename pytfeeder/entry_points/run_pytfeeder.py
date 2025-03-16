@@ -117,7 +117,7 @@ def run():
         if not new_channel:
             exit(1)
         config.channels.append(new_channel)
-        config.dump(args.config_file)
+        config.dump_channels()
         print(f"{new_channel.title!r} just added")
         exit(0)
 
