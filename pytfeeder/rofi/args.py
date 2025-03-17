@@ -66,14 +66,7 @@ def parse_args(args=None) -> argparse.Namespace:
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
     )
     parser.add_argument(
-        "-N",
-        "--unwatched-first",
-        action="store_true",
-        help="Prioritize unwatched entries over new ones already watched",
-    )
-    parser.add_argument(
         "--separator",
-        default="\n",
         metavar="STR",
         help="Line separator (default: %(default)r)",
     )
@@ -82,6 +75,12 @@ def parse_args(args=None) -> argparse.Namespace:
         "--sync",
         action="store_true",
         help="Updates all feeds and prints new entries count",
+    )
+    parser.add_argument(
+        "-N",
+        "--unwatched-first",
+        action="store_true",
+        help="Prioritize unwatched entries over new ones already watched",
     )
     parser.add_argument(
         "-v",

@@ -44,7 +44,7 @@ class RofiPrinter:
         else:
             message = "feed, %d entries" % len(entries)
         self.print_message(message)
-        self.print_entries(entries)
+        self.print_entries(entries, self.c.feed_entries_fmt)
 
     def print_channel_feed(self, channel_id: str) -> None:
         if len(channel_id) != 24:
@@ -59,9 +59,9 @@ class RofiPrinter:
         print("\000data\037%s" % channel_id, end=self.c.separator)
 
         if entries := self.feeder.channel_feed(channel_id, self.c.channel_feed_limit):
-            self.print_entries(entries)
+            self.print_entries(entries, self.c.entries_fmt)
 
-    def print_entries(self, entries: List[Entry]) -> None:
+    def print_entries(self, entries: List[Entry], fmt: str) -> None:
         for entry in entries:
             channel_title = self.feeder.channel_title(entry.channel_id)
             meta = channel_title
@@ -69,7 +69,7 @@ class RofiPrinter:
                 meta += "%s%s" % (",".join(parts), "".join(parts))
 
             print(
-                self.c.entries_fmt.format(
+                fmt.format(
                     title=entry.title.replace("&", "&amp;"),
                     id=entry.id,
                     channel_title=channel_title,

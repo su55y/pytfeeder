@@ -9,6 +9,7 @@ class ConfigRofi:
     alphabetic_sort: bool = False
     channel_feed_limit: int = -1
     channels_fmt: str = consts.DEFAULT_CHANNELS_FMT
+    feed_entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     datetime_fmt: str = consts.DEFAULT_DATETIME_FMT
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_limit: int = -1
