@@ -33,23 +33,6 @@ class ConfigTUI:
 
     def __repr__(self) -> str:
         repr_str = "tui:\n"
-        repr_str += f"  alphabetic_sort: {self.alphabetic_sort}\n"
-        repr_str += f"  always_update: {self.always_update}\n"
-        repr_str += f"  channel_feed_limit: {self.channel_feed_limit}\n"
-        repr_str += f"  channels_fmt: {self.channels_fmt!r}\n"
-        repr_str += f"  datetime_fmt: {self.datetime_fmt!r}\n"
-        repr_str += f"  entries_fmt: {self.entries_fmt!r}\n"
-        repr_str += f"  feed_entries_fmt: {self.feed_entries_fmt!r}\n"
-        repr_str += f"  feed_limit: {self.feed_limit}\n"
-        repr_str += f"  hide_feed: {self.hide_feed}\n"
-        repr_str += f"  last_update_fmt: {self.last_update_fmt!r}\n"
-        repr_str += f"  new_mark: {self.new_mark!r}\n"
-        repr_str += f"  no_update: {self.no_update}\n"
-        repr_str += f"  status_fmt: {self.status_fmt!r}\n"
-        repr_str += f"  unwatched_first: {self.unwatched_first}\n"
-        repr_str += f"  update_interval: {self.update_interval}\n"
-        repr_str += f"  macro1: {self.macro1!r}\n"
-        repr_str += f"  macro2: {self.macro2!r}\n"
-        repr_str += f"  macro3: {self.macro3!r}\n"
-        repr_str += f"  macro4: {self.macro4!r}\n"
+        for k, v in sorted(vars(self).items()):
+            repr_str += f"  {k}: {v!r}\n"
         return repr_str

@@ -22,12 +22,6 @@ class ConfigRofi:
 
     def __repr__(self) -> str:
         repr_str = "rofi:\n"
-        repr_str += f"  alphabetic_sort: {self.alphabetic_sort}\n"
-        repr_str += f"  channel_feed_limit: {self.channel_feed_limit}\n"
-        repr_str += f"  channels_fmt: {self.channels_fmt!r}\n"
-        repr_str += f"  datetime_fmt: {self.datetime_fmt!r}\n"
-        repr_str += f"  entries_fmt: {self.entries_fmt!r}\n"
-        repr_str += f"  feed_limit: {self.feed_limit}\n"
-        repr_str += f"  separator: {self.separator!r}\n"
-
+        for k, v in sorted(vars(self).items()):
+            repr_str += f"  {k}: {v!r}\n"
         return repr_str
