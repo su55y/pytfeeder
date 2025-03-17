@@ -1,68 +1,101 @@
-# sort channels list in alphabetic order, instead of config defined, boolean
-alphabetic_sort: true
-
-# dir to store db and logs, required, defaults to $XDG_CACHE_HOME/pytfeeder
+# dir to store db and logs, defaults to $XDG_CACHE_HOME/pytfeeder
 # cache_dir:
 
-# channels list, channel example: {channel_id: 'foobar', title: 'Foo Bar'}, required
-channels:
-  - { channel_id: UCI0vQvr9aFn27yR6Ej6n5UA, title: Real Python }
-  - { channel_id: UC7OEbnj75LYjOxj6tjYXVjA, title: Антропологія }
+# feeds sources filepath, defaults to $XDG_CONFIG_HOME/pytfeeder/channels.yaml
+# should be yaml and contain collection of channels objects
+# - { channel_id: foo, title: bar }
+channels_filepath:
 
-# channel feed select limit, optional, default: none
-# channel_feed_limit: 0
-
-# channels print format for rofi, available keys:
-# -- id             - 24 characters long channel id
-# -- title          - channel title
-# -- unwatched_count - count of new entries
-rofi_channels_fmt: "{title}\x00info\x1f{id}"
-
-# entries print format for rofi, available keys:
-# -- id            - 11 characters long video id
-# -- title         - video title
-# -- channel_title - the title of the channel this video is from
-# -- meta          - the title of channel, splitted and joined by template 'a b' = 'a b,a,b'
-# -- updated       - updated in `datetime-fmt` format (rss `updated` value or fetch date)
-rofi_entries_fmt: "{title}\x00info\x1f{id}\x1fmeta\x1f{meta}"
-
-# datetime format for the {updated} key of entry format
-datetime_fmt: '%D %T'
-
-# feed entry format, keys same as in other entries formats
-feed_entries_fmt: '{index} {updated}{channel_title}{title}'
-
-# int, common feed select limit, optional, default: None
-# feed_limit: 0
-
-# log format, optional
+# log format
 log_fmt: '[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)'
 
 # available logging levels: debug, info, warning, error
 log_level: none
 
-# defines sorting order prioritizing unwatched entries, boolean
-unwatched_first: false
+#
+# rofi config
+#
+rofi:
+  # sort channels list in alphabetic order instead of config defined one
+  alphabetic_sort: false
 
+  # entries limit for channel feed
+  # channel_feed_limit: -1
+
+  # channels print format, available keys:
+  # -- id              - 24 characters long channel id
+  # -- title           - channel title
+  # -- unwatched_count - count of new entries
+  channels_fmt: "{title}\0info\x1f{id}"
+
+  # datetime format for the {updated} key of entry format
+  datetime_fmt: '%D %T'
+
+  # entries print format, available keys:
+  # -- id            - 11 characters long video id
+  # -- title         - video title
+  # -- channel_title - the title of the channel this video is from
+  # -- meta          - the title of channel, splitted and joined by template 'a b' = 'a b,a,b'
+  # -- updated       - updated in `datetime-fmt` format (rss `updated` value or fetch date)
+  entries_fmt: "{title}\0info\x1f{id}\x1fmeta\x1f{meta}"
+  feed_entries_fmt: "{title}\0info\x1f{id}\x1fmeta\x1f{meta}"
+
+  # entries limit for common feed
+  feed_limit: 7
+
+  # lines separator
+  separator: '\n'
+
+  # sorting order, prefering unwatched over newer but watched
+  unwatched_first: false
+
+#
 # tui config
+#
 tui:
-  # sync feeds on start, boolean
+  # sort channels list in alphabetic order instead of config defined one
+  alphabetic_sort: false
+
+  # always update on start
   always_update: false
+
+  # entries limit for channel feed
+  # channel_feed_limit: -1
+
   # channels print format, available keys:
   # -- id              - 24 characters long channel id
   # -- title           - channel title
   # -- new_mark        - mark if have updates, otherwise whitespace
   # -- unwatched_count - count of unwatched entries
   channels_fmt: ''
+
+  # datetime format for the {updated} key of entry format
+  datetime_fmt: '%D %T'
+
   # entries print format, available keys:
-  # -- index          - line index
-  # -- new_mark       - new-mark if have updates, otherwise whitespace
-  # -- title          - title of the entry
-  # -- updated        - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
-  # -- channel_title  - title of the channel
-  entries_fmt: ''
+  # -- index         - line index
+  # -- new_mark      - mark if unwatched, otherwise whitespace
+  # -- title         - title of the entry
+  # -- updated       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
+  # -- channel_title - title of the channel
+  entries_fmt: '{new_mark} | {updated} | {title}'
+  feed_entries_fmt: '{new_mark} | {updated} | {channel_title} | {title}'
+
+  # entries limit for common feed
+  # feed_limit: -1
+
+  # don't show feed
+  hide_feed: false
+
   # {last_update} status key datetime format
   last_update_fmt: '%D %T'
+
+  # new mark string
+  new_mark: '[+]'
+
+  # never update on startup
+  no_update: false
+
   # macros F1-F4, available only in entries screens, passed args:
   # -- $1 - id
   # -- $2 - title
@@ -70,3 +103,16 @@ tui:
   macro2: null
   macro3: null
   macro4: null
+
+  # status bar format, available keys:
+  # -- index       - current line index
+  # -- msg         - status message
+  # -- title       - current feed title
+  # -- last_update - time of last update (optionally formatted with `last_update_fmt`)
+  status_fmt: '{msg}{index} {title} {keybinds}'
+
+  # interval in minutes between updates on start (used if always_update=false)
+  # update_interval: 120
+
+  # sorting order, prefering unwatched over newer but watched
+  # unwatched_first: false
