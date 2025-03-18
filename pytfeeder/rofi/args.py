@@ -52,6 +52,7 @@ def parse_args(args=None) -> argparse.Namespace:
     parser.add_argument("-f", "--feed", action="store_true", help="Prints feed")
     parser.add_argument(
         "--feed-entries-fmt",
+        type=lambda s: eval("'%s'" % s),
         metavar="STR",
         help=f"Feed entries format (default: {consts.DEFAULT_ENTRIES_FMT!r})",
     )
