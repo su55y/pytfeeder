@@ -103,8 +103,8 @@ def run():
         print(config)
         exit(0)
 
-    if not config.cache_dir.exists():
-        config.cache_dir.mkdir(parents=True)
+    if not config.data_dir.exists():
+        config.data_dir.mkdir(parents=True)
 
     if config.log_level > 0:
         init_logger(config)

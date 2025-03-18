@@ -1,5 +1,5 @@
-# dir to store db and logs, defaults to $XDG_CACHE_HOME/pytfeeder
-# cache_dir:
+# dir to store db and logs, defaults to $XDG_DATA_HOME/pytfeeder
+# data_dir:
 
 # feeds sources filepath, defaults to $XDG_CONFIG_HOME/pytfeeder/channels.yaml
 # should be yaml and contain collection of channels objects

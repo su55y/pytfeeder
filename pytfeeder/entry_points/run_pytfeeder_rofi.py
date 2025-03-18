@@ -94,8 +94,8 @@ def main():
 
     config.rofi.update(vars(args))
 
-    if not config.cache_dir.exists():
-        config.cache_dir.mkdir(parents=True)
+    if not config.storage_path.exists():
+        config.storage_path.mkdir(parents=True)
 
     feeder = Feeder(config, Storage(config.storage_path))
     if args.viewed:

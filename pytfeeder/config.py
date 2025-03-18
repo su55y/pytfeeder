@@ -10,7 +10,7 @@ import yaml
 
 
 from .defaults import (
-    default_cachedir_path,
+    default_data_path,
     default_channels_filepath,
     default_lockfile_path,
 )
@@ -62,7 +62,7 @@ class Config:
         self,
         config_file: Optional[Union[Path, str]] = None,
         channels_filepath: Optional[Path] = None,
-        cache_dir: Optional[Path] = None,
+        data_dir: Optional[Path] = None,
         channels: Optional[List[Channel]] = None,
         log_level: Optional[int] = None,
         log_file: Optional[Path] = None,
@@ -74,11 +74,11 @@ class Config:
     ) -> None:
         self.channels = channels or []
         self.channels_filepath = channels_filepath or default_channels_filepath()
-        self.cache_dir = cache_dir or default_cachedir_path()
+        self.data_dir = data_dir or default_data_path()
         self.log_level = log_level or logging.NOTSET
-        self.log_file = log_file or self.cache_dir.joinpath("pytfeeder.log")
+        self.log_file = log_file or self.data_dir.joinpath("pytfeeder.log")
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
-        self.storage_path = storage_path or self.cache_dir.joinpath("pytfeeder.db")
+        self.storage_path = storage_path or self.data_dir.joinpath("pytfeeder.db")
         self.lock_file = lock_file or default_lockfile_path()
         self.rofi = rofi
         self.tui = tui
@@ -101,10 +101,10 @@ class Config:
             self.channels_filepath = expand_path(channels_filepath)
         self.channels = load_channels(self.channels_filepath)
 
-        if cache_dir := config_dict.get("cache_dir"):
-            self.cache_dir = expand_path(cache_dir)
-            self.log_file = self.cache_dir.joinpath("pytfeeder.log")
-            self.storage_path = self.cache_dir.joinpath("pytfeeder.db")
+        if data_dir := config_dict.get("data_dir"):
+            self.data_dir = expand_path(data_dir)
+            self.log_file = self.data_dir.joinpath("pytfeeder.log")
+            self.storage_path = self.data_dir.joinpath("pytfeeder.db")
         if log_fmt := config_dict.get("log_fmt"):
             self.log_fmt = str(log_fmt)
         if isinstance((log_level := config_dict.get("log_level")), str):
@@ -133,7 +133,7 @@ class Config:
 
     def __dump(self, config_file: str) -> None:
         data = {
-            "cache_dir": str(self.cache_dir),
+            "data_dir": str(self.data_dir),
             "channels_filepath": str(self.channels_filepath),
             "log_fmt": self.log_fmt,
             "log_level": self.log_level,
@@ -145,7 +145,7 @@ class Config:
 
     def __repr__(self) -> str:
         repr_str = ""
-        repr_str += f"cache_dir: {self.cache_dir!s}\n"
+        repr_str += f"data_dir: {self.data_dir!s}\n"
         if self.channels:
             repr_str += "channels:\n"
             repr_str += "".join(

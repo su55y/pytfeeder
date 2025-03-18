@@ -19,12 +19,12 @@ def default_channels_filepath() -> Path:
     return config_home.joinpath("pytfeeder", "channels.yaml")
 
 
-def default_cachedir_path() -> Path:
-    if xdg_cache_home := getenv("XDG_CACHE_HOME"):
-        cache_home = Path(xdg_cache_home)
+def default_data_path() -> Path:
+    if xdg_data_home := getenv("XDG_DATA_HOME"):
+        data_home = Path(xdg_data_home)
     else:
-        cache_home = Path.home().joinpath(".cache")
-    return cache_home.joinpath("pytfeeder")
+        data_home = Path.home().joinpath(".local", "share")
+    return data_home.joinpath("pytfeeder")
 
 
 def default_lockfile_path() -> Path:
