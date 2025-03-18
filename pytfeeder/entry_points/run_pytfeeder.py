@@ -66,18 +66,15 @@ def init_logger(config: Config):
 
 
 def entries_stats(feeder: Feeder) -> str:
-    stats_str = "new entries count: %d (%d new)\n" % (
-        feeder.stor.select_entries_count(),
-        feeder.unviewed_count(),
-    )
     max_title_len = max(len(c.title) for c in feeder.config.channels)
     channels_map = {c.channel_id: c.title for c in feeder.config.channels}
     stats = feeder.stor.select_stats()
-    max_count_number_len = max(len(str(c)) for _, c, _ in stats)
+    max_count_number_len = max(len(str(c)) for _, c, _ in stats) if len(stats) else 1
+    entries_stats_str = ""
     for channel_id, count, new in stats:
-        title = channels_map.get(channel_id, channel_id)
-        stats_str += f"  - {title + ':': <{max_title_len + 3}}{count:{max_count_number_len}d} ({new})\n"
-    return stats_str
+        title = channels_map.get(channel_id, f"{channel_id} (DELETED)")
+        entries_stats_str += f"  - {title + ':': <{max_title_len + 3}}{count:{max_count_number_len}d} ({new})\n"
+    return entries_stats_str
 
 
 def storage_file_stats(storage_path: Path) -> str:
@@ -124,8 +121,15 @@ def run():
     feeder = Feeder(config, Storage(config.storage_path))
 
     if args.storage_stats:
-        print("storage stats:\n" + entries_stats(feeder))
-        print("file stats:\n" + storage_file_stats(config.storage_path))
+        print(
+            " Total entries count: {total} ({new} new)\n".format(
+                total=feeder.stor.select_entries_count(),
+                new=feeder.unviewed_count(),
+            ),
+            end="",
+        )
+        print(entries_stats(feeder))
+        print(" File stats:\n" + storage_file_stats(config.storage_path))
         exit(0)
 
     if args.clean_cache:
