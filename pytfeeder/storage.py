@@ -6,14 +6,24 @@ import sqlite3
 from typing import List, Optional, Tuple
 from .models import Entry
 
-TB_ENTRIES = """
-CREATE TABLE IF NOT EXISTS tb_entries(
-    id TEXT NOT NULL CHECK(length(id) == 11) PRIMARY KEY,
-    title TEXT NOT NULL,
-    updated DATETIME NOT NULL,
-    channel_id TEXT NOT NULL,
-    is_viewed TINYINT NOT NULL DEFAULT 0
-);"""
+TB_ENTRIES = "tb_entries"
+
+
+def join_split(s: str) -> str:
+    return " ".join(s.split())
+
+
+def tb_entries_sql(if_not_exists=False) -> str:
+    return """CREATE TABLE {if_not_exists} {tb_entries}(
+        id TEXT NOT NULL CHECK(length(id) == 11) PRIMARY KEY,
+        title TEXT NOT NULL,
+        published DATETIME NOT NULL,
+        channel_id TEXT NOT NULL,
+        is_viewed TINYINT NOT NULL DEFAULT 0
+    )""".format(
+        if_not_exists="IF NOT EXISTS" if if_not_exists else "",
+        tb_entries=TB_ENTRIES,
+    )
 
 
 class Storage:
@@ -24,8 +34,22 @@ class Storage:
         self.__init_db()
 
     def __init_db(self) -> None:
-        with self.get_cursor() as cursor:
-            cursor.execute(TB_ENTRIES)
+        self.log.debug("__init_db")
+        conn = sqlite3.connect(self.db_file)
+        cur = conn.cursor()
+        cur.execute(tb_entries_sql(if_not_exists=True))
+        row = cur.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (TB_ENTRIES,),
+        ).fetchone()
+        if row is None or len(row) != 1:
+            self.log.error(f"Cannot verify db integrity ({row = !r})")
+            raise Exception(f"{TB_ENTRIES!r} not found in db {self.db_file!r}")
+
+        (sql,) = row
+        assert join_split(sql) == join_split(tb_entries_sql()), "Invalid db"
+
+        conn.commit()
 
     @contextmanager
     def get_cursor(self):
@@ -48,23 +72,23 @@ class Storage:
     ) -> List[Entry]:
         entries: List[Entry] = []
         with self.get_cursor() as cursor:
-            query = "SELECT id, title, updated, channel_id, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unviewed_first} updated DESC {limit}".format(
+            query = "SELECT id, title, published, channel_id, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unviewed_first} published DESC {limit}".format(
                 where="" if (not channel_id and not timedelta) else "WHERE",
                 channel_id=f"channel_id = '{channel_id}'" if channel_id else "",
                 and_="AND" if (timedelta and channel_id) else "",
-                timedelta=f"updated > '{timedelta}'" if timedelta else "",
+                timedelta=f"published > '{timedelta}'" if timedelta else "",
                 unviewed_first="is_viewed," if unviewed_first else "",
                 limit=f"LIMIT {limit}" if limit else "",
             )
             self.log.debug(query)
             rows = cursor.execute(query).fetchall()
             self.log.debug("selected %d entries" % len(rows))
-            for id, title, updated, c_id, is_viewed in rows:
+            for id, title, published, c_id, is_viewed in rows:
                 entries.append(
                     Entry(
                         id=id,
                         title=title,
-                        updated=dt.datetime.fromisoformat(updated),
+                        published=dt.datetime.fromisoformat(published),
                         channel_id=c_id,
                         is_viewed=bool(is_viewed),
                     )
@@ -118,9 +142,9 @@ class Storage:
         if not entries:
             return 0
         with self.get_cursor() as cursor:
-            query = "INSERT OR IGNORE INTO tb_entries (id, title, updated, channel_id) VALUES (?, ?, ?, ?)"
+            query = "INSERT OR IGNORE INTO tb_entries (id, title, published, channel_id) VALUES (?, ?, ?, ?)"
             new_entries = [
-                (entry.id, entry.title, entry.updated, entry.channel_id)
+                (entry.id, entry.title, entry.published, entry.channel_id)
                 for entry in entries
             ]
             self.log.debug(f"{query}, entries count: {len(new_entries)}")

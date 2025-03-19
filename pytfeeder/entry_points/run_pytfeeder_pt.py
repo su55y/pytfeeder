@@ -332,7 +332,7 @@ class App(TuiProps):
         line = self.current_entry_format.format(
             index=self._entry_index(i),
             new_mark=self.new_marks[not entry.is_viewed],
-            updated=entry.updated.strftime(self.c.datetime_fmt),
+            published=entry.published.strftime(self.c.datetime_fmt),
             title=entry.title,
             channel_title=f"{self.feeder.channel_title(entry.channel_id):^{self.max_len_chan_title}s}",
         )

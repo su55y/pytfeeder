@@ -279,11 +279,11 @@ class App(TuiProps):
             if isinstance(line.data, Entry):
                 if line.data.is_viewed is False:
                     color_pair = Color.NEW
-                updated = line.data.updated.strftime(self.c.datetime_fmt)
+                published = line.data.published.strftime(self.c.datetime_fmt)
                 text = self.current_entry_format.format(
                     index=index,
                     new_mark=self.new_marks[not line.data.is_viewed],
-                    updated=updated,
+                    published=published,
                     title=line.data.title,
                     channel_title=f"{self.feeder.channel_title(line.data.channel_id):^{self.max_len_chan_title}s}",
                 )

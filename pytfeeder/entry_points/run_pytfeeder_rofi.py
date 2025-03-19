@@ -74,7 +74,7 @@ class RofiPrinter:
                     id=entry.id,
                     channel_title=channel_title,
                     meta=meta,
-                    updated=entry.updated.strftime(self.c.datetime_fmt),
+                    published=entry.published.strftime(self.c.datetime_fmt),
                     active=["true", "false"][entry.is_viewed],
                 ),
                 end=self.c.separator,

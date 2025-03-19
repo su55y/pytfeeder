@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+import datetime as dt
 from typing import List, Dict
 
 
@@ -7,7 +7,7 @@ from typing import List, Dict
 class Entry:
     id: str
     title: str
-    updated: datetime = datetime.now(timezone.utc)
+    published: dt.datetime = dt.datetime.now(dt.timezone.utc)
     channel_id: str = "Unknown"
     is_viewed: bool = False
 

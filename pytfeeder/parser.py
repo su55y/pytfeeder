@@ -17,10 +17,10 @@ class YTFeedParser:
         self.log = logging.getLogger()
         self.rx_id = re.compile(r"^[A-Za-z0-9\-_]{11}$")
         self.rx_channel_id = re.compile(r"^[A-Za-z0-9\-_]{24}$")
-        self.rx_updated = re.compile(
+        self.rx_datetime = re.compile(
             r"^\d{4}-\d{2}-\d{2}[T\s]\d{2}\:\d{2}\:\d{2}\+\d{2}\:\d{2}$"
         )
-        self.default_updated = dt.datetime.now(dt.timezone.utc)
+        self.default_published = dt.datetime.now(dt.timezone.utc)
 
         self._read_entries()
 
@@ -39,13 +39,13 @@ class YTFeedParser:
                 self.log.error(f"invalid channel_id {channel_id!r} in entry: {entry!r}")
                 continue
             title = self._read_tag(self.__schema % "title", entry) or "-"
-            updated = self._read_tag(self.__schema % "updated", entry)
-            if updated is not None and self.rx_updated.match(updated):
-                updated = dt.datetime.fromisoformat(updated)
+            published = self._read_tag(self.__schema % "published", entry)
+            if published is not None and self.rx_datetime.match(published):
+                published = dt.datetime.fromisoformat(published)
             else:
-                updated = self.default_updated
+                published = self.default_published
             self.__entries.append(
-                Entry(id=id, title=title, updated=updated, channel_id=channel_id)
+                Entry(id=id, title=title, published=published, channel_id=channel_id)
             )
 
     def _read_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
