@@ -7,7 +7,7 @@ sample_entries = [
     Entry(
         id=f"video_id_{i:02d}",
         title=f"Video #{i}",
-        updated=datetime.now(timezone.utc) - timedelta(hours=25 * (3 - i)),
+        published=datetime.now(timezone.utc) - timedelta(hours=25 * (3 - i)),
         channel_id="sample_channel_id1234567",
     )
     for i in range(3, 0, -1)
@@ -17,7 +17,7 @@ another_sample_entries = [
     Entry(
         id=f"video_id_{i:02d}",
         title=f"Video #{i}",
-        updated=datetime.now(timezone.utc) - timedelta(hours=25 * (3 - i)),
+        published=datetime.now(timezone.utc) - timedelta(hours=25 * (3 - i)),
         channel_id=f"another_sample_channel_{i}",
     )
     for i in range(6, 3, -1)
@@ -27,7 +27,7 @@ entry_fmt = """\t<entry>
 \t\t<yt:videoId>{id}</yt:videoId>
 \t\t<yt:channelId>{channel_id}</yt:channelId>
 \t\t<title>{title}</title>
-\t\t<updated>{updated}</updated>
+\t\t<published>{published}</published>
 \t</entry>"""
 
 feed_fmt = """<?xml version="1.0" encoding="UTF-8"?>
@@ -42,7 +42,7 @@ raw_feed = feed_fmt.format(
     channel_id=sample_channel.channel_id,
     entries="".join(
         entry_fmt.format(
-            id=e.id, title=e.title, updated=e.updated, channel_id=e.channel_id
+            id=e.id, title=e.title, published=e.published, channel_id=e.channel_id
         ).rstrip()
         for e in sample_entries
     ),
