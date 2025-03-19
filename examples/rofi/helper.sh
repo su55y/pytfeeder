@@ -36,7 +36,7 @@ print_feed() {
     printf "back\000info\037main\n"
     printf "\000markup-rows\037true\n"
     pytfeeder-rofi "$@" -f \
-        --feed-entries-fmt '{title}\r<b><i>{channel_title}</i></b> {updated}\000info\037{id}\037meta\037{meta}\037active\037{active}' \
+        --feed-entries-fmt '{title}\r<b><i>{channel_title}</i></b> {published}\000info\037{id}\037meta\037{meta}\037active\037{active}' \
         --datetime-fmt '<i>%d %B</i>'
 }
 
@@ -46,7 +46,7 @@ print_channel_feed() {
     shift
     printf "back\000info\037main\n"
     pytfeeder-rofi "$@" -i="$channel_id" \
-        --entries-fmt '{title}\r<b>{updated}</b>\000info\037{id}\037meta\037{meta}\037active\037{active}' \
+        --entries-fmt '{title}\r<b>{published}</b>\000info\037{id}\037meta\037{meta}\037active\037{active}' \
         --datetime-fmt '<i>%d %B</i>'
 }
 

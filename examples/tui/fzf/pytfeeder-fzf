@@ -1,7 +1,7 @@
 #!/bin/sh
 
-PYTFEEDER_CONFIG_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/pytfeeder/config.yaml"
-PYTFEEDER_DB_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/pytfeeder/pytfeeder.db"
+PYTFEEDER_CONFIG_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/pytfeeder/channels.yaml"
+PYTFEEDER_DB_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/pytfeeder/pytfeeder.db"
 DOWNLOAD_DIR="$HOME/Videos/YouTube"
 
 if [ ! -f "$PYTFEEDER_CONFIG_PATH" ]; then
@@ -14,9 +14,9 @@ if [ ! -f "$PYTFEEDER_DB_PATH" ]; then
     exit 1
 fi
 
-SELECT_QUERY="SELECT id, title FROM tb_entries WHERE channel_id = '%s' ORDER BY updated DESC"
+SELECT_QUERY="SELECT id, title FROM tb_entries WHERE channel_id = '%s' ORDER BY published DESC"
 
-channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" | jq -r '.channels[]|.channel_id+" "+.title' | fzf --with-nth 2.. --preview='')"
+channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" | jq -r '.[]|.channel_id+" "+.title' | fzf --with-nth 2.. --preview='')"
 [ -n "$channel_line" ] || exit 0
 channel_id="${channel_line%% *}"
 
