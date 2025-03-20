@@ -69,7 +69,7 @@ class App(TuiProps):
         self._set_channels()
         self.refresh_last_update()
         if "{unwatched_count}" in self.c.channels_fmt:
-            self.unwatched_method = lambda c_id: self.feeder.unviewed_count(c_id)
+            self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
 
         self.entries: List[Entry] = []
         self.is_help_opened = False
@@ -177,52 +177,52 @@ class App(TuiProps):
             self._status_msg = f"{msg}; "
             self._status_msg_lifetime = time.perf_counter()
 
-    def mark_viewed_all(self) -> None:
+    def mark_as_watched_all(self) -> None:
         self.selected_data = self.page_lines[self.index]
         if self.page_state == PageState.CHANNELS and isinstance(
             self.selected_data, Channel
         ):
-            self.feeder.mark_as_viewed(
-                unviewed=all(not c.have_updates for c in self.feeder.channels)
+            self.feeder.mark_as_watched(
+                unwatched=all(not c.have_updates for c in self.feeder.channels)
             )
             self.update_channels()
         elif self.page_state == PageState.ENTRIES and isinstance(
             self.selected_data, Entry
         ):
             if self.channels[self.last_index].channel_id == "feed":
-                unviewed = all(not c.have_updates for c in self.channels)
-                self.feeder.mark_as_viewed(unviewed=unviewed)
+                unwatched = all(not c.have_updates for c in self.channels)
+                self.feeder.mark_as_watched(unwatched=unwatched)
                 for i in range(len(self.channels)):
-                    self.channels[i].have_updates = unviewed
+                    self.channels[i].have_updates = unwatched
                 for i in range(len(self.page_lines)):
-                    self.page_lines[i].is_viewed = not unviewed  # type: ignore
+                    self.page_lines[i].is_viewed = not unwatched  # type: ignore
             else:
-                unviewed = not self.channels[self.last_index].have_updates
-                self.feeder.mark_as_viewed(
-                    channel_id=self.selected_data.channel_id, unviewed=unviewed
+                unwatched = not self.channels[self.last_index].have_updates
+                self.feeder.mark_as_watched(
+                    channel_id=self.selected_data.channel_id, unwatched=unwatched
                 )
-                self.channels[self.last_index].have_updates = unviewed
+                self.channels[self.last_index].have_updates = unwatched
                 for i in range(len(self.page_lines)):
-                    self.page_lines[i].is_viewed = not unviewed  # type: ignore
+                    self.page_lines[i].is_viewed = not unwatched  # type: ignore
 
-    def mark_viewed(self) -> None:
+    def mark_as_watched(self) -> None:
         self.selected_data = self.page_lines[self.index]
         if self.page_state == PageState.CHANNELS:
             if not isinstance(self.selected_data, Channel):
                 return
             if self.selected_data.channel_id == "feed":
                 return
-            unviewed = not self.selected_data.have_updates
-            self.feeder.mark_as_viewed(
-                channel_id=self.selected_data.channel_id, unviewed=unviewed
+            unwatched = not self.selected_data.have_updates
+            self.feeder.mark_as_watched(
+                channel_id=self.selected_data.channel_id, unwatched=unwatched
             )
-            self.selected_data.have_updates = unviewed
+            self.selected_data.have_updates = unwatched
         elif self.page_state == PageState.ENTRIES:
             if not isinstance(self.selected_data, Entry):
                 return
-            unviewed = self.selected_data.is_viewed
-            self.feeder.mark_as_viewed(id=self.selected_data.id, unviewed=unviewed)
-            self.selected_data.is_viewed = not unviewed
+            unwatched = self.selected_data.is_viewed
+            self.feeder.mark_as_watched(id=self.selected_data.id, unwatched=unwatched)
+            self.selected_data.is_viewed = not unwatched
             self.index = (self.index + 1) % len(self.page_lines)
 
     def set_entries_by_id(self, channel_id: str) -> None:
@@ -432,10 +432,10 @@ class App(TuiProps):
                 case PageState.ENTRIES:
                     if self.index >= len(self.entries) or self.index < 0:
                         return
-                    self.feeder.mark_as_viewed(id=self.entries[self.index].id)
+                    self.feeder.mark_as_watched(id=self.entries[self.index].id)
                     play_video(self.entries[self.index])
                     if not self.entries[self.index].is_viewed:
-                        self.mark_viewed()
+                        self.mark_as_watched()
 
         @kb.add("h")
         @kb.add("left")
@@ -574,13 +574,13 @@ class App(TuiProps):
             )
 
         @kb.add("a")
-        def _mark_viewed(_) -> None:
+        def _mark_as_watched(_) -> None:
             if len(self.page_lines) > 1:
-                self.mark_viewed()
+                self.mark_as_watched()
 
         @kb.add("A")
-        def _mark_viewed_all(_) -> None:
-            self.mark_viewed_all()
+        def _mark_as_watched_all(_) -> None:
+            self.mark_as_watched_all()
 
         @kb.add("d")
         def _download(_) -> None:
@@ -594,7 +594,7 @@ class App(TuiProps):
                 return
             download_video(self.selected_data)
             if not self.selected_data.is_viewed:
-                self.mark_viewed()
+                self.mark_as_watched()
 
         @kb.add("D")
         def _download_all(_) -> None:
@@ -608,7 +608,7 @@ class App(TuiProps):
             entries = [l for l in self.page_lines if l.is_viewed is False]  # type: ignore
             if len(entries) > 0:
                 download_all(entries)  # type: ignore
-                self.mark_viewed_all()
+                self.mark_as_watched_all()
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
@@ -634,12 +634,12 @@ class App(TuiProps):
 
     async def _reload_method(self) -> None:
         after = 0
-        before = self.feeder.unviewed_count()
+        before = self.feeder.unwatched_count()
         channel_id = ""
         if self.page_state == PageState.ENTRIES:
             channel_id = self.channels[self.last_index].channel_id
             if channel_id != "feed":
-                before = self.feeder.unviewed_count(channel_id)
+                before = self.feeder.unwatched_count(channel_id)
 
         try:
             await self.feeder.sync_entries()
@@ -648,12 +648,12 @@ class App(TuiProps):
             return
 
         self.update_channels()
-        after = self.feeder.unviewed_count()
+        after = self.feeder.unwatched_count()
         if self.page_state == PageState.ENTRIES:
             self.index = 0
             self.set_entries_by_id(channel_id)
             if channel_id != "feed":
-                after = self.feeder.unviewed_count(channel_id)
+                after = self.feeder.unwatched_count(channel_id)
 
         new = after - before
         if max(new, 0) > 0:

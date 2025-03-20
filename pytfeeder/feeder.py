@@ -23,14 +23,14 @@ class Feeder:
     def channels(self) -> List[Channel]:
         for i in range(len(self.config.channels)):
             self.config.channels[i].have_updates = bool(
-                self.stor.select_unviewed(self.config.channels[i].channel_id)
+                self.stor.select_unwatched(self.config.channels[i].channel_id)
             )
         return self.config.channels
 
     def update_channels(self) -> List[Channel]:
         for i in range(len(self.config.channels)):
             self.config.channels[i].have_updates = bool(
-                self.stor.select_unviewed(self.config.channels[i].channel_id)
+                self.stor.select_unwatched(self.config.channels[i].channel_id)
             )
         return self.config.channels
 
@@ -51,7 +51,7 @@ class Feeder:
         return self.stor.select_entries(
             channel_id=channel_id,
             limit=limit,
-            unviewed_first=unwatched_first,
+            unwatched_first=unwatched_first,
         )
 
     def feed(
@@ -61,26 +61,26 @@ class Feeder:
     ) -> List[Entry]:
         return self.stor.select_entries(
             limit=limit,
-            unviewed_first=unwatched_first,
+            unwatched_first=unwatched_first,
         )
 
-    def mark_as_viewed(
+    def mark_as_watched(
         self,
         id: Optional[str] = None,
         channel_id: Optional[str] = None,
-        unviewed: bool = False,
+        unwatched: bool = False,
     ) -> None:
         if id:
-            self.stor.mark_entry_as_viewed(id, unviewed)
+            self.stor.mark_entry_as_watched(id, unwatched)
         elif channel_id:
-            self.stor.mark_channel_entries_as_viewed(channel_id, unviewed)
+            self.stor.mark_channel_entries_as_watched(channel_id, unwatched)
         else:
-            self.stor.mark_all_entries_as_viewed(unviewed)
+            self.stor.mark_all_entries_as_watched(unwatched)
 
-    def unviewed_count(self, channel_id: Optional[str] = None) -> int:
+    def unwatched_count(self, channel_id: Optional[str] = None) -> int:
         if channel_id == "feed":
-            return self.stor.select_unviewed()
-        return self.stor.select_unviewed(channel_id)
+            return self.stor.select_unwatched()
+        return self.stor.select_unwatched(channel_id)
 
     def clean_cache(self, force=False) -> None:
         self.stor.delete_all_entries(force)

@@ -28,7 +28,7 @@ start_menu() {
     printf "\000markup-rows\037true\n"
     printf "Feed\r<i><b>%s</b> new entries</i>\000info\037feed\n" "$(pytfeeder -u)"
     pytfeeder-rofi "$@" \
-        --channels-fmt '{title}\r<i><b>{unviewed_count}</b> new entries</i>\000info\037{id}\037active\037{active}'
+        --channels-fmt '{title}\r<i><b>{unwatched_count}</b> new entries</i>\000info\037{id}\037active\037{active}'
     printf "\000new-selection\0370\n"
 }
 
@@ -76,7 +76,7 @@ case $ROFI_RETV in
             printf "\000new-selection\0370\n"
         elif [ "$(printf '%s' "$ROFI_INFO" |
             grep -oP "^[0-9a-zA-Z_\-]{11}$")" = "$ROFI_INFO" ]; then
-            pytfeeder-rofi -v="$ROFI_INFO" >/dev/null 2>&1
+            pytfeeder-rofi -w="$ROFI_INFO" >/dev/null 2>&1
             play "https://youtu.be/$ROFI_INFO" "$@"
         else
             err_msg "invalid id '$ROFI_INFO'"
@@ -100,10 +100,10 @@ case $ROFI_RETV in
 11 | 14)
     [ "${#ROFI_INFO}" -eq 11 ] || err_msg "invalid id '$ROFI_INFO'"
     case $ROFI_DATA in
-    feed) print_feed "-v=$ROFI_INFO" ;;
+    feed) print_feed "-w=$ROFI_INFO" ;;
     *)
         [ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-        print_channel_feed "$ROFI_DATA" "-v=$ROFI_INFO"
+        print_channel_feed "$ROFI_DATA" "-w=$ROFI_INFO"
         ;;
     esac
     [ "$ROFI_RETV" -eq 14 ] && download_vid "$ROFI_INFO" "$1" >/dev/null 2>&1
@@ -111,11 +111,11 @@ case $ROFI_RETV in
 # kb-custom-4 (Ctrl-X) -- mark current feed entries as viewed
 12)
     case $ROFI_DATA in
-    feed) print_feed "-v" "all" ;;
-    main) start_menu "-v" "all" ;;
+    feed) print_feed "-w" "all" ;;
+    main) start_menu "-w" "all" ;;
     *)
         [ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-        print_channel_feed "$ROFI_DATA" "-v=$ROFI_DATA"
+        print_channel_feed "$ROFI_DATA" "-w=$ROFI_DATA"
         ;;
     esac
     printf "\000new-selection\0370"
@@ -126,10 +126,10 @@ case $ROFI_RETV in
     [ "${#ROFI_INFO}" -eq 11 ] || err_msg "invalid id '$ROFI_INFO'"
     setsid -f "$APPEND_SCRIPT" "https://youtu.be/$ROFI_INFO" >/dev/null 2>&1
     case $ROFI_DATA in
-    feed) print_feed "-v=$ROFI_INFO" ;;
+    feed) print_feed "-w=$ROFI_INFO" ;;
     *)
         [ "${#ROFI_DATA}" -eq 24 ] || err_msg "invalid channel_id '$ROFI_DATA'"
-        print_channel_feed "$ROFI_DATA" "-v=$ROFI_INFO"
+        print_channel_feed "$ROFI_DATA" "-w=$ROFI_INFO"
         ;;
     esac
     ;;

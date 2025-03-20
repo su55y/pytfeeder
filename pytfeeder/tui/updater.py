@@ -46,14 +46,14 @@ class Updater:
     def update(self) -> Optional[Exception]:
         import asyncio
 
-        before = self.feeder.unviewed_count()
+        before = self.feeder.unwatched_count()
         try:
             asyncio.run(self.feeder.sync_entries())
         except Exception as e:
             self._status_msg = "Update failed: %s" % e
         else:
             self.update_lock_file()
-            after = self.feeder.unviewed_count()
+            after = self.feeder.unwatched_count()
             if before < after:
                 self.feeder.update_channels()
                 self._status_msg = f"{after - before} new entries"

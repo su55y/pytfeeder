@@ -68,16 +68,16 @@ class Storage:
         channel_id: Optional[str] = None,
         limit: Optional[int] = None,
         timedelta: Optional[str] = None,
-        unviewed_first: Optional[bool] = None,
+        unwatched_first: Optional[bool] = None,
     ) -> List[Entry]:
         entries: List[Entry] = []
         with self.get_cursor() as cursor:
-            query = "SELECT id, title, published, channel_id, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unviewed_first} published DESC {limit}".format(
+            query = "SELECT id, title, published, channel_id, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unwatched_first} published DESC {limit}".format(
                 where="" if (not channel_id and not timedelta) else "WHERE",
                 channel_id=f"channel_id = '{channel_id}'" if channel_id else "",
                 and_="AND" if (timedelta and channel_id) else "",
                 timedelta=f"published > '{timedelta}'" if timedelta else "",
-                unviewed_first="is_viewed," if unviewed_first else "",
+                unwatched_first="is_viewed," if unwatched_first else "",
                 limit=f"LIMIT {limit}" if limit else "",
             )
             self.log.debug(query)
@@ -95,7 +95,7 @@ class Storage:
                 )
         return entries
 
-    def select_unviewed(self, channel_id: Optional[str] = None) -> int:
+    def select_unwatched(self, channel_id: Optional[str] = None) -> int:
         with self.get_cursor() as cursor:
             query = "SELECT COUNT(*) FROM tb_entries WHERE is_viewed = 0 {for_channel}".format(
                 for_channel=f"AND channel_id = '{channel_id}'" if channel_id else ""
@@ -113,26 +113,34 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
-    def mark_entry_as_viewed(self, id: str, unviewed: bool = False) -> None:
-        value = 0 if unviewed else 1
+    def select_stats(self) -> List[Tuple[str, int, int]]:
+        with self.get_cursor() as cursor:
+            query = "SELECT channel_id, COUNT(channel_id) AS c1, SUM(is_viewed = 0) FROM tb_entries GROUP BY channel_id ORDER BY c1 DESC;"
+            self.log.debug(query)
+            rows = cursor.execute(query).fetchall()
+            self.log.debug("selected %d rows" % len(rows))
+            return rows
+
+    def mark_entry_as_watched(self, id: str, unwatched: bool = False) -> None:
+        value = 0 if unwatched else 1
         with self.get_cursor() as cursor:
             query = f"UPDATE tb_entries SET is_viewed = {value} WHERE id = ?"
             self.log.debug("%s, id: %s" % (query, id))
             count = cursor.execute(query, (id,)).rowcount
             if count != 1:
-                self.log.warning("rowcount != 1 for mark_entry_as_viewed(%s)" % id)
+                self.log.warning("rowcount != 1 for mark_entry_as_watched(%s)" % id)
 
-    def mark_channel_entries_as_viewed(
-        self, channel_id: str, unviewed: bool = False
+    def mark_channel_entries_as_watched(
+        self, channel_id: str, unwatched: bool = False
     ) -> None:
-        value = 0 if unviewed else 1
+        value = 0 if unwatched else 1
         with self.get_cursor() as cursor:
             query = f"UPDATE tb_entries SET is_viewed = {value} WHERE channel_id = ?"
             self.log.debug("%s, channel_id: %s" % (query, channel_id))
             cursor.execute(query, (channel_id,))
 
-    def mark_all_entries_as_viewed(self, unviewed: bool = False):
-        value = 0 if unviewed else 1
+    def mark_all_entries_as_watched(self, unwatched: bool = False):
+        value = 0 if unwatched else 1
         with self.get_cursor() as cursor:
             query = f"UPDATE tb_entries SET is_viewed = {value}"
             self.log.debug(query)
@@ -172,11 +180,3 @@ class Storage:
             self.log.debug(query)
             cursor.execute(query)
             self.log.debug("%d entries removed" % cursor.rowcount)
-
-    def select_stats(self) -> List[Tuple[str, int, int]]:
-        with self.get_cursor() as cursor:
-            query = "SELECT channel_id, COUNT(channel_id) AS c1, SUM(is_viewed = 0) FROM tb_entries GROUP BY channel_id ORDER BY c1 DESC;"
-            self.log.debug(query)
-            rows = cursor.execute(query).fetchall()
-            self.log.debug("selected %d rows" % len(rows))
-            return rows

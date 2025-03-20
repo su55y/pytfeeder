@@ -60,7 +60,7 @@ class TuiProps:
             feed_channel = Channel(
                 title="Feed",
                 channel_id="feed",
-                have_updates=bool(self.feeder.unviewed_count()),
+                have_updates=bool(self.feeder.unwatched_count()),
             )
             self.channels = [feed_channel, *self.feeder.channels]
 

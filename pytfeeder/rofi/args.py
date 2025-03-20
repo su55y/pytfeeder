@@ -84,10 +84,10 @@ def parse_args(args=None) -> argparse.Namespace:
         help="Prioritize unwatched entries over new ones already watched",
     )
     parser.add_argument(
-        "-v",
-        "--viewed",
+        "-w",
+        "--watched",
         metavar="ID",
-        help="Mark as viewed (Accepts entry/channel id or keyword 'all')",
+        help="Mark as watched (Accepts entry/channel id or keyword 'all')",
     )
 
     return parser.parse_args(args=args)

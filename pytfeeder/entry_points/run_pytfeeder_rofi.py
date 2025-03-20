@@ -16,17 +16,17 @@ class RofiPrinter:
         self.__message_printed = False
 
     def print_channels(self) -> None:
-        self.print_message("%d unviewed entries" % self.feeder.unviewed_count())
+        self.print_message("%d unwatched entries" % self.feeder.unwatched_count())
         print("\000data\037main", end=self.c.separator)
-        unviewed_count = lambda _: 0
-        if "{unviewed_count}" in self.c.channels_fmt:
-            unviewed_count = lambda channel_id: self.feeder.unviewed_count(channel_id)
+        unwatched_count = lambda _: 0
+        if "{unwatched_count}" in self.c.channels_fmt:
+            unwatched_count = lambda channel_id: self.feeder.unwatched_count(channel_id)
         for channel in self.feeder.channels:
             print(
                 self.c.channels_fmt.format(
                     id=channel.channel_id,
                     title=channel.title,
-                    unviewed_count=unviewed_count(channel.channel_id),
+                    unwatched_count=unwatched_count(channel.channel_id),
                     active=["false", "true"][channel.have_updates],
                 ),
                 end=self.c.separator,
@@ -38,9 +38,9 @@ class RofiPrinter:
         if not entries:
             self.print_message("no entries")
             return
-        unviewed = [e for e in entries if not e.is_viewed]
-        if len(unviewed):
-            message = "feed, %d new entries of %d" % (len(unviewed), len(entries))
+        unwatched = [e for e in entries if not e.is_viewed]
+        if len(unwatched):
+            message = "feed, %d new entries of %d" % (len(unwatched), len(entries))
         else:
             message = "feed, %d entries" % len(entries)
         self.print_message(message)
@@ -52,8 +52,8 @@ class RofiPrinter:
             return
 
         message = self.feeder.channel_title(channel_id)
-        if unviewed_count := self.feeder.unviewed_count(channel_id):
-            message = f"{message}, {unviewed_count} unviewed entries"
+        if unwatched_count := self.feeder.unwatched_count(channel_id):
+            message = f"{message}, {unwatched_count} unwatched entries"
 
         self.print_message(message)
         print("\000data\037%s" % channel_id, end=self.c.separator)
@@ -98,25 +98,25 @@ def main():
         config.storage_path.mkdir(parents=True)
 
     feeder = Feeder(config, Storage(config.storage_path))
-    if args.viewed:
-        if args.viewed == "all":
-            feeder.mark_as_viewed()
-        elif len(args.viewed) == 24:
-            feeder.mark_as_viewed(channel_id=args.viewed)
-        elif len(args.viewed) == 11:
-            feeder.mark_as_viewed(id=args.viewed)
+    if args.watched:
+        if args.watched == "all":
+            feeder.mark_as_watched()
+        elif len(args.watched) == 24:
+            feeder.mark_as_watched(channel_id=args.watched)
+        elif len(args.watched) == 11:
+            feeder.mark_as_watched(id=args.watched)
 
     before_update = 0
     if args.sync:
         import asyncio
 
-        before_update = feeder.unviewed_count()
+        before_update = feeder.unwatched_count()
         asyncio.run(feeder.sync_entries())
 
     printer = RofiPrinter(feeder=feeder)
 
     if args.sync:
-        if new_entries := (feeder.unviewed_count() - before_update):
+        if new_entries := (feeder.unwatched_count() - before_update):
             printer.print_message("%d new entries" % new_entries)
         else:
             printer.print_message("no updates")

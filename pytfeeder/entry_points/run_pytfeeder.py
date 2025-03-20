@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
         "-S", "--storage-stats", action="store_true", help="Prints storage stats"
     )
     parser.add_argument(
-        "-u", "--unviewed", action="store_true", help="Prints unviewed entries count"
+        "-u", "--unwatched", action="store_true", help="Prints unwatched entries count"
     )
     parser.add_argument(
         "-V",
@@ -124,7 +124,7 @@ def run():
         print(
             " Total entries count: {total} ({new} new)\n".format(
                 total=feeder.stor.select_entries_count(),
-                new=feeder.unviewed_count(),
+                new=feeder.unwatched_count(),
             ),
             end="",
         )
@@ -137,8 +137,8 @@ def run():
 
     before_update = 0
     if args.sync:
-        before_update = feeder.unviewed_count()
+        before_update = feeder.unwatched_count()
         asyncio.run(feeder.sync_entries())
-        print(feeder.unviewed_count() - before_update)
-    elif args.unviewed:
-        print(feeder.unviewed_count())
+        print(feeder.unwatched_count() - before_update)
+    elif args.unwatched:
+        print(feeder.unwatched_count())
