@@ -22,7 +22,7 @@ class TestStats(unittest.TestCase):
         cls.entries = cls.sample_entries + [cls.another_entry]
 
         assert cls.stor.add_entries(cls.entries) == len(cls.entries)
-        cls.stor.mark_entry_as_viewed(id=cls.sample_entries[0].id)
+        cls.stor.mark_entry_as_watched(id=cls.sample_entries[0].id)
 
     @classmethod
     def tearDownClass(cls):

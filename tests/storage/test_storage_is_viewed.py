@@ -25,10 +25,10 @@ class IsViewedTest(unittest.TestCase):
 
     def test_is_viewed_1(self):
         self.assertEqual(self.stor.select_entries()[0].is_viewed, False)
-        self.stor.mark_entry_as_viewed(id=self.entry.id)
+        self.stor.mark_entry_as_watched(id=self.entry.id)
         self.assertEqual(self.stor.select_entries()[0].is_viewed, True)
 
     def test_is_viewed_2(self):
         self.assertEqual(self.stor.select_entries()[0].is_viewed, True)
-        self.stor.mark_entry_as_viewed(id=self.entry.id, unviewed=True)
+        self.stor.mark_entry_as_watched(id=self.entry.id, unwatched=True)
         self.assertEqual(self.stor.select_entries()[0].is_viewed, False)
