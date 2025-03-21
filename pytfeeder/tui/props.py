@@ -4,6 +4,7 @@ from typing import List
 
 from pytfeeder.feeder import Feeder
 from pytfeeder.models import Channel, Entry
+from pytfeeder import __version__
 from .args import format_keybindings
 
 
@@ -18,6 +19,9 @@ class TuiProps:
         self.c = self.feeder.config.tui
         self.channels = list()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
+        self.help_status = " version {version} [h,q,Left]: close help".format(
+            version=__version__
+        )
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self.page_state = PageState.CHANNELS
         self.index = 0

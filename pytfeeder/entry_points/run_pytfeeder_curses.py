@@ -341,7 +341,6 @@ class App(TuiProps):
         max_y, max_x = screen.getmaxyx()
         pad_pos = 0
         pad = curses.newpad(len(self.help_lines) + 1, max_x)
-        help_status = " Help [j,Down,k,Up]: navigate, [h,q,Left]: close help"
 
         for i, line in enumerate(self.help_lines):
             text = f"{line}"
@@ -359,7 +358,7 @@ class App(TuiProps):
                 screen.addnstr(
                     max_y - 1,
                     0,
-                    f"{help_status:<{max_x}}",
+                    f"{self.help_status:<{max_x}}",
                     max_x,
                     curses.color_pair(Color.ACTIVE),
                 )

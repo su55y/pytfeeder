@@ -288,9 +288,7 @@ class App(TuiProps):
 
     def _get_statusbar_text(self) -> str:
         if self.is_help_opened:
-            self._status_msg = ""
-            self._title_fmt = "Help"
-            self._keybinds_fmt = "[j,Down,k,Up]: navigate, [h,q,Left]: close help"
+            return self.help_status
 
         if (
             len(self._status_msg) > 0
