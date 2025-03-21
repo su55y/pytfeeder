@@ -113,6 +113,13 @@ def run():
         new_channel = fetch_channel_info(args.add_channel)
         if not new_channel:
             exit(1)
+        if channel := {c.channel_id: c for c in config.channels}.get(
+            new_channel.channel_id
+        ):
+            print(
+                f"Channel {channel.title!r} ({channel.channel_id = }) already exists in {config.channels_filepath!s}"
+            )
+            exit(1)
         config.channels.append(new_channel)
         config.dump_channels()
         print(f"{new_channel.title!r} just added")
