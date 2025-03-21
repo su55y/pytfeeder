@@ -105,9 +105,11 @@ class Feeder:
             self.log.error("can't fetch feed for '%s'" % channel.title)
             return
         try:
-            parser = YTFeedParser(raw_feed)
-        except:
-            self.log.error("can't parse feed for '%s'" % channel.title)
+            parser = YTFeedParser(raw_feed, log=self.log)
+        except Exception as e:
+            self.log.error(
+                f"can't parse feed for {channel} ({e})\n{raw_feed[:80] = !r}"
+            )
         else:
             if count := self.stor.add_entries(parser.entries):
                 self.log.info("%d new entries for '%s'" % (count, channel.title))

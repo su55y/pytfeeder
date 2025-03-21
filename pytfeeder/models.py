@@ -7,8 +7,8 @@ from typing import List, Dict
 class Entry:
     id: str
     title: str
+    channel_id: str
     published: dt.datetime = dt.datetime.now(dt.timezone.utc)
-    channel_id: str = "Unknown"
     is_viewed: bool = False
 
     def __eq__(self, obj: "Entry") -> bool:

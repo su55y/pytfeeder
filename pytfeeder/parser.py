@@ -2,64 +2,56 @@ import datetime as dt
 import logging
 import re
 from typing import List, Optional
-import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import XML
 
 from .models import Entry
 
+rx_id = re.compile(r"^[A-Za-z0-9\-_]{11}$")
+rx_channel_id = re.compile(r"^[A-Za-z0-9\-_]{24}$")
+rx_datetime = re.compile(r"^\d{4}-\d{2}-\d{2}[T\s]\d{2}\:\d{2}\:\d{2}\+\d{2}\:\d{2}$")
+
+SCHEMA = "{http://www.w3.org/2005/Atom}%s"
+NAMESPACE = {"yt": "http://www.youtube.com/xml/schemas/2015"}
+
 
 class YTFeedParser:
-    def __init__(self, raw) -> None:
-        self.__schema = "{http://www.w3.org/2005/Atom}%s"
-        self.__namespace = {"yt": "http://www.youtube.com/xml/schemas/2015"}
-        self.__tree = ET.fromstring(raw)
-
-        self.__entries: List[Entry] = []
-        self.log = logging.getLogger()
-        self.rx_id = re.compile(r"^[A-Za-z0-9\-_]{11}$")
-        self.rx_channel_id = re.compile(r"^[A-Za-z0-9\-_]{24}$")
-        self.rx_datetime = re.compile(
-            r"^\d{4}-\d{2}-\d{2}[T\s]\d{2}\:\d{2}\:\d{2}\+\d{2}\:\d{2}$"
-        )
+    def __init__(self, raw: str, log: Optional[logging.Logger] = None) -> None:
+        self.log = log or logging.getLogger()
         self.default_published = dt.datetime.now(dt.timezone.utc)
+        self.__tree = XML(text=raw)
+        self.__entries: List[Entry] = list()
 
-        self._read_entries()
+        self.__parse_entries()
 
     @property
     def entries(self) -> List[Entry]:
         return self.__entries
 
-    def _read_entries(self):
-        for entry in self.__tree.findall(self.__schema % "entry"):
-            id = self._read_yt_tag("yt:videoId", entry)
-            if id is None or not self.rx_id.match(id):
-                self.log.error(f"invalid id {id!r} in entry: {entry!r}")
+    def __parse_entries(self):
+        for entry in self.__tree.findall(SCHEMA % "entry"):
+            id_ = entry.findtext("yt:videoId", namespaces=NAMESPACE)
+            if id_ is None or not rx_id.match(id_):
+                self.log.error(f"invalid id {id_!r} in entry: {entry!r}")
                 continue
-            channel_id = self._read_yt_tag("yt:channelId", entry)
-            if channel_id is None or not self.rx_channel_id.match(channel_id):
+
+            channel_id = entry.findtext("yt:channelId", namespaces=NAMESPACE)
+            if channel_id is None or not rx_channel_id.match(channel_id):
                 self.log.error(f"invalid channel_id {channel_id!r} in entry: {entry!r}")
                 continue
-            title = self._read_tag(self.__schema % "title", entry) or "-"
-            published = self._read_tag(self.__schema % "published", entry)
-            if published is not None and self.rx_datetime.match(published):
+
+            title = entry.findtext(SCHEMA % "title", default="Unknown")
+
+            published = entry.findtext(SCHEMA % "published")
+            if published and rx_datetime.match(published):
                 published = dt.datetime.fromisoformat(published)
             else:
                 published = self.default_published
+
             self.__entries.append(
-                Entry(id=id, title=title, published=published, channel_id=channel_id)
+                Entry(
+                    id=id_,
+                    title=title,
+                    published=published,
+                    channel_id=channel_id,
+                )
             )
-
-    def _read_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
-        tag = self.__tree.find(name) if el is None else el.find(name)
-        if tag is not None:
-            return tag.text
-        self.log.error(f"can't read {name} tag")
-
-    def _read_yt_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
-        tag = (
-            self.__tree.find(name, self.__namespace)
-            if el is None
-            else el.find(name, self.__namespace)
-        )
-        if tag is not None:
-            return tag.text
-        self.log.error(f"can't read {name} tag")
