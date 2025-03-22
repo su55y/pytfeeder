@@ -85,8 +85,29 @@ class RofiPrinter:
             print("\000message\037%s" % message, end=self.c.separator)
         self.__message_printed = True
 
+    def print_error(self, message: str) -> None:
+        if not self.__message_printed:
+            self.print_message(message)
+            print(" ", end=self.c.separator)
+        else:
+            print(message, end=self.c.separator)
+
+
+def print_error(message: str):
+    print(f"\000message\037{message}\n \n")
+
 
 def main():
+    try:
+        wrapped_main()
+    except Exception as e:
+        print_error(f"ERR: {e!s}")
+        exit(1)
+
+
+def wrapped_main():
+    global print_error
+
     args = parse_args()
     config = Config(config_file=args.config_file)
     if not config:
@@ -114,6 +135,7 @@ def main():
         asyncio.run(feeder.sync_entries())
 
     printer = RofiPrinter(feeder=feeder)
+    print_error = printer.print_error
 
     if args.sync:
         if new_entries := (feeder.unwatched_count() - before_update):
