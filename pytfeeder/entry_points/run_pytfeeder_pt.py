@@ -28,7 +28,6 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.utils import download_video, download_all, play_video
 from pytfeeder.tui.args import parse_args
-from pytfeeder.tui.consts import DEFAULT_KEYBINDS
 from pytfeeder.tui.updater import Updater
 from pytfeeder.tui.props import TuiProps, PageState
 
@@ -87,9 +86,7 @@ class App(TuiProps):
         }
 
         self._app_link: Optional[Application] = None
-        self._filter: Optional[str] = None
-        self._default_keybinds_fmt = DEFAULT_KEYBINDS
-        self._keybinds_fmt = DEFAULT_KEYBINDS
+        self._filter: str = ""
         self._title_fmt = ""
 
         self.bottom_statusbar = FormattedTextControl(
@@ -121,8 +118,7 @@ class App(TuiProps):
                 self._app_link.vi_state.input_mode = InputMode.NAVIGATION
                 self._app_link = None
                 self._filter = buf.text
-                self._title_fmt = "%d found" % len(self.page_lines)
-                self._keybinds_fmt = f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
+                self.is_filtered = True
                 self.index = 0
             buf.text = ""
             return True
@@ -234,8 +230,8 @@ class App(TuiProps):
             self.entries = self.channel_feed(channel_id)
 
     def reset_filter(self) -> None:
-        self._filter = None
-        self._keybinds_fmt = DEFAULT_KEYBINDS
+        self._filter = ""
+        self.is_filtered = False
         if self.page_state == PageState.ENTRIES:
             self._title_fmt = self.channels[self.last_index].title
         elif self.page_state == PageState.CHANNELS:
@@ -245,7 +241,7 @@ class App(TuiProps):
     def page_lines(self) -> Lines:
         match self.page_state:
             case PageState.CHANNELS:
-                if self._filter:
+                if self.is_filtered and self._filter:
                     return [
                         c
                         for c in self.channels
@@ -253,7 +249,7 @@ class App(TuiProps):
                     ]
                 return self.channels
             case PageState.ENTRIES:
-                if self._filter:
+                if self.is_filtered and self._filter:
                     return [
                         e
                         for e in self.entries
@@ -297,12 +293,16 @@ class App(TuiProps):
             self._status_msg = ""
             self._status_msg_lifetime = 0
 
+        title = self._title_fmt
+        if self.is_filtered:
+            title = "%d found" % len(self.page_lines)
+
         return " ".join(
             self.c.status_fmt.format(
                 msg=self._status_msg,
                 index=self._index_fmt,
-                title=self._title_fmt,
-                keybinds=self._keybinds_fmt,
+                title=title,
+                keybinds=self.keybinds_str,
                 last_update=self._last_update,
             ).split()
         )
@@ -375,7 +375,6 @@ class App(TuiProps):
             self.main_window.height = self.container.height
             event.app.layout.reset()
             event.app.layout.focus(self.main_window)
-            self._keybinds_fmt = self._default_keybinds_fmt
             self._title_fmt = ""
 
         return kb
@@ -409,7 +408,7 @@ class App(TuiProps):
                 case PageState.CHANNELS:
                     if self.index >= len(self.channels):
                         return
-                    if self._filter:
+                    if self.is_filtered:
                         if len(self.page_lines) < self.index + 1:
                             return
                         channel = self.page_lines[self.index]
@@ -442,7 +441,7 @@ class App(TuiProps):
                 self.is_help_opened = False
                 return
 
-            if self._filter:
+            if self.is_filtered:
                 self.reset_filter()
                 return
 
@@ -476,7 +475,7 @@ class App(TuiProps):
             return min(len(self.channels) - 1, self.last_index + 1)
 
         def do_move(prev: bool = False) -> None:
-            if not (self.page_state == PageState.ENTRIES and self._filter is None):
+            if not (self.page_state == PageState.ENTRIES and not self.is_filtered):
                 return
             index = move_index(prev)
             self.last_index = index
@@ -498,7 +497,7 @@ class App(TuiProps):
                 self.page_state != PageState.ENTRIES
                 or self.last_index != 0
                 or not self._is_feed_opened
-                or self._filter
+                or self.is_filtered
             ):
                 return
             # find new last_index value

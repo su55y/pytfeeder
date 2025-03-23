@@ -12,7 +12,6 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.utils import download_video, download_all, play_video
 from pytfeeder.tui.args import parse_args
-from pytfeeder.tui.consts import DEFAULT_KEYBINDS
 from pytfeeder.tui.updater import Updater
 from pytfeeder.tui.props import TuiProps, PageState
 
@@ -87,10 +86,8 @@ class App(TuiProps):
         if "{unwatched_count}" in self.c.channels_fmt:
             self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
 
-        self.filtered = False
         self.gravity = Gravity.DOWN
         self.is_pad_active = False
-        self.keybinds_str = DEFAULT_KEYBINDS
         self.last_channel_index = -1
         self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
@@ -148,7 +145,7 @@ class App(TuiProps):
                         screen.clear()
                     match self.page_state:
                         case PageState.CHANNELS:
-                            if not self.filtered:
+                            if not self.is_filtered:
                                 exit(0)
                             self.move_left_channels()
                             self.draw(screen)
@@ -157,8 +154,8 @@ class App(TuiProps):
                             self.move_left_entries()
                         case _:
                             continue
-                    if self.filtered:
-                        self.filtered = False
+                    if self.is_filtered:
+                        self.is_filtered = False
                 case Key.r:
                     self._status_msg = "updating..."
                     self._status_msg_lifetime = time.perf_counter()
@@ -193,11 +190,11 @@ class App(TuiProps):
                 case Key.A:
                     self.mark_as_watched_all()
                 case Key.J:
-                    if self.page_state == PageState.ENTRIES and not self.filtered:
+                    if self.page_state == PageState.ENTRIES and not self.is_filtered:
                         self.move_next()
                         screen.clear()
                 case Key.K:
-                    if self.page_state == PageState.ENTRIES and not self.filtered:
+                    if self.page_state == PageState.ENTRIES and not self.is_filtered:
                         self.move_prev()
                         screen.clear()
                 case Key.f:
@@ -443,7 +440,7 @@ class App(TuiProps):
 
         if self.page_state == PageState.CHANNELS:
             self.page_state = PageState.ENTRIES
-            self.filtered = False
+            self.is_filtered = False
             if last_channel_index == -1:
                 self.last_page_index = self.index
             self.lines = self.lines_by_id(self.selected_data.channel_id)
@@ -468,7 +465,7 @@ class App(TuiProps):
 
     def move_left_entries(self) -> None:
         self.page_state = PageState.CHANNELS
-        if not self.filtered:
+        if not self.is_filtered:
             self.lines = list(map(Line, self.channels))
             self.index = min(self.last_page_index, len(self.lines) - 1)
             self.last_page_index = -1
@@ -525,7 +522,7 @@ class App(TuiProps):
         self.index = 0
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
-        self.filtered = True
+        self.is_filtered = True
         curses.curs_set(0)
 
     def jump(self, key_index: int) -> None:
@@ -662,7 +659,7 @@ class App(TuiProps):
         title = ""
         if self.last_page_index > -1 and len(self.channels) >= self.last_page_index + 1:
             title = "%s " % self.channels[self.last_page_index].title
-        if self.filtered:
+        if self.is_filtered:
             title = "%d found " % len(self.lines)
         if (
             len(self._status_msg) > 0
@@ -676,23 +673,16 @@ class App(TuiProps):
                 msg=self._status_msg,
                 index=self._status_index,
                 title=title,
-                keybinds=self._status_keybinds,
+                keybinds=self.keybinds_str,
                 last_update=self._last_update,
             ).split()
         )
 
     @property
-    def _status_keybinds(self) -> str:
-        keybinds_str = self.keybinds_str
-        if self.filtered:
-            keybinds_str = f"[h]: cancel filter, {keybinds_str}"
-        return keybinds_str
-
-    @property
     def _status_index(self) -> str:
         num_fmt = f"%{len(str(len(self.lines)))}d"
         index = self.index + 1
-        if self.filtered and len(self.lines) == 0:
+        if self.is_filtered and len(self.lines) == 0:
             index = 0
         return "[%s/%s] " % ((num_fmt % index), (num_fmt % len(self.lines)))
 

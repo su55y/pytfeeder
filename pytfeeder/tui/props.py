@@ -6,6 +6,7 @@ from pytfeeder.feeder import Feeder
 from pytfeeder.models import Channel, Entry
 from pytfeeder import __version__
 from .args import format_keybindings
+from .consts import DEFAULT_KEYBINDS
 
 
 class PageState(Enum):
@@ -23,9 +24,10 @@ class TuiProps:
             version=__version__
         )
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
-        self.page_state = PageState.CHANNELS
         self.index = 0
+        self.is_filtered = False
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
+        self.page_state = PageState.CHANNELS
         self._status_msg = ""
         self._status_msg_lifetime = 0
         self._last_update = ""
@@ -47,6 +49,12 @@ class TuiProps:
     @property
     def current_entry_format(self) -> str:
         return self.entry_formats[self._is_feed_opened]
+
+    @property
+    def keybinds_str(self) -> str:
+        if self.is_filtered:
+            return f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
+        return DEFAULT_KEYBINDS
 
     def update_channels(self) -> None:
         self._set_channels(self.feeder.update_channels())
