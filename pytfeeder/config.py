@@ -108,7 +108,7 @@ class Config:
         if log_fmt := config_dict.get("log_fmt"):
             self.log_fmt = str(log_fmt)
         if isinstance((log_level := config_dict.get("log_level")), str):
-            self.log_level = log_levels_map.get(log_level.lower(), logging.NOTSET)
+            self.log_level = log_levels_map.get(log_level.lower(), self.log_level)
         if lock_file := config_dict.get("lock_file"):
             self.lock_file = expand_path(lock_file)
         if rofi_object := config_dict.get("rofi"):
@@ -153,7 +153,8 @@ class Config:
                 for c in self.channels
             )
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
-        repr_str += f"log_level: {self.log_level}\n"
+        log_level_name = {v: k for k, v in log_levels_map.items()}.get(self.log_level)
+        repr_str += f"log_level: {log_level_name}\n"
         repr_str += f"{repr(self.rofi).strip()}\n"
         repr_str += f"{repr(self.tui).strip()}\n"
         return repr_str.strip()
