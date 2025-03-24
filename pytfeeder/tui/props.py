@@ -50,6 +50,13 @@ class TuiProps:
     def current_entry_format(self) -> str:
         return self.entry_formats[self._is_feed_opened]
 
+    def status_index(self, lines_count: int) -> str:
+        num_fmt = f"%{len(str(lines_count))}d"
+        index = self.index + 1
+        if self.is_filtered and lines_count == 0:
+            index = 0
+        return "[%s/%s] " % ((num_fmt % index), (num_fmt % lines_count))
+
     @property
     def status_keybinds(self) -> str:
         if self.is_filtered:

@@ -300,25 +300,11 @@ class App(TuiProps):
         return " ".join(
             self.c.status_fmt.format(
                 msg=self.status_msg,
-                index=self.status_index,
+                index=self.status_index(lines_count=len(self.page_lines)),
                 title=title,
                 keybinds=self.status_keybinds,
                 last_update=self.status_last_update,
             ).split()
-        )
-
-    @property
-    def status_index(self) -> str:
-        if self.is_help_opened:
-            return ""
-
-        index = self.index + 1
-        if len(self.page_lines) == 0:
-            index = 0
-        num_fmt = f"%{len(str(len(self.page_lines)))}d"
-        return "[%s/%s]" % (
-            (num_fmt % index),
-            (num_fmt % len(self.page_lines)),
         )
 
     def _entry_index(self, i: int) -> str:

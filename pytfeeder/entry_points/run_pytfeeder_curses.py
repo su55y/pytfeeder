@@ -671,20 +671,12 @@ class App(TuiProps):
         return " ".join(
             self.c.status_fmt.format(
                 msg=self.status_msg,
-                index=self.status_index,
+                index=self.status_index(lines_count=len(self.lines)),
                 title=title,
                 keybinds=self.status_keybinds,
                 last_update=self.status_last_update,
             ).split()
         )
-
-    @property
-    def status_index(self) -> str:
-        num_fmt = f"%{len(str(len(self.lines)))}d"
-        index = self.index + 1
-        if self.is_filtered and len(self.lines) == 0:
-            index = 0
-        return "[%s/%s] " % ((num_fmt % index), (num_fmt % len(self.lines)))
 
     def lines_by_id(self, channel_id: str) -> List[Line]:
         if channel_id == "feed":
