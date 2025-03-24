@@ -102,8 +102,8 @@ class App(TuiProps):
             Key.F4: self.c.macro4,
         }
         if msg := self.updater.status_msg:
-            self._status_msg = msg
-            self._status_msg_lifetime = time.perf_counter()
+            self.status_msg = msg
+            self.status_msg_lifetime = time.perf_counter()
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -128,7 +128,7 @@ class App(TuiProps):
         while True:
             self.draw(screen)
             ch = screen.getch()
-            self._status_msg = ""
+            self.status_msg = ""
             match ch:
                 case Key.j | curses.KEY_DOWN | Key.TAB | Key.n:
                     if len(self.lines) > 0:
@@ -157,8 +157,8 @@ class App(TuiProps):
                     if self.is_filtered:
                         self.is_filtered = False
                 case Key.r:
-                    self._status_msg = "updating..."
-                    self._status_msg_lifetime = time.perf_counter()
+                    self.status_msg = "updating..."
+                    self.status_msg_lifetime = time.perf_counter()
                     self.draw(screen)
                     self.reload()
                 case curses.KEY_HOME:
@@ -215,8 +215,8 @@ class App(TuiProps):
                         )
                     err = download_video(selected_data)
                     if err:
-                        self._status_msg = f"download failed: {err}"
-                        self._status_msg_lifetime = time.perf_counter()
+                        self.status_msg = f"download failed: {err}"
+                        self.status_msg_lifetime = time.perf_counter()
                     else:
                         if not selected_data.is_viewed:
                             self.mark_as_watched()
@@ -251,8 +251,8 @@ class App(TuiProps):
         if not isinstance(self.selected_data, Entry):
             return
 
-        self._status_msg = f"Executing macro {Key(key).name}..."
-        self._status_msg_lifetime = time.perf_counter()
+        self.status_msg = f"Executing macro {Key(key).name}..."
+        self.status_msg_lifetime = time.perf_counter()
         sp.Popen(
             [macro, self.selected_data.id, self.selected_data.title],
             stdout=sp.DEVNULL,
@@ -484,8 +484,8 @@ class App(TuiProps):
         try:
             asyncio.run(self.feeder.sync_entries())
         except:
-            self._status_msg = "reload failed"
-            self._status_msg_lifetime = time.perf_counter()
+            self.status_msg = "reload failed"
+            self.status_msg_lifetime = time.perf_counter()
             return
 
         self.update_channels()
@@ -504,10 +504,10 @@ class App(TuiProps):
 
         new = after - before
         if max(new, 0) > 0:
-            self._status_msg = f"{new} new updates"
+            self.status_msg = f"{new} new updates"
         else:
-            self._status_msg = "no updates"
-        self._status_msg_lifetime = time.perf_counter()
+            self.status_msg = "no updates"
+        self.status_msg_lifetime = time.perf_counter()
 
         self.updater.update_lock_file()
         self.refresh_last_update()
@@ -662,24 +662,24 @@ class App(TuiProps):
         if self.is_filtered:
             title = "%d found " % len(self.lines)
         if (
-            len(self._status_msg) > 0
-            and (time.perf_counter() - self._status_msg_lifetime) > 3
+            len(self.status_msg) > 0
+            and (time.perf_counter() - self.status_msg_lifetime) > 3
         ):
-            self._status_msg = ""
-            self._status_msg_lifetime = 0
+            self.status_msg = ""
+            self.status_msg_lifetime = 0
 
         return " ".join(
             self.c.status_fmt.format(
-                msg=self._status_msg,
-                index=self._status_index,
+                msg=self.status_msg,
+                index=self.status_index,
                 title=title,
-                keybinds=self.keybinds_str,
-                last_update=self._last_update,
+                keybinds=self.status_keybinds,
+                last_update=self.status_last_update,
             ).split()
         )
 
     @property
-    def _status_index(self) -> str:
+    def status_index(self) -> str:
         num_fmt = f"%{len(str(len(self.lines)))}d"
         index = self.index + 1
         if self.is_filtered and len(self.lines) == 0:

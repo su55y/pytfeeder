@@ -87,7 +87,7 @@ class App(TuiProps):
 
         self._app_link: Optional[Application] = None
         self._filter: str = ""
-        self._title_fmt = ""
+        self.status_title = ""
 
         self.bottom_statusbar = FormattedTextControl(
             text=self._get_statusbar_text,
@@ -170,8 +170,8 @@ class App(TuiProps):
         )
 
         if msg := self.updater.status_msg:
-            self._status_msg = f"{msg}; "
-            self._status_msg_lifetime = time.perf_counter()
+            self.status_msg = f"{msg}; "
+            self.status_msg_lifetime = time.perf_counter()
 
     def mark_as_watched_all(self) -> None:
         self.selected_data = self.page_lines[self.index]
@@ -233,9 +233,9 @@ class App(TuiProps):
         self._filter = ""
         self.is_filtered = False
         if self.page_state == PageState.ENTRIES:
-            self._title_fmt = self.channels[self.last_index].title
+            self.status_title = self.channels[self.last_index].title
         elif self.page_state == PageState.CHANNELS:
-            self._title_fmt = ""
+            self.status_title = ""
 
     @property
     def page_lines(self) -> Lines:
@@ -287,28 +287,28 @@ class App(TuiProps):
             return self.help_status
 
         if (
-            len(self._status_msg) > 0
-            and (time.perf_counter() - self._status_msg_lifetime) > 3
+            len(self.status_msg) > 0
+            and (time.perf_counter() - self.status_msg_lifetime) > 3
         ):
-            self._status_msg = ""
-            self._status_msg_lifetime = 0
+            self.status_msg = ""
+            self.status_msg_lifetime = 0
 
-        title = self._title_fmt
+        title = self.status_title
         if self.is_filtered:
             title = "%d found" % len(self.page_lines)
 
         return " ".join(
             self.c.status_fmt.format(
-                msg=self._status_msg,
-                index=self._index_fmt,
+                msg=self.status_msg,
+                index=self.status_index,
                 title=title,
-                keybinds=self.keybinds_str,
-                last_update=self._last_update,
+                keybinds=self.status_keybinds,
+                last_update=self.status_last_update,
             ).split()
         )
 
     @property
-    def _index_fmt(self) -> str:
+    def status_index(self) -> str:
         if self.is_help_opened:
             return ""
 
@@ -375,7 +375,7 @@ class App(TuiProps):
             self.main_window.height = self.container.height
             event.app.layout.reset()
             event.app.layout.focus(self.main_window)
-            self._title_fmt = ""
+            self.status_title = ""
 
         return kb
 
@@ -425,7 +425,7 @@ class App(TuiProps):
                     self.set_entries_by_id(channel.channel_id)
                     self.page_state = PageState.ENTRIES
                     self.index = 0
-                    self._title_fmt = channel.title
+                    self.status_title = channel.title
                 case PageState.ENTRIES:
                     if self.index >= len(self.entries) or self.index < 0:
                         return
@@ -453,7 +453,7 @@ class App(TuiProps):
                     self.entries = []
                     self.index = self.last_index
                     self.last_index = -1
-                    self._title_fmt = ""
+                    self.status_title = ""
 
         @kb.add("g", "g")
         @kb.add("home")
@@ -481,7 +481,7 @@ class App(TuiProps):
             self.last_index = index
             self.set_entries_by_id(self.channels[index].channel_id)
             self.index = 0
-            self._title_fmt = self.channels[index].title
+            self.status_title = self.channels[index].title
 
         @kb.add("J")
         def _go_next(_) -> None:
@@ -511,7 +511,7 @@ class App(TuiProps):
             self.set_entries_by_id(self.entries[self.index].channel_id)
             self.last_index = new_last_index
             self.index = 0
-            self._title_fmt = self.channels[self.last_index].title
+            self.status_title = self.channels[self.last_index].title
 
         @kb.add("q")
         def _exit(event) -> None:
@@ -553,12 +553,12 @@ class App(TuiProps):
 
             macro = self.macros.get(key := event.key_sequence.pop().key)
             if not macro or len(macro) == 0:
-                self._status_msg = f"Macro {key!r} not found; "
-                self._status_msg_lifetime = time.perf_counter()
+                self.status_msg = f"Macro {key!r} not found; "
+                self.status_msg_lifetime = time.perf_counter()
                 return
 
-            self._status_msg = f"Executing macro {key!r}...; "
-            self._status_msg_lifetime = time.perf_counter()
+            self.status_msg = f"Executing macro {key!r}...; "
+            self.status_msg_lifetime = time.perf_counter()
 
             self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
@@ -622,8 +622,8 @@ class App(TuiProps):
 
         @kb.add("r")
         async def _reload(event: KeyPressEvent) -> None:
-            self._status_msg = "reloading...; "
-            self._status_msg_lifetime = time.perf_counter()
+            self.status_msg = "reloading...; "
+            self.status_msg_lifetime = time.perf_counter()
             event.app.invalidate()
             await self._reload_method()
 
@@ -641,7 +641,7 @@ class App(TuiProps):
         try:
             await self.feeder.sync_entries()
         except:
-            self._status_msg = "reload failed; "
+            self.status_msg = "reload failed; "
             return
 
         self.update_channels()
@@ -654,10 +654,10 @@ class App(TuiProps):
 
         new = after - before
         if max(new, 0) > 0:
-            self._status_msg = f"{new} new updates; "
+            self.status_msg = f"{new} new updates; "
         else:
-            self._status_msg = "no updates; "
-        self._status_msg_lifetime = time.perf_counter()
+            self.status_msg = "no updates; "
+        self.status_msg_lifetime = time.perf_counter()
         self.updater.update_lock_file()
         self.refresh_last_update()
 

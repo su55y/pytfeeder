@@ -28,9 +28,9 @@ class TuiProps:
         self.is_filtered = False
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
-        self._status_msg = ""
-        self._status_msg_lifetime = 0
-        self._last_update = ""
+        self.status_msg = ""
+        self.status_msg_lifetime = 0
+        self.status_last_update = ""
         self._is_feed_opened = False
         self.unwatched_method = lambda _: 0
 
@@ -51,7 +51,7 @@ class TuiProps:
         return self.entry_formats[self._is_feed_opened]
 
     @property
-    def keybinds_str(self) -> str:
+    def status_keybinds(self) -> str:
         if self.is_filtered:
             return f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
         return DEFAULT_KEYBINDS
@@ -84,4 +84,4 @@ class TuiProps:
         except:
             pass
         else:
-            self._last_update = dt_str.strftime(self.c.last_update_fmt)
+            self.status_last_update = dt_str.strftime(self.c.last_update_fmt)
