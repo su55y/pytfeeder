@@ -19,6 +19,7 @@ class TuiProps:
         self.feeder = feeder
         self.c = self.feeder.config.tui
         self.channels = list()
+        self._set_channels()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
         self.help_status = " version {version} [h,q,Left]: close help".format(
             version=__version__
@@ -26,13 +27,16 @@ class TuiProps:
         self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
         self.index = 0
         self.is_filtered = False
+        self._is_feed_opened = False
+        self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
         self.status_msg = ""
         self.status_msg_lifetime = 0
         self.status_last_update = ""
-        self._is_feed_opened = False
         self.unwatched_method = lambda _: 0
+        if "{unwatched_count}" in self.c.channels_fmt:
+            self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
 
     def feed(self) -> List[Entry]:
         return self.feeder.feed(
@@ -45,6 +49,9 @@ class TuiProps:
             limit=self.c.channel_feed_limit,
             unwatched_first=self.c.unwatched_first,
         )
+
+    def channel_title(self, channel_id: str) -> str:
+        return f"{self.feeder.channel_title(channel_id):^{self.max_len_chan_title}s}"
 
     @property
     def current_entry_format(self) -> str:

@@ -81,26 +81,21 @@ class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
         self.updater = updater
         super().__init__(feeder)
-        self._set_channels()
         self.refresh_last_update()
-        if "{unwatched_count}" in self.c.channels_fmt:
-            self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
 
+        self._g_pressed = False
         self.gravity = Gravity.DOWN
-        self.is_pad_active = False
         self.last_channel_index = -1
         self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
-        self.max_len_chan_title = max(len(c.title) for c in self.channels)
-        self.scroll_top = 0
-        self.selected_data = None
-        self._g_pressed = False
         self.macros = {
             Key.F1: self.c.macro1,
             Key.F2: self.c.macro2,
             Key.F3: self.c.macro3,
             Key.F4: self.c.macro4,
         }
+        self.scroll_top = 0
+        self.selected_data = None
         if msg := self.updater.status_msg:
             self.status_msg = msg
             self.status_msg_lifetime = time.perf_counter()
@@ -282,7 +277,7 @@ class App(TuiProps):
                     new_mark=self.new_marks[not line.data.is_viewed],
                     published=published,
                     title=line.data.title,
-                    channel_title=f"{self.feeder.channel_title(line.data.channel_id):^{self.max_len_chan_title}s}",
+                    channel_title=self.channel_title(line.data.channel_id),
                 )
 
             elif isinstance(line.data, Channel):

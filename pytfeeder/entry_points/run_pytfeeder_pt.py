@@ -65,33 +65,25 @@ class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
         self.updater = updater
         super().__init__(feeder)
-        self._set_channels()
         self.refresh_last_update()
-        if "{unwatched_count}" in self.c.channels_fmt:
-            self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
 
-        self.entries: List[Entry] = []
-        self.is_help_opened = False
-        self.help_index = 0
-        self.last_index = -1
-
+        self._app_link: Optional[Application] = None
         self.classnames = {0: "entry", 1: "new_entry"}
-        self.max_len_chan_title = max(len(c.title) for c in self.channels)
-
+        self.entries: List[Entry] = []
+        self.filter_text = ""
+        self.help_index = 0
+        self.is_help_opened = False
+        self.last_index = -1
         self.macros = {
             "f1": self.c.macro1,
             "f2": self.c.macro2,
             "f3": self.c.macro3,
             "f4": self.c.macro4,
         }
-
+        self.status_title = ""
         if msg := self.updater.status_msg:
             self.status_msg = f"{msg}; "
             self.status_msg_lifetime = time.perf_counter()
-
-        self._app_link: Optional[Application] = None
-        self.filter_text: str = ""
-        self.status_title: str = ""
 
         self.bottom_statusbar = FormattedTextControl(
             text=self._get_statusbar_text,
@@ -315,7 +307,7 @@ class App(TuiProps):
             new_mark=self.new_marks[not entry.is_viewed],
             published=entry.published.strftime(self.c.datetime_fmt),
             title=entry.title,
-            channel_title=f"{self.feeder.channel_title(entry.channel_id):^{self.max_len_chan_title}s}",
+            channel_title=self.channel_title(entry.channel_id),
         )
         return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
 
