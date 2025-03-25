@@ -85,9 +85,13 @@ class App(TuiProps):
             "f4": self.c.macro4,
         }
 
+        if msg := self.updater.status_msg:
+            self.status_msg = f"{msg}; "
+            self.status_msg_lifetime = time.perf_counter()
+
         self._app_link: Optional[Application] = None
-        self._filter: str = ""
-        self.status_title = ""
+        self.filter_text: str = ""
+        self.status_title: str = ""
 
         self.bottom_statusbar = FormattedTextControl(
             text=self._get_statusbar_text,
@@ -117,15 +121,13 @@ class App(TuiProps):
                 self._app_link.layout.focus(self.main_window)
                 self._app_link.vi_state.input_mode = InputMode.NAVIGATION
                 self._app_link = None
-                self._filter = buf.text
+                self.filter_text = buf.text
                 self.is_filtered = True
                 self.index = 0
             buf.text = ""
             return True
 
         self.filter_buffer = Buffer(multiline=False, accept_handler=filter_handler)
-
-        self.jump_last_index = None
 
         def jump_handler(buf: Buffer) -> bool:
             if self._app_link:
@@ -159,6 +161,7 @@ class App(TuiProps):
             style="class:entry",
             z_index=0,
         )
+
         self.container = HSplit(
             [
                 self.main_window,
@@ -169,9 +172,73 @@ class App(TuiProps):
             ]
         )
 
-        if msg := self.updater.status_msg:
-            self.status_msg = f"{msg}; "
-            self.status_msg_lifetime = time.perf_counter()
+    @property
+    def page_lines(self) -> Lines:
+        if self.page_state == PageState.CHANNELS:
+            if self.is_filtered and self.filter_text:
+                return [
+                    channel
+                    for channel in self.channels
+                    if self.filter_text.lower() in channel.title.lower()
+                ]
+            return self.channels
+        elif self.page_state == PageState.ENTRIES:
+            if self.is_filtered and self.filter_text:
+                return [
+                    entry
+                    for entry in self.entries
+                    if self.filter_text.lower() in entry.title.lower()
+                ]
+            return self.entries
+        return []
+
+    def _get_formatted_text(self) -> AnyFormattedText:
+        result = []
+        for i, line in enumerate(self.page_lines):
+            if i == self.index:
+                result.append([("[SetCursorPosition]", "")])
+            if isinstance(line, Entry):
+                result.append(self._format_entry(i, line))
+            elif isinstance(line, Channel):
+                result.append(self._format_channel(i, line))
+            result.append("\n")
+
+        return merge_formatted_text(result)
+
+    def _get_formatted_help_text(self) -> AnyFormattedText:
+        result = []
+        for i, line in enumerate(self.help_lines):
+            if i == self.help_index:
+                result.append([("[SetCursorPosition]", "")])
+            result.append([(f"class:{self.classnames[0]}", line)])
+            result.append("\n")
+
+        return merge_formatted_text(result)
+
+    def _get_statusbar_text(self) -> str:
+        if self.is_help_opened:
+            return self.help_status
+
+        if (
+            len(self.status_msg) > 0
+            and (time.perf_counter() - self.status_msg_lifetime) > 3
+        ):
+            self.status_msg = ""
+            self.status_msg_lifetime = 0
+
+        title = self.status_title
+        if self.is_filtered:
+            title = "%d found" % len(self.page_lines)
+
+        return " ".join(
+            self.c.status_fmt.format(
+                msg=self.status_msg,
+                index=self.status_index(lines_count=len(self.page_lines)),
+                title=title,
+                keybinds=self.status_keybinds,
+                last_update=self.status_last_update,
+            ).split()
+        )
 
     def mark_as_watched_all(self) -> None:
         self.selected_data = self.page_lines[self.index]
@@ -230,82 +297,12 @@ class App(TuiProps):
             self.entries = self.channel_feed(channel_id)
 
     def reset_filter(self) -> None:
-        self._filter = ""
+        self.filter_text = ""
         self.is_filtered = False
         if self.page_state == PageState.ENTRIES:
             self.status_title = self.channels[self.last_index].title
         elif self.page_state == PageState.CHANNELS:
             self.status_title = ""
-
-    @property
-    def page_lines(self) -> Lines:
-        match self.page_state:
-            case PageState.CHANNELS:
-                if self.is_filtered and self._filter:
-                    return [
-                        c
-                        for c in self.channels
-                        if self._filter.lower() in c.title.lower()
-                    ]
-                return self.channels
-            case PageState.ENTRIES:
-                if self.is_filtered and self._filter:
-                    return [
-                        e
-                        for e in self.entries
-                        if self._filter.lower() in e.title.lower()
-                    ]
-                return self.entries
-            case _:
-                return []
-
-    def _get_formatted_text(self) -> AnyFormattedText:
-        result = []
-        for i, entry in enumerate(self.page_lines):
-            if i == self.index:
-                result.append([("[SetCursorPosition]", "")])
-            if isinstance(entry, Entry):
-                result.append(self._format_entry(i, entry))
-            elif isinstance(entry, Channel):
-                result.append(self._format_channel(i, entry))
-            result.append("\n")
-
-        return merge_formatted_text(result)
-
-    def _get_formatted_help_text(self) -> AnyFormattedText:
-        result = []
-        for i, line in enumerate(self.help_lines):
-            if i == self.help_index:
-                result.append([("[SetCursorPosition]", "")])
-            result.append([(f"class:{self.classnames[0]}", line)])
-            result.append("\n")
-
-        return merge_formatted_text(result)
-
-    def _get_statusbar_text(self) -> str:
-        if self.is_help_opened:
-            return self.help_status
-
-        if (
-            len(self.status_msg) > 0
-            and (time.perf_counter() - self.status_msg_lifetime) > 3
-        ):
-            self.status_msg = ""
-            self.status_msg_lifetime = 0
-
-        title = self.status_title
-        if self.is_filtered:
-            title = "%d found" % len(self.page_lines)
-
-        return " ".join(
-            self.c.status_fmt.format(
-                msg=self.status_msg,
-                index=self.status_index(lines_count=len(self.page_lines)),
-                title=title,
-                keybinds=self.status_keybinds,
-                last_update=self.status_last_update,
-            ).split()
-        )
 
     def _entry_index(self, i: int) -> str:
         index = i + 1
@@ -691,7 +688,7 @@ def main():
                 },
             ),
             key_bindings=kb,
-        ).run()
+        ).run(set_exception_handler=False)
     except Exception as e:
         print(e)
         exit(1)
