@@ -101,7 +101,7 @@ class App(TuiProps):
             content=FormattedTextControl(
                 text=self._get_formatted_text,
                 focusable=True,
-                key_bindings=self._get_key_bindings(),
+                key_bindings=self._main_keybindings,
             ),
             style="class:select-box",
             cursorline=True,
@@ -147,7 +147,7 @@ class App(TuiProps):
             content=FormattedTextControl(
                 text=self._get_formatted_help_text,
                 focusable=True,
-                key_bindings=self._get_help_bindings(),
+                key_bindings=self._help_keybindings,
             ),
             height=0,
             style="class:entry",
@@ -163,6 +163,9 @@ class App(TuiProps):
                 PromptContainer(self, self.jump_buffer, ":"),
             ]
         )
+
+    def __pt_container__(self) -> HSplit:
+        return self.container
 
     @property
     def page_lines(self) -> Lines:
@@ -184,15 +187,38 @@ class App(TuiProps):
             return self.entries
         return []
 
+    def format_channel(self, i: int, channel: Channel) -> List[Tuple[str, str]]:
+        line = self.c.channels_fmt.format(
+            index=self.format_line_index(i + 1),
+            new_mark=self.new_marks[channel.have_updates],
+            title=channel.title,
+            unwatched_count=self.unwatched_method(channel.channel_id),
+        )
+        return [(f"class:{self.classnames[channel.have_updates]}", line)]
+
+    def format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
+        line = self.current_entry_format.format(
+            index=self.format_line_index(i + 1),
+            new_mark=self.new_marks[not entry.is_viewed],
+            published=entry.published.strftime(self.c.datetime_fmt),
+            title=entry.title,
+            channel_title=self.channel_title(entry.channel_id),
+        )
+        return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
+
+    def format_line_index(self, i: int) -> str:
+        index_len = max(1, len(str(len(self.page_lines))))
+        return f"{i:{index_len}d}"
+
     def _get_formatted_text(self) -> AnyFormattedText:
         result = []
         for i, line in enumerate(self.page_lines):
             if i == self.index:
                 result.append([("[SetCursorPosition]", "")])
             if isinstance(line, Entry):
-                result.append(self._format_entry(i, line))
+                result.append(self.format_entry(i, line))
             elif isinstance(line, Channel):
-                result.append(self._format_channel(i, line))
+                result.append(self.format_channel(i, line))
             result.append("\n")
 
         return merge_formatted_text(result)
@@ -280,13 +306,37 @@ class App(TuiProps):
             self.selected_data.is_viewed = not unwatched
             self.index = (self.index + 1) % len(self.page_lines)
 
-    def set_entries_by_id(self, channel_id: str) -> None:
-        if channel_id == "feed":
-            self._is_feed_opened = True
-            self.entries = self.feed()
+    async def _reload_method(self) -> None:
+        after = 0
+        before = self.feeder.unwatched_count()
+        channel_id = ""
+        if self.page_state == PageState.ENTRIES:
+            channel_id = self.channels[self.last_index].channel_id
+            if channel_id != "feed":
+                before = self.feeder.unwatched_count(channel_id)
+
+        try:
+            await self.feeder.sync_entries()
+        except:
+            self.status_msg = "reload failed; "
+            return
+
+        self.update_channels()
+        after = self.feeder.unwatched_count()
+        if self.page_state == PageState.ENTRIES:
+            self.index = 0
+            self.set_entries_by_id(channel_id)
+            if channel_id != "feed":
+                after = self.feeder.unwatched_count(channel_id)
+
+        new = after - before
+        if max(new, 0) > 0:
+            self.status_msg = f"{new} new updates; "
         else:
-            self._is_feed_opened = False
-            self.entries = self.channel_feed(channel_id)
+            self.status_msg = "no updates; "
+        self.status_msg_lifetime = time.perf_counter()
+        self.updater.update_lock_file()
+        self.refresh_last_update()
 
     def reset_filter(self) -> None:
         self.filter_text = ""
@@ -296,31 +346,16 @@ class App(TuiProps):
         elif self.page_state == PageState.CHANNELS:
             self.status_title = ""
 
-    def _entry_index(self, i: int) -> str:
-        index = i + 1
-        index_len = max(1, len(str(len(self.page_lines))))
-        return f"{index:{index_len}d}"
+    def set_entries_by_id(self, channel_id: str) -> None:
+        if channel_id == "feed":
+            self._is_feed_opened = True
+            self.entries = self.feed()
+        else:
+            self._is_feed_opened = False
+            self.entries = self.channel_feed(channel_id)
 
-    def _format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
-        line = self.current_entry_format.format(
-            index=self._entry_index(i),
-            new_mark=self.new_marks[not entry.is_viewed],
-            published=entry.published.strftime(self.c.datetime_fmt),
-            title=entry.title,
-            channel_title=self.channel_title(entry.channel_id),
-        )
-        return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
-
-    def _format_channel(self, i: int, channel: Channel) -> List[Tuple[str, str]]:
-        line = self.c.channels_fmt.format(
-            index=self._entry_index(i),
-            new_mark=self.new_marks[channel.have_updates],
-            title=channel.title,
-            unwatched_count=self.unwatched_method(channel.channel_id),
-        )
-        return [(f"class:{self.classnames[channel.have_updates]}", line)]
-
-    def _get_help_bindings(self) -> KeyBindings:
+    @property
+    def _help_keybindings(self) -> KeyBindings:
         kb = KeyBindings()
 
         @kb.add("k")
@@ -354,7 +389,8 @@ class App(TuiProps):
 
         return kb
 
-    def _get_key_bindings(self) -> KeyBindings:
+    @property
+    def _main_keybindings(self) -> KeyBindings:
         kb = KeyBindings()
 
         @kb.add("k")
@@ -603,41 +639,6 @@ class App(TuiProps):
             await self._reload_method()
 
         return kb
-
-    async def _reload_method(self) -> None:
-        after = 0
-        before = self.feeder.unwatched_count()
-        channel_id = ""
-        if self.page_state == PageState.ENTRIES:
-            channel_id = self.channels[self.last_index].channel_id
-            if channel_id != "feed":
-                before = self.feeder.unwatched_count(channel_id)
-
-        try:
-            await self.feeder.sync_entries()
-        except:
-            self.status_msg = "reload failed; "
-            return
-
-        self.update_channels()
-        after = self.feeder.unwatched_count()
-        if self.page_state == PageState.ENTRIES:
-            self.index = 0
-            self.set_entries_by_id(channel_id)
-            if channel_id != "feed":
-                after = self.feeder.unwatched_count(channel_id)
-
-        new = after - before
-        if max(new, 0) > 0:
-            self.status_msg = f"{new} new updates; "
-        else:
-            self.status_msg = "no updates; "
-        self.status_msg_lifetime = time.perf_counter()
-        self.updater.update_lock_file()
-        self.refresh_last_update()
-
-    def __pt_container__(self) -> HSplit:
-        return self.container
 
 
 def main():
