@@ -4,7 +4,7 @@ DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
 DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
 DEFAULT_LAST_UPDATE_FMT = "%D %T"
 DEFAULT_NEW_MARK = "[+]"
-DEFAULT_STATUS_FMT = "{msg}{index} {title} {keybinds}"
+DEFAULT_STATUS_FMT = "{msg} {index} {title} {keybinds}"
 DEFAULT_UPDATE_INTERVAL_MINS = 30
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 

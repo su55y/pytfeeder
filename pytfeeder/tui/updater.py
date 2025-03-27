@@ -50,7 +50,7 @@ class Updater:
         try:
             asyncio.run(self.feeder.sync_entries())
         except Exception as e:
-            self._status_msg = "Update failed: %s" % e
+            self._status_msg = "update failed: %s" % e
         else:
             self.update_lock_file()
             after = self.feeder.unwatched_count()

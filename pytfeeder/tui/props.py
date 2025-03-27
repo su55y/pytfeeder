@@ -1,5 +1,6 @@
 import datetime as dt
 from enum import Enum, auto
+import time
 from typing import List
 
 from pytfeeder.feeder import Feeder
@@ -31,9 +32,10 @@ class TuiProps:
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
-        self.status_msg = ""
-        self.status_msg_lifetime = 0
         self.status_last_update = ""
+        self.status_msg_lifetime = 3
+        self._status_msg_creation_time = 0
+        self._status_msg_text = ""
         self.unwatched_method = lambda _: 0
         if "{unwatched_count}" in self.c.channels_fmt:
             self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
@@ -62,13 +64,28 @@ class TuiProps:
         index = self.index + 1
         if self.is_filtered and lines_count == 0:
             index = 0
-        return "[%s/%s] " % ((num_fmt % index), (num_fmt % lines_count))
+        return "[%s/%s]" % ((num_fmt % index), (num_fmt % lines_count))
 
     @property
     def status_keybinds(self) -> str:
         if self.is_filtered:
             return f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
         return DEFAULT_KEYBINDS
+
+    @property
+    def status_msg(self) -> str:
+        if (
+            self._status_msg_text
+            and (time.perf_counter() - self._status_msg_creation_time)
+            > self.status_msg_lifetime
+        ):
+            self._status_msg_text = ""
+        return self._status_msg_text
+
+    @status_msg.setter
+    def status_msg(self, text: str) -> None:
+        self._status_msg_text = text
+        self._status_msg_creation_time = time.perf_counter()
 
     def update_channels(self) -> None:
         self._set_channels(self.feeder.update_channels())

@@ -1,5 +1,4 @@
 import subprocess as sp
-import time
 from typing import List, Optional, Tuple, Union
 
 from prompt_toolkit.filters import has_focus
@@ -82,8 +81,7 @@ class App(TuiProps):
         }
         self.status_title = ""
         if msg := self.updater.status_msg:
-            self.status_msg = f"{msg}; "
-            self.status_msg_lifetime = time.perf_counter()
+            self.status_msg = msg
 
         self.bottom_statusbar = FormattedTextControl(
             text=self._get_statusbar_text,
@@ -237,13 +235,6 @@ class App(TuiProps):
         if self.is_help_opened:
             return self.help_status
 
-        if (
-            len(self.status_msg) > 0
-            and (time.perf_counter() - self.status_msg_lifetime) > 3
-        ):
-            self.status_msg = ""
-            self.status_msg_lifetime = 0
-
         title = self.status_title
         if self.is_filtered:
             title = "%d found" % len(self.page_lines)
@@ -318,7 +309,7 @@ class App(TuiProps):
         try:
             await self.feeder.sync_entries()
         except:
-            self.status_msg = "reload failed; "
+            self.status_msg = "update failed"
             return
 
         self.update_channels()
@@ -330,11 +321,10 @@ class App(TuiProps):
                 after = self.feeder.unwatched_count(channel_id)
 
         new = after - before
-        if max(new, 0) > 0:
-            self.status_msg = f"{new} new updates; "
+        if new > 0:
+            self.status_msg = f"{new} new updates"
         else:
-            self.status_msg = "no updates; "
-        self.status_msg_lifetime = time.perf_counter()
+            self.status_msg = "no updates"
         self.updater.update_lock_file()
         self.refresh_last_update()
 
@@ -564,12 +554,10 @@ class App(TuiProps):
 
             macro = self.macros.get(key := event.key_sequence.pop().key)
             if not macro or len(macro) == 0:
-                self.status_msg = f"Macro {key!r} not found; "
-                self.status_msg_lifetime = time.perf_counter()
+                self.status_msg = f"macro {key!r} not found"
                 return
 
-            self.status_msg = f"Executing macro {key!r}...; "
-            self.status_msg_lifetime = time.perf_counter()
+            self.status_msg = f"executing {macro!r}..."
 
             self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
@@ -633,8 +621,7 @@ class App(TuiProps):
 
         @kb.add("r")
         async def _reload(event: KeyPressEvent) -> None:
-            self.status_msg = "reloading...; "
-            self.status_msg_lifetime = time.perf_counter()
+            self.status_msg = "updating..."
             event.app.invalidate()
             await self._reload_method()
 

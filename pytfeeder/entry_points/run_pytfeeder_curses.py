@@ -3,7 +3,6 @@ import curses
 from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 import subprocess as sp
-import time
 from typing import List, Literal, Optional, Union
 
 from pytfeeder.feeder import Feeder
@@ -98,7 +97,6 @@ class App(TuiProps):
         self.selected_data = None
         if msg := self.updater.status_msg:
             self.status_msg = msg
-            self.status_msg_lifetime = time.perf_counter()
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -123,7 +121,6 @@ class App(TuiProps):
         while True:
             self.draw(screen)
             ch = screen.getch()
-            self.status_msg = ""
             match ch:
                 case Key.j | curses.KEY_DOWN | Key.TAB | Key.n:
                     if len(self.lines) > 0:
@@ -153,7 +150,6 @@ class App(TuiProps):
                         self.is_filtered = False
                 case Key.r:
                     self.status_msg = "updating..."
-                    self.status_msg_lifetime = time.perf_counter()
                     self.draw(screen)
                     self.reload()
                 case curses.KEY_HOME:
@@ -208,10 +204,8 @@ class App(TuiProps):
                             "unexpected selected data type %s: %r"
                             % (type(selected_data), selected_data)
                         )
-                    err = download_video(selected_data)
-                    if err:
+                    if err := download_video(selected_data):
                         self.status_msg = f"download failed: {err}"
-                        self.status_msg_lifetime = time.perf_counter()
                     else:
                         if not selected_data.is_viewed:
                             self.mark_as_watched()
@@ -246,8 +240,7 @@ class App(TuiProps):
         if not isinstance(self.selected_data, Entry):
             return
 
-        self.status_msg = f"Executing macro {Key(key).name}..."
-        self.status_msg_lifetime = time.perf_counter()
+        self.status_msg = f"executing {macro!r}..."
         sp.Popen(
             [macro, self.selected_data.id, self.selected_data.title],
             stdout=sp.DEVNULL,
@@ -479,8 +472,7 @@ class App(TuiProps):
         try:
             asyncio.run(self.feeder.sync_entries())
         except:
-            self.status_msg = "reload failed"
-            self.status_msg_lifetime = time.perf_counter()
+            self.status_msg = "update failed"
             return
 
         self.update_channels()
@@ -498,11 +490,10 @@ class App(TuiProps):
                 after = self.feeder.unwatched_count(self.selected_data.channel_id)  # type: ignore
 
         new = after - before
-        if max(new, 0) > 0:
+        if new > 0:
             self.status_msg = f"{new} new updates"
         else:
             self.status_msg = "no updates"
-        self.status_msg_lifetime = time.perf_counter()
 
         self.updater.update_lock_file()
         self.refresh_last_update()
@@ -656,12 +647,6 @@ class App(TuiProps):
             title = "%s " % self.channels[self.last_page_index].title
         if self.is_filtered:
             title = "%d found " % len(self.lines)
-        if (
-            len(self.status_msg) > 0
-            and (time.perf_counter() - self.status_msg_lifetime) > 3
-        ):
-            self.status_msg = ""
-            self.status_msg_lifetime = 0
 
         return " ".join(
             self.c.status_fmt.format(
