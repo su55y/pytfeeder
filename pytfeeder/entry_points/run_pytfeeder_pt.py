@@ -1,5 +1,5 @@
 import subprocess as sp
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, override
 
 from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
@@ -62,9 +62,7 @@ class PromptContainer(ConditionalContainer):
 
 class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        self.updater = updater
-        super().__init__(feeder)
-        self.refresh_last_update()
+        super().__init__(feeder, updater)
 
         self._app_link: Optional[Application] = None
         self.classnames = {0: "entry", 1: "new_entry"}
@@ -297,36 +295,16 @@ class App(TuiProps):
             self.selected_data.is_viewed = not unwatched
             self.index = (self.index + 1) % len(self.page_lines)
 
-    async def _reload_method(self) -> None:
-        after = 0
-        before = self.feeder.unwatched_count()
-        channel_id = ""
-        if self.page_state == PageState.ENTRIES:
-            channel_id = self.channels[self.last_index].channel_id
-            if channel_id != "feed":
-                before = self.feeder.unwatched_count(channel_id)
+    @override
+    def get_parent_channel_id(self) -> Optional[str]:
+        if self.last_index > -1 and self.last_index < len(self.channels):
+            return self.channels[self.last_index].channel_id
 
-        try:
-            await self.feeder.sync_entries()
-        except:
-            self.status_msg = "update failed"
-            return
-
-        self.update_channels()
-        after = self.feeder.unwatched_count()
-        if self.page_state == PageState.ENTRIES:
+    @override
+    def reload_lines(self, channel_id: Optional[str] = None) -> None:
+        if self.page_state == PageState.ENTRIES and channel_id:
             self.index = 0
             self.set_entries_by_id(channel_id)
-            if channel_id != "feed":
-                after = self.feeder.unwatched_count(channel_id)
-
-        new = after - before
-        if new > 0:
-            self.status_msg = f"{new} new updates"
-        else:
-            self.status_msg = "no updates"
-        self.updater.update_lock_file()
-        self.refresh_last_update()
 
     def reset_filter(self) -> None:
         self.filter_text = ""
@@ -623,7 +601,7 @@ class App(TuiProps):
         async def _reload(event: KeyPressEvent) -> None:
             self.status_msg = "updating..."
             event.app.invalidate()
-            await self._reload_method()
+            await self.sync_and_reload()
 
         return kb
 

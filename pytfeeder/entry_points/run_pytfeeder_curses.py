@@ -3,7 +3,7 @@ import curses
 from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 import subprocess as sp
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union, override
 
 from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
@@ -78,9 +78,7 @@ class CLIType(Enum):
 
 class App(TuiProps):
     def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        self.updater = updater
-        super().__init__(feeder)
-        self.refresh_last_update()
+        super().__init__(feeder, updater)
 
         self._g_pressed = False
         self.gravity = Gravity.DOWN
@@ -151,7 +149,7 @@ class App(TuiProps):
                 case Key.r:
                     self.status_msg = "updating..."
                     self.draw(screen)
-                    self.reload()
+                    asyncio.run(self.sync_and_reload())
                 case curses.KEY_HOME:
                     self.move_top()
                 case Key.g:
@@ -463,40 +461,18 @@ class App(TuiProps):
             self.move_right(self.last_channel_index)
             self.last_channel_index = self.last_page_index
 
-    def reload(self) -> None:
-        after = 0
-        before = self.feeder.unwatched_count()
-        if self.page_state == PageState.ENTRIES and self.selected_data.channel_id != "feed":  # type: ignore
-            before = self.feeder.unwatched_count(self.selected_data.channel_id)  # type: ignore
+    @override
+    def get_parent_channel_id(self) -> Optional[str]:
+        if self.last_page_index > -1 and len(self.channels) >= self.last_page_index + 1:
+            return self.channels[self.last_page_index].channel_id
 
-        try:
-            asyncio.run(self.feeder.sync_entries())
-        except:
-            self.status_msg = "update failed"
-            return
-
-        self.update_channels()
+    @override
+    def reload_lines(self, channel_id: Optional[str] = None) -> None:
         if self.page_state == PageState.CHANNELS:
             self.lines = list(map(Line, self.channels))
-            after = self.feeder.unwatched_count()
-        elif self.page_state == PageState.ENTRIES:
+        elif self.page_state == PageState.ENTRIES and channel_id:
             self.index = 0
-            self.lines = self.lines_by_id(
-                channel_id=self.channels[self.last_channel_index].channel_id
-            )
-            if self.selected_data.channel_id == "feed":  # type: ignore
-                after = self.feeder.unwatched_count()
-            else:
-                after = self.feeder.unwatched_count(self.selected_data.channel_id)  # type: ignore
-
-        new = after - before
-        if new > 0:
-            self.status_msg = f"{new} new updates"
-        else:
-            self.status_msg = "no updates"
-
-        self.updater.update_lock_file()
-        self.refresh_last_update()
+            self.lines = self.lines_by_id(channel_id)
 
     def filter_lines(self, keyword: str) -> None:
         if not keyword:
