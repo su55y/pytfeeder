@@ -128,28 +128,13 @@ class TuiProps:
 
     async def sync_and_reload(self) -> None:
         channel_id = self.get_parent_channel_id()
-        is_channel = (
-            channel_id
-            and len(channel_id) == 24
-            and self.page_state == PageState.ENTRIES
-        )
-        if is_channel:
-            before = self.feeder.unwatched_count(channel_id)
-        else:
-            before = self.feeder.unwatched_count()
-
         try:
-            await self.feeder.sync_entries()
+            new = await self.feeder.sync_entries()
         except:
             self.status_msg = "update failed"
             return
 
-        if is_channel:
-            after = self.feeder.unwatched_count(channel_id)
-        else:
-            after = self.feeder.unwatched_count()
-
-        if (new := after - before) > 0:
+        if new > 0:
             self.update_channels()
             self.reload_lines(channel_id)
             self.status_msg = f"{new} new updates"

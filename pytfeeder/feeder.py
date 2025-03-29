@@ -88,31 +88,42 @@ class Feeder:
             ", ".join(f"{c.channel_id!r}" for c in self.config.channels)
         )
 
-    async def sync_entries(self) -> None:
-        async with ClientSession() as session:
-            await asyncio.gather(
-                *[
-                    asyncio.create_task(self._fetch_and_sync_entries(session, channel))
-                    for channel in self.config.channels
-                ]
-            )
+    async def sync_entries(self) -> int:
+        async with ClientSession() as s:
+            tasks = [
+                asyncio.create_task(self.sync_channel(s, c))
+                for c in self.config.channels
+            ]
+            new_entries = await asyncio.gather(*tasks)
+            return sum(new_entries)
+
+    async def sync_channel(self, session: ClientSession, channel: Channel) -> int:
+        try:
+            self.log.debug(f"trying to sync {channel.title!r} ({channel.channel_id!r})")
+            count = await self._fetch_and_sync_entries(session, channel.channel_id)
+        except Exception as e:
+            self.log.error(e)
+            return 0
+        else:
+            if count > 0:
+                self.log.info(
+                    "%d new entries for '%r' (%r)"
+                    % (count, channel.title, channel.channel_id)
+                )
+            return count
 
     async def _fetch_and_sync_entries(
-        self, session: ClientSession, channel: Channel
-    ) -> None:
-        raw_feed = await self._fetch_feed(session, channel.channel_id)
+        self, session: ClientSession, channel_id: str
+    ) -> int:
+        raw_feed = await self._fetch_feed(session, channel_id)
         if not raw_feed:
-            self.log.error("can't fetch feed for '%s'" % channel.title)
-            return
-        try:
-            parser = YTFeedParser(raw_feed, log=self.log)
-        except Exception as e:
-            self.log.error(
-                f"can't parse feed for {channel} ({e})\n{raw_feed[:80] = !r}"
-            )
-        else:
-            if count := self.stor.add_entries(parser.entries):
-                self.log.info("%d new entries for '%s'" % (count, channel.title))
+            self.log.error("can't fetch feed for '%s'" % channel_id)
+            return 0
+        parser = YTFeedParser(raw_feed, log=self.log)
+        if not len(parser.entries):
+            self.log.error(f"can't parse feed for {channel_id}\n{raw_feed[:80] = !r}")
+            return 0
+        return self.stor.add_entries(parser.entries)
 
     async def _fetch_feed(
         self, session: ClientSession, channel_id: str

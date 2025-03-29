@@ -142,10 +142,7 @@ def run():
     if args.clean_cache:
         feeder.clean_cache(args.force)
 
-    before_update = 0
     if args.sync:
-        before_update = feeder.unwatched_count()
-        asyncio.run(feeder.sync_entries())
-        print(feeder.unwatched_count() - before_update)
+        print(asyncio.run(feeder.sync_entries()))
     elif args.unwatched:
         print(feeder.unwatched_count())
