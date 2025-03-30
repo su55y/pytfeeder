@@ -1,3 +1,4 @@
+import asyncio
 import datetime as dt
 from enum import Enum, auto
 import time
@@ -8,7 +9,6 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder import __version__
 from .args import format_keybindings
 from .consts import DEFAULT_KEYBINDS
-from .updater import Updater
 
 
 class PageState(Enum):
@@ -17,8 +17,7 @@ class PageState(Enum):
 
 
 class TuiProps:
-    def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        self.updater = updater
+    def __init__(self, feeder: Feeder) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
         self.channels = list()
@@ -35,13 +34,15 @@ class TuiProps:
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
         self.status_last_update = ""
-        self.refresh_last_update()
         self.status_msg_lifetime = 3
         self._status_msg_creation_time = 0
         self._status_msg_text = ""
         self.unwatched_method = lambda _: 0
         if "{unwatched_count}" in self.c.channels_fmt:
             self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
+        if self.is_update_needed:
+            self.initial_update()
+        self.refresh_last_update()
 
     def feed(self) -> List[Entry]:
         return self.feeder.feed(
@@ -61,6 +62,35 @@ class TuiProps:
     @property
     def current_entry_format(self) -> str:
         return self.entry_formats[self._is_feed_opened]
+
+    def initial_update(self) -> None:
+        print("updating...")
+        new = asyncio.run(self.feeder.sync_entries())
+        if new > 0:
+            self.status_msg = f"{new} new entries"
+            self.update_channels()
+        else:
+            self.status_msg = "no updates"
+
+    @property
+    def is_update_needed(self) -> bool:
+        return not self.c.no_update and (
+            self.c.always_update or self.is_update_interval_expired()
+        )
+
+    def is_update_interval_expired(self) -> bool:
+        if not self.feeder.config.lock_file.exists():
+            return True
+
+        last_update = dt.datetime.fromtimestamp(
+            float(self.feeder.config.lock_file.read_text())
+        )
+        if last_update < (
+            dt.datetime.now() - dt.timedelta(minutes=self.c.update_interval)
+        ):
+            return True
+
+        return False
 
     def status_index(self, lines_count: int) -> str:
         num_fmt = f"%{len(str(lines_count))}d"
@@ -115,8 +145,8 @@ class TuiProps:
             dt_str = dt.datetime.fromtimestamp(
                 float(self.feeder.config.lock_file.read_text())
             )
-        except:
-            pass
+        except Exception as e:
+            self.status_msg = f"refresh_last_update error: {e!r}"
         else:
             self.status_last_update = dt_str.strftime(self.c.last_update_fmt)
 
@@ -141,5 +171,4 @@ class TuiProps:
         else:
             self.status_msg = "no updates"
 
-        self.updater.update_lock_file()
         self.refresh_last_update()

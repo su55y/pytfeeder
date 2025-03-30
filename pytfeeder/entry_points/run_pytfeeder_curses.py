@@ -11,7 +11,6 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.utils import download_video, download_all, play_video
 from pytfeeder.tui.args import parse_args
-from pytfeeder.tui.updater import Updater
 from pytfeeder.tui.props import TuiProps, PageState
 
 
@@ -77,8 +76,8 @@ class CLIType(Enum):
 
 
 class App(TuiProps):
-    def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        super().__init__(feeder, updater)
+    def __init__(self, feeder: Feeder) -> None:
+        super().__init__(feeder)
 
         self._g_pressed = False
         self.gravity = Gravity.DOWN
@@ -93,8 +92,6 @@ class App(TuiProps):
         }
         self.scroll_top = 0
         self.selected_data = None
-        if msg := self.updater.status_msg:
-            self.status_msg = msg
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -658,10 +655,8 @@ def main():
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    updater = Updater(feeder)
-
     try:
-        _ = App(feeder, updater).start()
+        _ = App(feeder).start()
     except Exception as e:
         print(e)
         exit(1)

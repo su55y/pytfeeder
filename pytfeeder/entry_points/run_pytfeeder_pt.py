@@ -61,8 +61,8 @@ class PromptContainer(ConditionalContainer):
 
 
 class App(TuiProps):
-    def __init__(self, feeder: Feeder, updater: Updater) -> None:
-        super().__init__(feeder, updater)
+    def __init__(self, feeder: Feeder) -> None:
+        super().__init__(feeder)
 
         self._app_link: Optional[Application] = None
         self.classnames = {0: "entry", 1: "new_entry"}
@@ -78,16 +78,15 @@ class App(TuiProps):
             "f4": self.c.macro4,
         }
         self.status_title = ""
-        if msg := self.updater.status_msg:
-            self.status_msg = msg
 
         self.bottom_statusbar = FormattedTextControl(
             text=self._get_statusbar_text,
             focusable=False,
         )
+        self.is_statusbar_hidden = False
         self.statusbar_window = Window(
             always_hide_cursor=True,
-            height=Dimension.exact(1),
+            height=Dimension.exact(1 ^ self.is_statusbar_hidden),
             content=self.bottom_statusbar,
             style="class:statusbar",
         )
@@ -622,9 +621,7 @@ def main():
         print(f"No channels found in config {config_path}")
         exit(0)
 
-    updater = Updater(feeder)
-
-    pager = App(feeder, updater)
+    pager = App(feeder)
 
     kb = KeyBindings()
 
