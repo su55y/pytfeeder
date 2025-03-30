@@ -27,7 +27,6 @@ from pytfeeder.models import Channel, Entry
 from pytfeeder.storage import Storage
 from pytfeeder.utils import download_video, download_all, play_video
 from pytfeeder.tui.args import parse_args
-from pytfeeder.tui.updater import Updater
 from pytfeeder.tui.props import TuiProps, PageState
 
 
