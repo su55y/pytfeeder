@@ -1,5 +1,6 @@
 from functools import lru_cache, cached_property
 import logging
+import time
 from typing import List, Optional
 
 import asyncio
@@ -95,6 +96,7 @@ class Feeder:
                 for c in self.config.channels
             ]
             new_entries = await asyncio.gather(*tasks)
+            self.update_lock_file()
             return sum(new_entries)
 
     async def sync_channel(self, session: ClientSession, channel: Channel) -> int:
@@ -133,3 +135,9 @@ class Feeder:
             self.log.debug(f"{resp.status} {resp.reason} {resp.url}")
             if resp.status == 200:
                 return await resp.text()
+
+    def update_lock_file(self) -> None:
+        try:
+            self.config.lock_file.write_text(time.strftime("%s"))
+        except Exception as e:
+            self.log.error(repr(e))
