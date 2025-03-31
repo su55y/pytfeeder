@@ -87,6 +87,9 @@ tui:
   # don't show feed
   hide_feed: false
 
+  # turn off statusbar
+  hide_statusbar: false
+
   # {last_update} status key datetime format
   last_update_fmt: '%D %T'
 
