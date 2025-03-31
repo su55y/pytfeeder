@@ -60,6 +60,9 @@ def parse_args() -> argparse.Namespace:
         "--hide-feed", action="store_true", help="Hide 'Feed' in channels list"
     )
     parser.add_argument(
+        "--hide-statusbar", action="store_true", help="Turn off statusbar visability"
+    )
+    parser.add_argument(
         "-l",
         "--limit",
         default=0,

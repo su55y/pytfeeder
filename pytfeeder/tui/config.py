@@ -15,6 +15,7 @@ class ConfigTUI:
     feed_entries_fmt: str = consts.DEFAULT_FEED_ENTRIES_FMT
     feed_limit: int = -1
     hide_feed: bool = False
+    hide_statusbar: bool = False
     last_update_fmt: str = consts.DEFAULT_LAST_UPDATE_FMT
     new_mark: str = consts.DEFAULT_NEW_MARK
     no_update: bool = False

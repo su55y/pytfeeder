@@ -39,6 +39,7 @@ class Key(IntEnum):
     d = ord("d")
     D = ord("D")
     f = ord("f")
+    s = ord("s")
     F1 = 265
     F2 = 266
     F3 = 267
@@ -216,7 +217,12 @@ class App(TuiProps):
                     if len(entries) > 0:
                         download_all(entries)  # type: ignore
                     self.mark_as_watched_all()
-
+                case Key.s:
+                    self.c.hide_statusbar = not self.c.hide_statusbar
+                    max_y, _ = screen.getmaxyx()
+                    self.gravity = Gravity.UP
+                    self.update_scroll_top(max_rows=max_y - self.statusbar_height)
+                    screen.clear()
                 case Key.c:
                     screen.clear()
                 case Key.q:
@@ -243,9 +249,9 @@ class App(TuiProps):
         )
 
     def draw(self, screen: "curses._CursesWindow") -> None:
-        x, y = 0, 0
+        x = 0  # y = 0
         max_y, max_x = screen.getmaxyx()
-        max_rows = max_y - y - 1
+        max_rows = max_y - self.statusbar_height
         self.update_scroll_top(max_rows)
         self.update_active()
         index_len = len(str(len(self.lines)))
@@ -282,19 +288,28 @@ class App(TuiProps):
                 color_pair = Color.ACTIVE
 
             text = f"{text:<{max_x}}"
-            screen.addnstr(y, x, text, max_x, curses.color_pair(color_pair))
-            y += 1
+            try:
+                screen.addnstr(
+                    i,
+                    x,
+                    text,
+                    max_x,
+                    curses.color_pair(color_pair),
+                )
+            except:
+                pass
 
-        try:
-            screen.addnstr(
-                max_y - 1,
-                x,
-                f"{self.status:<{max_x}}",
-                max_x,
-                curses.color_pair(Color.ACTIVE),
-            )
-        except:
-            pass
+        if self.statusbar_height:
+            try:
+                screen.addnstr(
+                    max_y - 1,
+                    x,
+                    f"{self.status:<{max_x}}",
+                    max_x,
+                    curses.color_pair(Color.ACTIVE),
+                )
+            except:
+                pass
         screen.refresh()
 
     def update_scroll_top(self, max_rows: int) -> None:
@@ -510,13 +525,14 @@ class App(TuiProps):
 
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
-        screen.addnstr(
-            max_y - 2,
-            0,
-            f"{self.status:<{max_x}}",
-            max_x,
-            curses.color_pair(Color.ACTIVE),
-        )
+        if self.statusbar_height:
+            screen.addnstr(
+                max_y - 2,
+                0,
+                f"{self.status:<{max_x}}",
+                max_x,
+                curses.color_pair(Color.ACTIVE),
+            )
         screen.move(max_y - 1, 0)
         screen.clrtoeol()
         screen.move(max_y - 1, 2)

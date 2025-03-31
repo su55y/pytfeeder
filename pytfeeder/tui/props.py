@@ -92,6 +92,10 @@ class TuiProps:
 
         return False
 
+    @property
+    def statusbar_height(self) -> int:
+        return 1 ^ self.c.hide_statusbar
+
     def status_index(self, lines_count: int) -> str:
         num_fmt = f"%{len(str(lines_count))}d"
         index = self.index + 1

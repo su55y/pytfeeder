@@ -82,10 +82,9 @@ class App(TuiProps):
             text=self._get_statusbar_text,
             focusable=False,
         )
-        self.is_statusbar_hidden = False
         self.statusbar_window = Window(
             always_hide_cursor=True,
-            height=Dimension.exact(1 ^ self.is_statusbar_hidden),
+            height=Dimension.exact(self.statusbar_height),
             content=self.bottom_statusbar,
             style="class:statusbar",
         )
@@ -489,6 +488,11 @@ class App(TuiProps):
             self.last_index = new_last_index
             self.index = 0
             self.status_title = self.channels[self.last_index].title
+
+        @kb.add("s")
+        def _toggle_status_visability(_) -> None:
+            self.c.hide_statusbar = not self.c.hide_statusbar
+            self.statusbar_window.height = Dimension.exact(self.statusbar_height)
 
         @kb.add("q")
         def _exit(event) -> None:
