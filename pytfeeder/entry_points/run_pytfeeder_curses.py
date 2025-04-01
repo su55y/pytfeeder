@@ -200,7 +200,7 @@ class App(TuiProps):
                             "unexpected selected data type %s: %r"
                             % (type(selected_data), selected_data)
                         )
-                    if err := download_video(selected_data):
+                    if err := download_video(selected_data, self.c.download_output):
                         self.status_msg = f"download failed: {err}"
                     else:
                         if not selected_data.is_viewed:
@@ -215,7 +215,7 @@ class App(TuiProps):
 
                     entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
                     if len(entries) > 0:
-                        download_all(entries)  # type: ignore
+                        download_all(entries, self.c.download_output)  # type: ignore
                     self.mark_as_watched_all()
                 case Key.s:
                     self.c.hide_statusbar = not self.c.hide_statusbar

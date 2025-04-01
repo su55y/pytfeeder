@@ -37,14 +37,14 @@ def human_readable_size(size: int) -> str:
     return "%s %s" % (s, size_name[i])
 
 
-def download_video(entry: Entry, send_notification=True) -> Optional[str]:
+def download_video(entry: Entry, output: str, send_notification=True) -> Optional[str]:
     p = sp.check_output(
         [
             "tsp",
             "yt-dlp",
             f"https://youtu.be/{entry.id}",
             "-o",
-            "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s",
+            output,
         ],
         shell=False,
     )
@@ -94,7 +94,7 @@ def notify(msg: str) -> bool:
     return True
 
 
-def download_all(entries: List[Entry]) -> Optional[str]:
+def download_all(entries: List[Entry], output: str) -> Optional[str]:
     _ = notify(f"⬇️Start downloading {len(entries)} entries...")
     for e in entries:
-        download_video(e, send_notification=False)
+        download_video(e, output, send_notification=False)

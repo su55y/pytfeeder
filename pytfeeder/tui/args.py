@@ -47,6 +47,11 @@ def parse_args() -> argparse.Namespace:
         help=f"Entries `{{updated}}` datetime format (default: {consts.DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
+        "--download-output",
+        metavar="STR",
+        help=f"Download output template (yt-dlp's `-o` option) (default: {consts.DEFAULT_DOWNLOAD_OUTPUT.replace('%', '%%')!r})",
+    )
+    parser.add_argument(
         "--feed-entries-fmt",
         metavar="STR",
         help=f"Feed entries format (default: {consts.DEFAULT_FEED_ENTRIES_FMT!r})",

@@ -11,6 +11,7 @@ class ConfigTUI:
     channels_fmt: str = consts.DEFAULT_CHANNELS_FMT
     channel_feed_limit: int = -1
     datetime_fmt: str = consts.DEFAULT_DATETIME_FMT
+    download_output: str = consts.DEFAULT_DOWNLOAD_OUTPUT
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_entries_fmt: str = consts.DEFAULT_FEED_ENTRIES_FMT
     feed_limit: int = -1

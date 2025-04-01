@@ -568,7 +568,7 @@ class App(TuiProps):
             self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
                 return
-            download_video(self.selected_data)
+            download_video(self.selected_data, self.c.download_output)
             if not self.selected_data.is_viewed:
                 self.mark_as_watched()
 
@@ -583,7 +583,7 @@ class App(TuiProps):
                 return
             entries = [l for l in self.page_lines if l.is_viewed is False]  # type: ignore
             if len(entries) > 0:
-                download_all(entries)  # type: ignore
+                download_all(entries, self.c.download_output)  # type: ignore
                 self.mark_as_watched_all()
 
         @kb.add("?")
