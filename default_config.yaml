@@ -72,6 +72,9 @@ tui:
   # datetime format for the {updated} key of entry format
   datetime_fmt: '%D %T'
 
+  # the download output template used as value for yt-dlp's option `-o`
+  download_output: '~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s'
+
   # entries print format, available keys:
   # -- index         - line index
   # -- new_mark      - mark if unwatched, otherwise whitespace
