@@ -15,10 +15,14 @@ from .defaults import (
     default_lockfile_path,
 )
 from .models import Channel
-from .consts import DEFAULT_LOG_FMT
 from pytfeeder.rofi import ConfigRofi
 from pytfeeder.tui import ConfigTUI
 
+DEFAULT_LOG_FMT = (
+    "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
+)
+LOGS_FILENAME = "pytfeeder.log"
+STORAGE_FILENAME = "pytfeeder.db"
 
 log_levels_map = {
     "debug": logging.DEBUG,
@@ -76,9 +80,9 @@ class Config:
         self.channels_filepath = channels_filepath or default_channels_filepath()
         self.data_dir = data_dir or default_data_path()
         self.log_level = log_level or logging.NOTSET
-        self.log_file = log_file or self.data_dir.joinpath("pytfeeder.log")
+        self.log_file = log_file or self.data_dir.joinpath(LOGS_FILENAME)
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
-        self.storage_path = storage_path or self.data_dir.joinpath("pytfeeder.db")
+        self.storage_path = storage_path or self.data_dir.joinpath(STORAGE_FILENAME)
         self.lock_file = lock_file or default_lockfile_path()
         self.rofi = rofi
         self.tui = tui
@@ -103,8 +107,8 @@ class Config:
 
         if data_dir := config_dict.get("data_dir"):
             self.data_dir = expand_path(data_dir)
-            self.log_file = self.data_dir.joinpath("pytfeeder.log")
-            self.storage_path = self.data_dir.joinpath("pytfeeder.db")
+            self.log_file = self.data_dir.joinpath(LOGS_FILENAME)
+            self.storage_path = self.data_dir.joinpath(STORAGE_FILENAME)
         if log_fmt := config_dict.get("log_fmt"):
             self.log_fmt = str(log_fmt)
         if isinstance((log_level := config_dict.get("log_level")), str):
@@ -130,18 +134,6 @@ class Config:
         except Exception as e:
             print(f"Can't dump channels: {e!s}")
             exit(1)
-
-    def __dump(self, config_file: str) -> None:
-        data = {
-            "data_dir": str(self.data_dir),
-            "channels_filepath": str(self.channels_filepath),
-            "log_fmt": self.log_fmt,
-            "log_level": self.log_level,
-            "rofi": dc.asdict(self.rofi),
-            "tui": dc.asdict(self.tui),
-        }
-        with open(config_file, "w") as f:
-            yaml.safe_dump(data, f, allow_unicode=True)
 
     def __repr__(self) -> str:
         repr_str = ""

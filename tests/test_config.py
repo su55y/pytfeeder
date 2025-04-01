@@ -1,11 +1,19 @@
 import unittest
 
 
-from pytfeeder.rofi.config import ConfigRofi
+from pytfeeder import config
+from pytfeeder.defaults import default_data_path
+from pytfeeder.rofi import ConfigRofi
 from pytfeeder.tui import ConfigTUI
 
 
 class TestConfig(unittest.TestCase):
+    def test_default_data_paths(self):
+        c = config.Config()
+        data_path = default_data_path()
+        self.assertEqual(c.log_file, data_path / config.LOGS_FILENAME)
+        self.assertEqual(c.storage_path, data_path / config.STORAGE_FILENAME)
+
     def test_updating_tui_config(self):
         c = ConfigTUI()
         d = {

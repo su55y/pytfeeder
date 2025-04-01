@@ -7,10 +7,11 @@ import asyncio
 from aiohttp import ClientSession
 
 from .config import Config
-from .consts import YT_FEED_URL
 from .models import Channel, Entry
 from .parser import YTFeedParser
 from .storage import Storage
+
+YT_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=%s"
 
 
 class Feeder:
