@@ -44,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--datetime-fmt",
         metavar="STR",
-        help=f"Entries `{{updated}}` datetime format (default: {consts.DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
+        help=f"Datetime format for `{{published}}` format key (default: {consts.DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
     )
     parser.add_argument(
         "--download-output",

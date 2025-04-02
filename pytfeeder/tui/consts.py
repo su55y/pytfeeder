@@ -1,7 +1,7 @@
 DEFAULT_CHANNELS_FMT = "{new_mark} | {title}"
 DEFAULT_DATETIME_FMT = "%D %T"
-DEFAULT_ENTRIES_FMT = "{new_mark} | {updated} | {title}"
-DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {updated} | {channel_title} | {title}"
+DEFAULT_ENTRIES_FMT = "{new_mark} | {published} | {title}"
+DEFAULT_FEED_ENTRIES_FMT = "{new_mark} | {published} | {channel_title} | {title}"
 DEFAULT_LAST_UPDATE_FMT = "%D %T"
 DEFAULT_NEW_MARK = "[+]"
 DEFAULT_STATUS_FMT = "{msg} {index} {title} {keybinds}"
@@ -25,7 +25,7 @@ entries-fmt keys:
     {index}         - line index
     {new_mark}      - show mark if unwatched, otherwise `' '*len(new_mark)`
     {title}         - title of the entry
-    {updated}       - updated in `--datetime-fmt` format (rss `updated` value or fetch date)
+    {published}     - publication date (uses `--datetime-fmt`)
     {channel_title} - title of the channel
 
 status-fmt keys:
