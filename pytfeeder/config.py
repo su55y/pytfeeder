@@ -36,14 +36,6 @@ def expand_path(path: Union[Path, str]) -> Path:
     return Path(expandvars(path)).expanduser()
 
 
-def load_channels(path: Path) -> List[Channel]:
-    try:
-        return [Channel(**c) for c in yaml.safe_load(path.open())]
-    except Exception as e:
-        print(f"Can't load channels: {e!s}")
-        exit(1)
-
-
 @dc.dataclass
 class Config:
     """Configuration settings
@@ -52,7 +44,6 @@ class Config:
         path (Path | str, optional): The path to the configuration file. If provided, the configuration will be loaded from the file.
     """
 
-    channels: List[Channel]
     channels_filepath: Path
     log_level: int
     log_file: Path
@@ -61,6 +52,7 @@ class Config:
     rofi: ConfigRofi
     tui: ConfigTUI
     lock_file: Path
+    __channels: List[Channel] = dc.field(default_factory=list, repr=False, kw_only=True)
 
     def __init__(
         self,
@@ -72,24 +64,44 @@ class Config:
         log_file: Optional[Path] = None,
         log_fmt: Optional[str] = None,
         storage_path: Optional[Path] = None,
-        rofi: ConfigRofi = ConfigRofi(),
-        tui: ConfigTUI = ConfigTUI(),
+        rofi: Optional[ConfigRofi] = None,
+        tui: Optional[ConfigTUI] = None,
         lock_file: Optional[Path] = None,
     ) -> None:
-        self.channels = channels or []
+        self.__is_channels_set = False
+        if channels is not None:
+            self.channels = channels
+
         self.channels_filepath = channels_filepath or default_channels_filepath()
+        if channels_filepath and channels is None:
+            self.channels = self._load_channels_from_file(channels_filepath)
+
         self.data_dir = data_dir or default_data_path()
         self.log_level = log_level or logging.NOTSET
         self.log_file = log_file or self.data_dir.joinpath(LOGS_FILENAME)
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
         self.storage_path = storage_path or self.data_dir.joinpath(STORAGE_FILENAME)
         self.lock_file = lock_file or default_lockfile_path()
-        self.rofi = rofi
-        self.tui = tui
+        self.rofi = rofi or ConfigRofi()
+        self.tui = tui or ConfigTUI()
+
         if config_file:
             config_file = expand_path(config_file)
             if config_file.exists():
                 self._override_defaults(config_file)
+
+        if self.__is_channels_set is False:
+            self.channels = self._load_channels_from_file(self.channels_filepath)
+
+    @property
+    def channels(self) -> List[Channel]:
+        return self.__channels
+
+    @channels.setter
+    def channels(self, channels_: List[Channel]) -> None:
+        assert isinstance(channels_, list), "Unexpected channels value type"
+        self.__channels = channels_
+        self.__is_channels_set = True
 
     def _override_defaults(self, config_path: Path) -> None:
         try:
@@ -103,12 +115,12 @@ class Config:
 
         if channels_filepath := config_dict.get("channels_filepath"):
             self.channels_filepath = expand_path(channels_filepath)
-        self.channels = load_channels(self.channels_filepath)
 
         if data_dir := config_dict.get("data_dir"):
             self.data_dir = expand_path(data_dir)
             self.log_file = self.data_dir.joinpath(LOGS_FILENAME)
             self.storage_path = self.data_dir.joinpath(STORAGE_FILENAME)
+
         if log_fmt := config_dict.get("log_fmt"):
             self.log_fmt = str(log_fmt)
         if isinstance((log_level := config_dict.get("log_level")), str):
@@ -119,6 +131,15 @@ class Config:
             self.rofi.update(rofi_object)
         if tui_object := config_dict.get("tui"):
             self.tui.update(tui_object)
+
+    def _load_channels_from_file(self, file: Path) -> List[Channel]:
+        try:
+            with open(file) as f:
+                channels_ = [Channel(**c) for c in yaml.safe_load(f)]
+                return channels_
+        except Exception as e:
+            print(f"Can't load channels: {e!s}")
+            exit(1)
 
     def dump_channels(self) -> None:
         try:

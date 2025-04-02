@@ -14,8 +14,7 @@ class FeederTest(unittest.TestCase):
         if cls.db_file.exists():
             cls.db_file.unlink()
         cls.stor = Storage(cls.db_file)
-        cls.config = Config(storage_path=cls.db_file)
-        cls.config.channels.append(mocks.sample_channel)
+        cls.config = Config(channels=[mocks.sample_channel], storage_path=cls.db_file)
         cls.feeder = Feeder(config=cls.config, storage=cls.stor)
 
     @classmethod
