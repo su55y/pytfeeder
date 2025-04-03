@@ -105,12 +105,13 @@ class Config:
 
     def _override_defaults(self, config_path: Path) -> None:
         try:
-            config_dict = yaml.safe_load(config_path.open())
+            with config_path.open() as f:
+                config_dict = yaml.safe_load(f)
+            assert isinstance(
+                config_dict, dict
+            ), f"Unexpected config type {type(config_dict)!s}, should be dict"
         except Exception as e:
-            exit("Invalid config %s: %s" % (config_path, e))
-
-        if not isinstance(config_dict, Dict):
-            print("Invalid config format (type: %s)" % type(config_dict))
+            print(f"Can't parse config {config_path}\n{e}")
             exit(1)
 
         if channels_filepath := config_dict.get("channels_filepath"):
@@ -134,7 +135,7 @@ class Config:
 
     def _load_channels_from_file(self, file: Path) -> List[Channel]:
         try:
-            with open(file) as f:
+            with file.open() as f:
                 channels_ = [Channel(**c) for c in yaml.safe_load(f)]
                 return channels_
         except Exception as e:
@@ -147,11 +148,8 @@ class Config:
                 self.channels_filepath,
                 self.channels_filepath.parent / f"channels{round(time.time())}.bak",
             )
-            yaml.safe_dump(
-                [c.dump() for c in self.channels],
-                self.channels_filepath.open("w"),
-                allow_unicode=True,
-            )
+            with self.channels_filepath.open("w") as f:
+                yaml.safe_dump([c.dump() for c in self.channels], f, allow_unicode=True)
         except Exception as e:
             print(f"Can't dump channels: {e!s}")
             exit(1)
