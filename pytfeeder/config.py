@@ -1,13 +1,13 @@
 import dataclasses as dc
 import logging
+import os
 from os.path import expandvars
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+import tempfile
+from typing import List, Optional, Union
 import shutil
-import time
 
 import yaml
-
 
 from .defaults import (
     default_data_path,
@@ -143,16 +143,17 @@ class Config:
             exit(1)
 
     def dump_channels(self) -> None:
+        fd, tmp_name = tempfile.mkstemp(prefix="channels", suffix=".yaml")
+        os.close(fd)
         try:
-            _ = shutil.copyfile(
-                self.channels_filepath,
-                self.channels_filepath.parent / f"channels{round(time.time())}.bak",
-            )
+            _ = shutil.copyfile(self.channels_filepath, tmp_name)
             with self.channels_filepath.open("w") as f:
                 yaml.safe_dump([c.dump() for c in self.channels], f, allow_unicode=True)
         except Exception as e:
-            print(f"Can't dump channels: {e!s}")
+            print(f"Error while dumping channels: {e!s}\nBackup copied to {tmp_name}")
             exit(1)
+        else:
+            os.remove(tmp_name)
 
     def __repr__(self) -> str:
         repr_str = ""
