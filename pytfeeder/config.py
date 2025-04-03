@@ -76,20 +76,21 @@ class Config:
         if channels_filepath and channels is None:
             self.channels = self._load_channels_from_file(channels_filepath)
 
-        self.data_dir = data_dir or default_data_path()
         self.log_level = log_level or logging.NOTSET
-        self.log_file = log_file or self.data_dir.joinpath(LOGS_FILENAME)
         self.log_fmt = log_fmt or DEFAULT_LOG_FMT
-        self.storage_path = storage_path or self.data_dir.joinpath(STORAGE_FILENAME)
         self.lock_file = lock_file or default_lockfile_path()
         self.rofi = rofi or ConfigRofi()
         self.tui = tui or ConfigTUI()
 
-        if config_file:
-            config_file = expand_path(config_file)
-            if config_file.exists():
-                self._override_defaults(config_file)
+        self.__is_data_dir_set = False
+        if config_file and (config_file := expand_path(config_file)).exists():
+            self._parse_config_file(config_file)
 
+        self._set_data_paths(
+            data_dir=data_dir,
+            log_file=log_file,
+            storage_path=storage_path,
+        )
         if self.__is_channels_set is False:
             self.channels = self._load_channels_from_file(self.channels_filepath)
 
@@ -103,7 +104,7 @@ class Config:
         self.__channels = channels_
         self.__is_channels_set = True
 
-    def _override_defaults(self, config_path: Path) -> None:
+    def _parse_config_file(self, config_path: Path) -> None:
         try:
             with config_path.open() as f:
                 config_dict = yaml.safe_load(f)
@@ -121,6 +122,7 @@ class Config:
             self.data_dir = expand_path(data_dir)
             self.log_file = self.data_dir.joinpath(LOGS_FILENAME)
             self.storage_path = self.data_dir.joinpath(STORAGE_FILENAME)
+            self.__is_data_dir_set = True
 
         if log_fmt := config_dict.get("log_fmt"):
             self.log_fmt = str(log_fmt)
@@ -132,6 +134,27 @@ class Config:
             self.rofi.update(rofi_object)
         if tui_object := config_dict.get("tui"):
             self.tui.update(tui_object)
+
+    def _set_data_paths(
+        self,
+        data_dir: Optional[Path] = None,
+        log_file: Optional[Path] = None,
+        storage_path: Optional[Path] = None,
+    ) -> None:
+        if data_dir:
+            self.data_dir = expand_path(data_dir)
+        elif not self.__is_data_dir_set:
+            self.data_dir = default_data_path()
+
+        if log_file:
+            self.log_file = expand_path(log_file)
+        else:
+            self.log_file = self.data_dir.joinpath(LOGS_FILENAME)
+
+        if storage_path:
+            self.storage_path = expand_path(storage_path)
+        else:
+            self.storage_path = self.data_dir.joinpath(STORAGE_FILENAME)
 
     def _load_channels_from_file(self, file: Path) -> List[Channel]:
         try:
