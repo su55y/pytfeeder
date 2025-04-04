@@ -110,10 +110,9 @@ class Config:
                 config_dict = yaml.safe_load(f)
             assert isinstance(
                 config_dict, dict
-            ), f"Unexpected config type {type(config_dict)!s}, should be dict"
+            ), f"Unexpected config type {type(config_dict)}, should be dict"
         except Exception as e:
-            print(f"Can't parse config {config_path}\n{e}")
-            exit(1)
+            raise Exception(f"Error while parsing {config_path}\n{e!r}")
 
         if channels_filepath := config_dict.get("channels_filepath"):
             self.channels_filepath = expand_path(channels_filepath)
@@ -159,11 +158,17 @@ class Config:
     def _load_channels_from_file(self, file: Path) -> List[Channel]:
         try:
             with file.open() as f:
-                channels_ = [Channel(**c) for c in yaml.safe_load(f)]
+                channels_list = yaml.safe_load(f)
+                if channels_list is None:
+                    raise ValueError("Empty channels file")
+                if not isinstance(channels_list, list):
+                    raise ValueError(
+                        f"Unexpected channels file yaml format ({type(channels_list)}), should be collection of channels"
+                    )
+                channels_ = [Channel(**c) for c in channels_list]
                 return channels_
         except Exception as e:
-            print(f"Can't load channels: {e!s}")
-            exit(1)
+            raise Exception(f"Error while loading channels: {e!r}")
 
     def dump_channels(self) -> None:
         fd, tmp_name = tempfile.mkstemp(prefix="channels", suffix=".yaml")
@@ -173,8 +178,9 @@ class Config:
             with self.channels_filepath.open("w") as f:
                 yaml.safe_dump([c.dump() for c in self.channels], f, allow_unicode=True)
         except Exception as e:
-            print(f"Error while dumping channels: {e!s}\nBackup copied to {tmp_name}")
-            exit(1)
+            raise Exception(
+                f"Error while dumping channels: {e!s}\nBackup copied to {tmp_name}"
+            )
         else:
             os.remove(tmp_name)
 
