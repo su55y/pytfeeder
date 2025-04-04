@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 import subprocess as sp
 from typing import List, Literal, Optional, Union, override
+import sys
 
 from pytfeeder.feeder import Feeder
 from pytfeeder.config import Config
@@ -134,7 +135,7 @@ class App(TuiProps):
                     match self.page_state:
                         case PageState.CHANNELS:
                             if not self.is_filtered:
-                                exit(0)
+                                sys.exit(0)
                             self.move_left_channels()
                             self.draw(screen)
                             screen.refresh()
@@ -226,7 +227,7 @@ class App(TuiProps):
                 case Key.c:
                     screen.clear()
                 case Key.q:
-                    exit(0)
+                    sys.exit(0)
 
     def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
         if self.page_state != PageState.ENTRIES:
@@ -660,7 +661,7 @@ def main():
     config_path = args.config
     config = Config(config_path)
     if not config:
-        exit(1)
+        sys.exit(1)
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
 
@@ -669,13 +670,13 @@ def main():
     feeder = Feeder(config, Storage(config.storage_path))
     if len(feeder.channels) == 0:
         print(f"No channels found in config {config_path}")
-        exit(0)
+        sys.exit(0)
 
     try:
         _ = App(feeder).start()
     except Exception as e:
         print(e)
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

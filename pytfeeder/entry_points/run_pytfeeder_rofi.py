@@ -1,4 +1,5 @@
 from typing import List
+import sys
 
 from pytfeeder.config import Config
 from pytfeeder.feeder import Feeder
@@ -102,7 +103,7 @@ def main():
         wrapped_main()
     except Exception as e:
         print_error(f"ERR: {e!s}")
-        exit(1)
+        sys.exit(1)
 
 
 def wrapped_main():
@@ -111,7 +112,7 @@ def wrapped_main():
     args = parse_args()
     config = Config(config_file=args.config_file)
     if not config:
-        exit(1)
+        sys.exit(1)
 
     config.rofi.update(vars(args))
 

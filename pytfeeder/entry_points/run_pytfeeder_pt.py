@@ -1,5 +1,6 @@
 import subprocess as sp
 from typing import List, Optional, Tuple, Union, override
+import sys
 
 from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
@@ -613,7 +614,7 @@ def main():
     config_path = args.config
     config = Config(config_path)
     if not config:
-        exit(1)
+        sys.exit(1)
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
 
@@ -622,7 +623,7 @@ def main():
     feeder = Feeder(config, Storage(config.storage_path))
     if len(feeder.channels) == 0:
         print(f"No channels found in config {config_path}")
-        exit(0)
+        sys.exit(0)
 
     pager = App(feeder)
 
@@ -649,7 +650,7 @@ def main():
         ).run(set_exception_handler=False)
     except Exception as e:
         print(e)
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

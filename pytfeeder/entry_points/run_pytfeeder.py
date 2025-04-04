@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import logging
 from pathlib import Path
+import sys
 
 from pytfeeder.config import Config
 from pytfeeder.defaults import default_config_path
@@ -97,11 +98,11 @@ def run():
     args = parse_args()
     config = Config(config_file=args.config_file)
     if not config:
-        exit(1)
+        sys.exit(1)
 
     if args.print_config:
         print(config)
-        exit(0)
+        sys.exit(0)
 
     if not config.data_dir.exists():
         config.data_dir.mkdir(parents=True)
@@ -112,18 +113,18 @@ def run():
     if args.add_channel:
         new_channel = fetch_channel_info(args.add_channel)
         if not new_channel:
-            exit(1)
+            sys.exit(1)
         if channel := {c.channel_id: c for c in config.channels}.get(
             new_channel.channel_id
         ):
             print(
                 f"Channel {channel.title!r} ({channel.channel_id = }) already exists in {config.channels_filepath!s}"
             )
-            exit(1)
+            sys.exit(1)
         config.channels.append(new_channel)
         config.dump_channels()
         print(f"{new_channel.title!r} just added")
-        exit(0)
+        sys.exit(0)
 
     feeder = Feeder(config, Storage(config.storage_path))
 
