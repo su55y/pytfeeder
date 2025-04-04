@@ -160,7 +160,7 @@ class Config:
             with file.open() as f:
                 channels_list = yaml.safe_load(f)
                 if channels_list is None:
-                    raise ValueError("Empty channels file")
+                    return []
                 if not isinstance(channels_list, list):
                     raise ValueError(
                         f"Unexpected channels file yaml format ({type(channels_list)}), should be collection of channels"
@@ -186,6 +186,7 @@ class Config:
 
     def __repr__(self) -> str:
         repr_str = ""
+        repr_str += f"channels_filepath: {self.channels_filepath!s}\n"
         repr_str += f"data_dir: {self.data_dir!s}\n"
         if self.channels:
             repr_str += "channels:\n"
@@ -193,6 +194,8 @@ class Config:
                 f"  - {{ channel_id: {c.channel_id}, title: {c.title!r} }}\n"
                 for c in self.channels
             )
+        else:
+            repr_str += "channels: []\n"
         repr_str += f"log_fmt: {self.log_fmt!r}\n"
         log_level_name = {v: k for k, v in log_levels_map.items()}.get(self.log_level)
         repr_str += f"log_level: {log_level_name}\n"
