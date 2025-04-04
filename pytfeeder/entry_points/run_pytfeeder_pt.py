@@ -612,9 +612,8 @@ class App(TuiProps):
 def main():
     args = parse_args()
     config_path = args.config
-    config = Config(config_path)
-    if not config:
-        sys.exit(1)
+    config = Config(config_file=config_path)
+
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
 

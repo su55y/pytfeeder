@@ -111,9 +111,6 @@ def wrapped_main():
 
     args = parse_args()
     config = Config(config_file=args.config_file)
-    if not config:
-        sys.exit(1)
-
     config.rofi.update(vars(args))
 
     if not config.storage_path.exists():

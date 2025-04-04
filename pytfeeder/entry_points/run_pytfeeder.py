@@ -97,8 +97,6 @@ def storage_file_stats(storage_path: Path) -> str:
 def run():
     args = parse_args()
     config = Config(config_file=args.config_file)
-    if not config:
-        sys.exit(1)
 
     if args.print_config:
         print(config)
