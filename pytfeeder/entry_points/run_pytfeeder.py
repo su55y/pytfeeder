@@ -4,12 +4,7 @@ import logging
 from pathlib import Path
 import sys
 
-from pytfeeder.config import Config
-from pytfeeder.defaults import default_config_path
-from pytfeeder.feeder import Feeder
-from pytfeeder.storage import Storage
-from pytfeeder.utils import fetch_channel_info, human_readable_size
-from pytfeeder import __version__
+from pytfeeder import Config, Feeder, Storage, utils, defaults, __version__
 
 
 def parse_args() -> argparse.Namespace:
@@ -18,7 +13,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-c",
         "--config-file",
-        default=default_config_path(),
+        default=defaults.default_config_path(),
         metavar="PATH",
         help="Location of config file (default: %(default)s)",
     )
@@ -87,7 +82,7 @@ def storage_file_stats(storage_path: Path) -> str:
         tab="  - ",
         path=storage_path,
         user="%s/%s" % (stat.st_uid, pwd.getpwuid(stat.st_uid)[0]),
-        size=human_readable_size(stat.st_size),
+        size=utils.human_readable_size(stat.st_size),
         ctime=datetime.fromtimestamp(stat.st_atime),
         mtime=datetime.fromtimestamp(stat.st_mtime),
         atime=datetime.fromtimestamp(stat.st_ctime),
@@ -109,7 +104,7 @@ def run():
         init_logger(config)
 
     if args.add_channel:
-        new_channel = fetch_channel_info(args.add_channel)
+        new_channel = utils.fetch_channel_info(args.add_channel)
         if not new_channel:
             sys.exit(1)
         if channel := {c.channel_id: c for c in config.channels}.get(

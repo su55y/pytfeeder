@@ -22,12 +22,9 @@ from prompt_toolkit.layout.processors import BeforeInput
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
 
-from pytfeeder.feeder import Feeder
-from pytfeeder.config import Config
+from pytfeeder import Config, Feeder, Storage, utils, __version__
 from pytfeeder.models import Channel, Entry
-from pytfeeder.storage import Storage
-from pytfeeder.utils import download_video, download_all, play_video
-from pytfeeder.tui.args import parse_args
+from pytfeeder.tui import args as tui_args
 from pytfeeder.tui.props import TuiProps, PageState
 
 
@@ -407,7 +404,7 @@ class App(TuiProps):
                     if self.index >= len(self.entries) or self.index < 0:
                         return
                     self.feeder.mark_as_watched(id=self.entries[self.index].id)
-                    play_video(self.entries[self.index])
+                    utils.play_video(self.entries[self.index])
                     if not self.entries[self.index].is_viewed:
                         self.mark_as_watched()
 
@@ -569,7 +566,7 @@ class App(TuiProps):
             self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
                 return
-            download_video(self.selected_data, self.c.download_output)
+            utils.download_video(self.selected_data, self.c.download_output)
             if not self.selected_data.is_viewed:
                 self.mark_as_watched()
 
@@ -584,7 +581,7 @@ class App(TuiProps):
                 return
             entries = [l for l in self.page_lines if l.is_viewed is False]  # type: ignore
             if len(entries) > 0:
-                download_all(entries, self.c.download_output)  # type: ignore
+                utils.download_all(entries, self.c.download_output)  # type: ignore
                 self.mark_as_watched_all()
 
         @kb.add("?")
@@ -610,7 +607,7 @@ class App(TuiProps):
 
 
 def main():
-    args = parse_args()
+    args = tui_args.parse_args()
     config_path = args.config
     config = Config(config_file=config_path)
 

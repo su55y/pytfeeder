@@ -4,9 +4,8 @@ from enum import Enum, auto
 import time
 from typing import List, Optional
 
-from pytfeeder.feeder import Feeder
+from pytfeeder import Feeder, __version__  # FIXME: circular import
 from pytfeeder.models import Channel, Entry
-from pytfeeder import __version__
 from .args import format_keybindings
 from .consts import DEFAULT_KEYBINDS
 

@@ -1,11 +1,9 @@
 from typing import List
 import sys
 
-from pytfeeder.config import Config
-from pytfeeder.feeder import Feeder
+from pytfeeder import Config, Feeder, Storage
 from pytfeeder.models import Entry
-from pytfeeder.storage import Storage
-from pytfeeder.rofi.args import parse_args
+from pytfeeder.rofi import args as rofi_args
 
 
 class RofiPrinter:
@@ -109,7 +107,7 @@ def main():
 def wrapped_main():
     global print_error
 
-    args = parse_args()
+    args = rofi_args.parse_args()
     config = Config(config_file=args.config_file)
     config.rofi.update(vars(args))
 

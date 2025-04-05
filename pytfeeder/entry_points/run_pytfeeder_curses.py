@@ -6,12 +6,9 @@ import subprocess as sp
 from typing import List, Literal, Optional, Union, override
 import sys
 
-from pytfeeder.feeder import Feeder
-from pytfeeder.config import Config
+from pytfeeder import Config, Feeder, Storage, utils, __version__
 from pytfeeder.models import Channel, Entry
-from pytfeeder.storage import Storage
-from pytfeeder.utils import download_video, download_all, play_video
-from pytfeeder.tui.args import parse_args
+from pytfeeder.tui import args as tui_args
 from pytfeeder.tui.props import TuiProps, PageState
 
 
@@ -201,7 +198,9 @@ class App(TuiProps):
                             "unexpected selected data type %s: %r"
                             % (type(selected_data), selected_data)
                         )
-                    if err := download_video(selected_data, self.c.download_output):
+                    if err := utils.download_video(
+                        selected_data, self.c.download_output
+                    ):
                         self.status_msg = f"download failed: {err}"
                     else:
                         if not selected_data.is_viewed:
@@ -216,7 +215,7 @@ class App(TuiProps):
 
                     entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
                     if len(entries) > 0:
-                        download_all(entries, self.c.download_output)  # type: ignore
+                        utils.download_all(entries, self.c.download_output)  # type: ignore
                     self.mark_as_watched_all()
                 case Key.s:
                     self.c.hide_statusbar = not self.c.hide_statusbar
@@ -452,7 +451,7 @@ class App(TuiProps):
                     "unexpected selected data type %s: %r"
                     % (type(self.selected_data), self.selected_data)
                 )
-            play_video(self.selected_data)
+            utils.play_video(self.selected_data)
             if not self.selected_data.is_viewed:
                 self.mark_as_watched()
 
@@ -657,7 +656,7 @@ class App(TuiProps):
 
 
 def main():
-    args = parse_args()
+    args = tui_args.parse_args()
     config_path = args.config
     config = Config(config_file=config_path)
 
