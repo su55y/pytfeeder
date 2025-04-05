@@ -159,10 +159,6 @@ class Storage:
             return cursor.executemany(query, new_entries).rowcount
 
     def delete_all_entries(self, force: bool = False) -> None:
-        """Removes entries from DB
-        Args:
-            force (bool, default False): removes only entries with `is_viewed = 1` if False
-        """
         with self.get_cursor() as cursor:
             query = "DELETE FROM tb_entries {}".format(
                 "" if force else " WHERE is_viewed = 1"

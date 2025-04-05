@@ -38,12 +38,6 @@ def expand_path(path: Union[Path, str]) -> Path:
 
 @dc.dataclass
 class Config:
-    """Configuration settings
-
-    Args:
-        path (Path | str, optional): The path to the configuration file. If provided, the configuration will be loaded from the file.
-    """
-
     channels_filepath: Path
     log_level: int
     log_file: Path
