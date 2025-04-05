@@ -11,7 +11,9 @@ class Entry:
     published: dt.datetime = dt.datetime.now(dt.timezone.utc)
     is_viewed: bool = False
 
-    def __eq__(self, obj: "Entry") -> bool:
+    def __eq__(self, obj: object) -> bool:
+        if not isinstance(obj, Entry):
+            return False
         return (
             obj.id == self.id
             and obj.title == self.title
