@@ -33,7 +33,9 @@ class RofiPrinter:
 
     def print_feed(self) -> None:
         print("\000data\037feed", end=self.c.separator)
-        entries = self.feeder.feed(self.c.feed_limit)
+        entries = self.feeder.feed(
+            self.c.feed_limit, unwatched_first=self.c.unwatched_first
+        )
         if not entries:
             self.print_message("no entries")
             return
@@ -57,7 +59,11 @@ class RofiPrinter:
         self.print_message(message)
         print("\000data\037%s" % channel_id, end=self.c.separator)
 
-        if entries := self.feeder.channel_feed(channel_id, self.c.channel_feed_limit):
+        if entries := self.feeder.channel_feed(
+            channel_id,
+            limit=self.c.channel_feed_limit,
+            unwatched_first=self.c.unwatched_first,
+        ):
             self.print_entries(entries, self.c.entries_fmt)
 
     def print_entries(self, entries: List[Entry], fmt: str) -> None:
