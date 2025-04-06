@@ -110,7 +110,7 @@ class Feeder:
         else:
             if count > 0:
                 self.log.info(
-                    "%d new entries for '%r' (%r)"
+                    "%d new entries for %r (%r)"
                     % (count, channel.title, channel.channel_id)
                 )
             return count
