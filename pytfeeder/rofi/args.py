@@ -4,7 +4,11 @@ from pytfeeder.defaults import default_config_path
 from . import consts
 
 
-def parse_args(args=None) -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
+    return create_parser().parse_args()
+
+
+def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-A",
@@ -90,4 +94,4 @@ def parse_args(args=None) -> argparse.Namespace:
         help="Mark as watched (Accepts entry/channel id or keyword 'all')",
     )
 
-    return parser.parse_args(args=args)
+    return parser

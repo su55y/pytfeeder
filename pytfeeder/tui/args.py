@@ -15,6 +15,10 @@ def format_keybindings() -> List[str]:
 
 
 def parse_args() -> argparse.Namespace:
+    return create_parser().parse_args()
+
+
+def create_parser() -> argparse.ArgumentParser:
     def format_epilog() -> str:
         keybinds_str = "\n".join(format_keybindings())
         return f"{consts.OPTIONS_DESCRIPTION}\n\nkeybindings:\n{keybinds_str}\n"
@@ -140,4 +144,4 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-U", "--always-update", action="store_true", help="Update all feeds on startup"
     )
-    return parser.parse_args()
+    return parser
