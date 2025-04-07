@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 from typing import List
 
 from pytfeeder.defaults import default_config_path
@@ -43,6 +44,7 @@ def create_parser() -> argparse.ArgumentParser:
         "--config",
         metavar="PATH",
         default=default_config_path(),
+        type=Path,
         help="Config path (default: %(default)s)",
     )
     parser.add_argument(

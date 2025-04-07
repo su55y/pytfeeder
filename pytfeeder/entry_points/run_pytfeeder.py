@@ -15,6 +15,7 @@ def parse_args() -> argparse.Namespace:
         "--config-file",
         default=defaults.default_config_path(),
         metavar="PATH",
+        type=Path,
         help="Location of config file (default: %(default)s)",
     )
     parser.add_argument(

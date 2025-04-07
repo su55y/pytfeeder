@@ -32,7 +32,7 @@ log_levels_map = {
 }
 
 
-def expand_path(path: Union[Path, str]) -> Path:
+def expand_path(path: Path) -> Path:
     return Path(expandvars(path)).expanduser()
 
 
@@ -50,7 +50,7 @@ class Config:
 
     def __init__(
         self,
-        config_file: Optional[Union[Path, str]] = None,
+        config_file: Optional[Path] = None,
         channels_filepath: Optional[Path] = None,
         data_dir: Optional[Path] = None,
         channels: Optional[List[Channel]] = None,

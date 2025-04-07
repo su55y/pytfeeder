@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from pytfeeder.defaults import default_config_path
 from . import consts
@@ -21,6 +22,7 @@ def create_parser() -> argparse.ArgumentParser:
         "--config-file",
         metavar="PATH",
         default=default_config_path(),
+        type=Path,
         help="Config file path (default: %(default)s)",
     )
     parser.add_argument(
