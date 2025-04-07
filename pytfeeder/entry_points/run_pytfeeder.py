@@ -138,6 +138,11 @@ def run():
         feeder.clean_cache(args.force)
 
     if args.sync:
-        print(asyncio.run(feeder.sync_entries()))
+        (new, err) = asyncio.run(feeder.sync_entries())
+        if err:
+            print(f"Error: {err}")
+        else:
+            print(new)
+
     elif args.unwatched:
         print(feeder.unwatched_count())
