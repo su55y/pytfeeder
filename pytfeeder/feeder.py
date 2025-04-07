@@ -1,7 +1,7 @@
 from functools import lru_cache, cached_property
 import logging
 import time
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import asyncio
 from aiohttp import ClientSession
@@ -90,30 +90,46 @@ class Feeder:
             ", ".join(f"{c.channel_id!r}" for c in self.config.channels)
         )
 
-    async def sync_entries(self) -> int:
+    async def sync_entries(self) -> Tuple[int, Optional[Exception]]:
+        try:
+            r = await self._sync_entries()
+        except Exception as e:
+            return 0, e
+        else:
+            return r, None
+        finally:
+            self.update_lock_file()
+
+    async def _sync_entries(self) -> int:
         async with ClientSession() as s:
             tasks = [
-                asyncio.create_task(self.sync_channel(s, c))
+                asyncio.create_task(self._sync_channel(s, c))
                 for c in self.config.channels
             ]
-            new_entries = await asyncio.gather(*tasks)
-            self.update_lock_file()
-            return sum(new_entries)
+            results = await asyncio.gather(*tasks)
+            sum_of_new = 0
+            for new, err in results:
+                if err is not None:
+                    raise err
+                sum_of_new += new
+            return sum_of_new
 
-    async def sync_channel(self, session: ClientSession, channel: Channel) -> int:
+    async def _sync_channel(
+        self, session: ClientSession, channel: Channel
+    ) -> Tuple[int, Optional[Exception]]:
         try:
             self.log.debug(f"trying to sync {channel.title!r} ({channel.channel_id!r})")
             count = await self._fetch_and_sync_entries(session, channel.channel_id)
         except Exception as e:
-            self.log.error(e)
-            return 0
+            self.log.error(f"cannot sync channel ({channel.channel_id}): {e}")
+            return 0, e
         else:
             if count > 0:
                 self.log.info(
                     "%d new entries for %r (%r)"
                     % (count, channel.title, channel.channel_id)
                 )
-            return count
+            return count, None
 
     async def _fetch_and_sync_entries(
         self, session: ClientSession, channel_id: str

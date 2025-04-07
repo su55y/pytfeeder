@@ -1,3 +1,4 @@
+import logging
 from typing import List
 import sys
 
@@ -93,9 +94,18 @@ class RofiPrinter:
     def print_error(self, message: str) -> None:
         if not self.__message_printed:
             self.print_message(message)
+            # FIXME: should not print if already printed anything
             print(" ", end=self.c.separator)
         else:
             print(message, end=self.c.separator)
+
+
+def init_logger(c: Config):
+    log = logging.getLogger()
+    log.setLevel(c.log_level)
+    h = logging.FileHandler(c.log_file)
+    h.setFormatter(logging.Formatter(c.log_fmt))
+    log.addHandler(h)
 
 
 def print_error(message: str):
@@ -115,6 +125,7 @@ def wrapped_main():
 
     args = rofi_args.parse_args()
     config = Config(config_file=args.config_file)
+    init_logger(config)
     config.rofi.update(vars(args))
 
     if not config.storage_path.exists():
@@ -129,19 +140,17 @@ def wrapped_main():
         elif len(args.watched) == 11:
             feeder.mark_as_watched(id=args.watched)
 
-    before_update = 0
-    if args.sync:
-        import asyncio
-
-        before_update = feeder.unwatched_count()
-        asyncio.run(feeder.sync_entries())
-
     printer = RofiPrinter(feeder=feeder)
     print_error = printer.print_error
 
     if args.sync:
-        if new_entries := (feeder.unwatched_count() - before_update):
-            printer.print_message("%d new entries" % new_entries)
+        import asyncio
+
+        new, err = asyncio.run(feeder.sync_entries())
+        if err:
+            printer.print_error(f"Error: {err}")
+        elif new > 0:
+            printer.print_message(f"{new} new entries")
         else:
             printer.print_message("no updates")
 

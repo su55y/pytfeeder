@@ -1,3 +1,4 @@
+import logging
 import subprocess as sp
 from typing import List, Optional, Tuple, Union, override
 import sys
@@ -606,10 +607,19 @@ class App(TuiProps):
         return kb
 
 
+def init_logger(c: Config):
+    log = logging.getLogger()
+    log.setLevel(c.log_level)
+    h = logging.FileHandler(c.log_file)
+    h.setFormatter(logging.Formatter(c.log_fmt))
+    log.addHandler(h)
+
+
 def main():
     args = tui_args.parse_args()
     config_path = args.config
     config = Config(config_file=config_path)
+    init_logger(config)
 
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)

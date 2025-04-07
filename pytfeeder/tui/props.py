@@ -64,7 +64,10 @@ class TuiProps:
 
     def initial_update(self) -> None:
         print("updating...")
-        new = asyncio.run(self.feeder.sync_entries())
+        new, err = asyncio.run(self.feeder.sync_entries())
+        if err:
+            self.status_msg = f"Error: {err}"
+            return
         if new > 0:
             self.status_msg = f"{new} new entries"
             self.update_channels()
@@ -161,12 +164,10 @@ class TuiProps:
 
     async def sync_and_reload(self) -> None:
         channel_id = self.get_parent_channel_id()
-        try:
-            new = await self.feeder.sync_entries()
-        except:
-            self.status_msg = "update failed"
+        new, err = await self.feeder.sync_entries()
+        if err:
+            self.status_msg = f"Error: {err}"
             return
-
         if new > 0:
             self.update_channels()
             self.reload_lines(channel_id)
