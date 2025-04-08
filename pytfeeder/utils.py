@@ -1,27 +1,22 @@
-import logging
 import subprocess as sp
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from .models import Channel, Entry
 
 
-def fetch_channel_info(url: str) -> Optional[Channel]:
-    try:
-        from yt_dlp import YoutubeDL
-    except ImportError as e:
-        print(f"ImportError: {e!s}")
-        return
+def fetch_channel_info(url: str) -> Channel:
+    from yt_dlp import YoutubeDL
 
     with YoutubeDL({"quiet": True}) as ydl:
         info = ydl.extract_info(url, download=False, process=False)
-        if not info or not isinstance(info, Dict):
-            logging.error(f"Can't extract info by url: {url}")
-            return
+        if not info or not isinstance(info, dict):
+            raise Exception(f"Can't extract info by url: {url}")
+
         title = info.get("title", "Unknown")
         channel_id = info.get("channel_id")
         if not channel_id or len(channel_id) != 24:
-            logging.error(f"Invalid channel_id {channel_id!r}\ninfo: {info}")
-            return
+            raise Exception(f"Invalid channel_id {channel_id!r}\ninfo: {info}")
+
         return Channel(title=title, channel_id=channel_id)
 
 

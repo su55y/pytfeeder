@@ -105,9 +105,12 @@ def run():
         init_logger(config)
 
     if args.add_channel:
-        new_channel = utils.fetch_channel_info(args.add_channel)
-        if not new_channel:
+        try:
+            new_channel = utils.fetch_channel_info(args.add_channel)
+        except Exception as e:
+            print(f"Error: {e}")
             sys.exit(1)
+
         if channel := {c.channel_id: c for c in config.channels}.get(
             new_channel.channel_id
         ):
