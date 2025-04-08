@@ -29,3 +29,23 @@ class TestTuiArgs(unittest.TestCase):
         self.assertFalse(as_value2)
         c2.update(a2)
         self.assertTrue(c2.alphabetic_sort)
+
+    def test_update_ints(self):
+        c1 = ConfigTUI(channel_feed_limit=10, feed_limit=100)
+        a1 = vars(self.p.parse_args(args=[]))
+        self.assertIsNone(a1.get("feed_limit"))
+        self.assertIsNone(a1.get("channel_feed_limit"))
+        c1.update(a1)
+        self.assertEqual(c1.channel_feed_limit, 10)
+        self.assertEqual(c1.feed_limit, 100)
+
+        a2 = vars(self.p.parse_args(args=["-l", "20", "-L", "200"]))
+        c1.update(a2)
+        self.assertEqual(c1.channel_feed_limit, 20)
+        self.assertEqual(c1.feed_limit, 200)
+
+    def test_update_new_mark(self):
+        c = ConfigTUI(new_mark="|||")
+        a = vars(self.p.parse_args(args=[]))
+        c.update(a)
+        self.assertEqual(c.new_mark, "|||")

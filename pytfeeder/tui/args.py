@@ -75,8 +75,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-l",
-        "--limit",
-        default=0,
+        "--channel-feed-limit",
         type=int,
         metavar="INT",
         help="Channels feed limit. Overrides config value (default: None)",
@@ -84,7 +83,6 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-L",
         "--feed-limit",
-        default=0,
         type=int,
         metavar="INT",
         help="Feed limit. Overrides config value (default: None)",
@@ -115,9 +113,8 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--new-mark",
-        default=consts.DEFAULT_NEW_MARK,
         metavar="STR",
-        help="New mark format (default: %(default)r)",
+        help=f"New mark format (default: {consts.DEFAULT_NEW_MARK!r})",
     )
     parser.add_argument(
         "-n",
