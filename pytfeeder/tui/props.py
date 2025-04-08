@@ -134,7 +134,7 @@ class TuiProps:
             self.feeder.channels = channels
 
         if self.c.alphabetic_sort:
-            self.feeder.channels.sort(key=lambda c: c.title)
+            self.feeder.channels.sort(key=lambda c: c.title.lower())
 
         if self.c.hide_feed:
             self.channels = self.feeder.channels
