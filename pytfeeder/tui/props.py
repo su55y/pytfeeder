@@ -19,6 +19,8 @@ class TuiProps:
     def __init__(self, feeder: Feeder) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
+        if self.c.alphabetic_sort:
+            self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
         self.channels = list()
         self._set_channels()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
@@ -133,9 +135,6 @@ class TuiProps:
         self._set_channels()
 
     def _set_channels(self) -> None:
-        if self.c.alphabetic_sort:
-            self.feeder.channels.sort(key=lambda c: c.title.lower())
-
         if self.c.hide_feed:
             self.channels = self.feeder.channels
         else:

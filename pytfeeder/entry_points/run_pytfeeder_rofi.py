@@ -12,7 +12,7 @@ class RofiPrinter:
         self.feeder = feeder
         self.c = self.feeder.config.rofi
         if self.c.alphabetic_sort:
-            self.feeder.channels.sort(key=lambda c: c.title.lower())
+            self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
         self.__message_printed = False
 
     def print_channels(self) -> None:
