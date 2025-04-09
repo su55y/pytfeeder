@@ -22,9 +22,10 @@ class FeederTest(unittest.TestCase):
         if cls.db_file.exists():
             cls.db_file.unlink()
 
-    def test_update_channels(self):
+    def test_refresh_channels(self):
         _ = self.stor.add_entries(mocks.sample_entries)
         before = self.feeder.channels[0].have_updates
         self.feeder.mark_as_watched(channel_id=mocks.sample_channel.channel_id)
-        after = self.feeder.update_channels()[0].have_updates
-        self.assertNotEqual(after, before)
+        self.feeder.refresh_channels()
+        after = self.feeder.channels[0].have_updates
+        self.assertNotEqual(before, after)

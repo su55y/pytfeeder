@@ -127,12 +127,10 @@ class TuiProps:
         self._status_msg_creation_time = time.perf_counter()
 
     def update_channels(self) -> None:
-        self._set_channels(self.feeder.update_channels())
+        self.feeder.refresh_channels()
+        self._set_channels()
 
-    def _set_channels(self, channels: List[Channel] = list()) -> None:
-        if channels:
-            self.feeder.channels = channels
-
+    def _set_channels(self) -> None:
         if self.c.alphabetic_sort:
             self.feeder.channels.sort(key=lambda c: c.title.lower())
 

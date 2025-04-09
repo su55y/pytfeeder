@@ -23,18 +23,14 @@ class Feeder:
 
     @cached_property
     def channels(self) -> List[Channel]:
-        for i in range(len(self.config.channels)):
-            self.config.channels[i].have_updates = bool(
-                self.stor.select_unwatched(self.config.channels[i].channel_id)
-            )
+        self.refresh_channels()
         return self.config.channels
 
-    def update_channels(self) -> List[Channel]:
+    def refresh_channels(self) -> None:
         for i in range(len(self.config.channels)):
             self.config.channels[i].have_updates = bool(
                 self.stor.select_unwatched(self.config.channels[i].channel_id)
             )
-        return self.config.channels
 
     @lru_cache
     def channel(self, channel_id: str) -> Optional[Channel]:
