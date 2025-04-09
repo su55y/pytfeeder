@@ -30,7 +30,7 @@ class ConfigTUI:
 
     def update(self, kwargs: Dict[str, Any]) -> None:
         for k, v in kwargs.items():
-            if k in vars(self).keys() and v is not None:
+            if k in vars(self) and v is not None:
                 if isinstance(v, bool):
                     v = getattr(self, k, v) | v
                 setattr(self, k, v)
