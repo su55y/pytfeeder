@@ -42,6 +42,7 @@ class TuiProps:
         if self.is_update_needed:
             self.initial_update()
         self.refresh_last_update()
+        self.is_channels_outdated = False
 
     def feed(self) -> List[Entry]:
         return self.feeder.feed(
@@ -128,6 +129,7 @@ class TuiProps:
 
     def update_channels(self) -> None:
         self.feeder.refresh_channels()
+        self.is_channels_outdated = False
         self._set_channels()
 
     def _set_channels(self) -> None:

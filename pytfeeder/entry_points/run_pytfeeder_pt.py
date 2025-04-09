@@ -258,6 +258,7 @@ class App(TuiProps):
             if self.channels[self.last_index].channel_id == "feed":
                 unwatched = all(not c.have_updates for c in self.channels)
                 self.feeder.mark_as_watched(unwatched=unwatched)
+                self.is_channels_outdated = True
                 for i in range(len(self.channels)):
                     self.channels[i].have_updates = unwatched
                 for i in range(len(self.page_lines)):
@@ -267,6 +268,7 @@ class App(TuiProps):
                 self.feeder.mark_as_watched(
                     channel_id=self.selected_data.channel_id, unwatched=unwatched
                 )
+                self.is_channels_outdated = True
                 self.channels[self.last_index].have_updates = unwatched
                 for i in range(len(self.page_lines)):
                     self.page_lines[i].is_viewed = not unwatched  # type: ignore
@@ -282,12 +284,14 @@ class App(TuiProps):
             self.feeder.mark_as_watched(
                 channel_id=self.selected_data.channel_id, unwatched=unwatched
             )
+            self.is_channels_outdated = True
             self.selected_data.have_updates = unwatched
         elif self.page_state == PageState.ENTRIES:
             if not isinstance(self.selected_data, Entry):
                 return
             unwatched = self.selected_data.is_viewed
             self.feeder.mark_as_watched(id=self.selected_data.id, unwatched=unwatched)
+            self.is_channels_outdated = True
             self.selected_data.is_viewed = not unwatched
             self.index = (self.index + 1) % len(self.page_lines)
 
@@ -415,6 +419,9 @@ class App(TuiProps):
             if self.is_help_opened:
                 self.is_help_opened = False
                 return
+
+            if self.is_channels_outdated:
+                self.update_channels()
 
             if self.is_filtered:
                 self.reset_filter()

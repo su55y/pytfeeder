@@ -465,6 +465,8 @@ class App(TuiProps):
     def move_left_entries(self) -> None:
         self.page_state = PageState.CHANNELS
         if not self.is_filtered:
+            if self.is_channels_outdated:
+                self.update_channels()
             self.lines = list(map(Line, self.channels))
             self.index = min(self.last_page_index, len(self.lines) - 1)
             self.last_page_index = -1
@@ -594,6 +596,7 @@ class App(TuiProps):
             if self.channels[self.last_page_index].channel_id == "feed":
                 unwatched = all(not c.have_updates for c in self.channels)
                 self.feeder.mark_as_watched(unwatched=unwatched)
+                self.is_channels_outdated = True
                 for i in range(len(self.channels)):
                     self.channels[i].have_updates = unwatched
                 for i in range(len(self.lines)):
@@ -603,6 +606,7 @@ class App(TuiProps):
                 self.feeder.mark_as_watched(
                     channel_id=self.selected_data.channel_id, unwatched=unwatched
                 )
+                self.is_channels_outdated = True
                 self.channels[self.last_page_index].have_updates = unwatched
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = not unwatched  # type: ignore
@@ -618,12 +622,14 @@ class App(TuiProps):
             self.feeder.mark_as_watched(
                 channel_id=self.selected_data.channel_id, unwatched=unwatched
             )
+            self.is_channels_outdated = True
             self.selected_data.have_updates = unwatched
         elif self.page_state == PageState.ENTRIES and isinstance(
             self.selected_data, Entry
         ):
             unwatched = self.selected_data.is_viewed
             self.feeder.mark_as_watched(id=self.selected_data.id, unwatched=unwatched)
+            self.is_channels_outdated = True
             self.selected_data.is_viewed = not unwatched
             self.move_down()
 
