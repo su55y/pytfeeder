@@ -17,6 +17,9 @@ include = ["pytfeeder*"]
 [tool.setuptools.dynamic]
 version = {attr = "pytfeeder.__version__"}
 
+[tool.setuptools.package-data]
+"pytfeeder" = ["migrations/*.sql"]
+
 [project.optional-dependencies]
 pt = ["prompt_toolkit"]
 ytdl = ["yt-dlp"]

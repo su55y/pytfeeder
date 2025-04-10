@@ -1,29 +1,19 @@
 from contextlib import contextmanager
 import datetime as dt
+from importlib import resources
 import logging
 from pathlib import Path
 import sqlite3
 from typing import List, Optional, Tuple
+
 from .models import Entry
+import pytfeeder.migrations as migrations_dir
 
 TB_ENTRIES = "tb_entries"
 
 
-def join_split(s: str) -> str:
-    return " ".join(s.split())
-
-
-def tb_entries_sql(if_not_exists=False) -> str:
-    return """CREATE TABLE {if_not_exists} {tb_entries}(
-        id TEXT NOT NULL CHECK(length(id) == 11) PRIMARY KEY,
-        title TEXT NOT NULL,
-        published DATETIME NOT NULL,
-        channel_id TEXT NOT NULL,
-        is_viewed TINYINT NOT NULL DEFAULT 0
-    )""".format(
-        if_not_exists="IF NOT EXISTS" if if_not_exists else "",
-        tb_entries=TB_ENTRIES,
-    )
+class StorageError(Exception):
+    pass
 
 
 class Storage:
@@ -34,22 +24,36 @@ class Storage:
         self.__init_db()
 
     def __init_db(self) -> None:
-        self.log.debug("__init_db")
+        self.log.debug(f"connecting to {self.db_file!r}")
         conn = sqlite3.connect(self.db_file)
-        cur = conn.cursor()
-        cur.execute(tb_entries_sql(if_not_exists=True))
-        row = cur.execute(
-            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
-            (TB_ENTRIES,),
-        ).fetchone()
-        if row is None or len(row) != 1:
-            self.log.error(f"Cannot verify db integrity ({row = !r})")
-            raise Exception(f"{TB_ENTRIES!r} not found in db {self.db_file!r}")
+        (current_version,) = next(conn.cursor().execute("PRAGMA user_version"), (0,))
+        self.log.debug(f"{current_version = }")
 
-        (sql,) = row
-        assert join_split(sql) == join_split(tb_entries_sql()), "Invalid db"
+        migrations = list(resources.files(migrations_dir).iterdir())
+        self.log.debug(f"migrations = [{', '.join(f'{m.name!r}' for m in migrations)}]")
 
-        conn.commit()
+        if len(migrations) == 0:
+            raise StorageError(
+                f"Migration files not found in {migrations_dir = } ({migrations = })"
+            )
+
+        if current_version < 0 or len(migrations) < current_version:
+            raise StorageError(
+                f"Unexpected PRAGMA user_version = {current_version}, should be 0 <= user_version <= {len(migrations)}"
+            )
+
+        for migration in migrations[current_version:]:
+            cur = conn.cursor()
+            try:
+                self.log.debug("applying %s", migration.name)
+                cur.executescript("begin;" + migration.read_text())
+            except Exception as e:
+                self.log.error("failed migration %s: %s", migration.name, e)
+                cur.execute("rollback")
+                raise StorageError(f"Migration failed ({migration.name})") from e
+            else:
+                cur.execute("commit")
+        conn.close()
 
     @contextmanager
     def get_cursor(self):
