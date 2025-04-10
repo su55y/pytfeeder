@@ -131,23 +131,19 @@ class Feeder:
         self, session: ClientSession, channel_id: str
     ) -> int:
         raw_feed = await self._fetch_feed(session, channel_id)
-        if not raw_feed:
-            self.log.error("can't fetch feed for '%s'" % channel_id)
-            return 0
         parser = YTFeedParser(raw_feed, log=self.log)
         if not len(parser.entries):
             self.log.error(f"can't parse feed for {channel_id}\n{raw_feed[:80] = !r}")
             return 0
         return self.stor.add_entries(parser.entries)
 
-    async def _fetch_feed(
-        self, session: ClientSession, channel_id: str
-    ) -> Optional[str]:
+    async def _fetch_feed(self, session: ClientSession, channel_id: str) -> str:
         url = YT_FEED_URL % channel_id
         async with session.get(url) as resp:
             self.log.debug(f"{resp.status} {resp.reason} {resp.url}")
             if resp.status == 200:
                 return await resp.text()
+            raise Exception(f"{resp.status} {resp.reason} {resp.url}")
 
     def update_lock_file(self) -> None:
         try:
