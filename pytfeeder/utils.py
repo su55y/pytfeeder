@@ -1,5 +1,5 @@
 import subprocess as sp
-from typing import List, Optional
+from typing import List
 
 from .models import Channel, Entry
 
@@ -32,7 +32,7 @@ def human_readable_size(size: int) -> str:
     return "%s %s" % (s, size_name[i])
 
 
-def download_video(entry: Entry, output: str, send_notification=True) -> Optional[str]:
+def download_video(entry: Entry, output: str, send_notification=True) -> None:
     p = sp.check_output(
         [
             "tsp",
@@ -89,7 +89,7 @@ def notify(msg: str) -> bool:
     return True
 
 
-def download_all(entries: List[Entry], output: str) -> Optional[str]:
+def download_all(entries: List[Entry], output: str) -> None:
     _ = notify(f"⬇️Start downloading {len(entries)} entries...")
     for e in entries:
         download_video(e, output, send_notification=False)

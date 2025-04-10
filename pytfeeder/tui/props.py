@@ -21,7 +21,7 @@ class TuiProps:
         self.c = self.feeder.config.tui
         if self.c.alphabetic_sort:
             self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
-        self.channels = list()
+        self.channels: List[Channel] = list()
         self._set_channels()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
         self.help_status = " version {version} [h,q,Left]: close help".format(
@@ -36,7 +36,7 @@ class TuiProps:
         self.page_state = PageState.CHANNELS
         self.status_last_update = ""
         self.status_msg_lifetime = 3
-        self._status_msg_creation_time = 0
+        self._status_msg_creation_time = 0.0
         self._status_msg_text = ""
         self.unwatched_method = lambda _: 0
         if "{unwatched_count}" in self.c.channels_fmt:

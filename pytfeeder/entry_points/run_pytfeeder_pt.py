@@ -1,12 +1,17 @@
 import logging
 import subprocess as sp
-from typing import List, Optional, Tuple, Union, override
+from typing import List, Optional, Union
+from typing_extensions import override
 import sys
 
 from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.formatted_text import AnyFormattedText, merge_formatted_text
+from prompt_toolkit.formatted_text import (
+    AnyFormattedText,
+    OneStyleAndTextTuple,
+    merge_formatted_text,
+)
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.layout import (
@@ -179,7 +184,7 @@ class App(TuiProps):
             return self.entries
         return []
 
-    def format_channel(self, i: int, channel: Channel) -> List[Tuple[str, str]]:
+    def format_channel(self, i: int, channel: Channel) -> List[OneStyleAndTextTuple]:
         line = self.c.channels_fmt.format(
             index=self.format_line_index(i + 1),
             new_mark=self.new_marks[channel.have_updates],
@@ -188,7 +193,7 @@ class App(TuiProps):
         )
         return [(f"class:{self.classnames[channel.have_updates]}", line)]
 
-    def format_entry(self, i: int, entry: Entry) -> List[Tuple[str, str]]:
+    def format_entry(self, i: int, entry: Entry) -> List[OneStyleAndTextTuple]:
         line = self.current_entry_format.format(
             index=self.format_line_index(i + 1),
             new_mark=self.new_marks[not entry.is_viewed],
@@ -203,7 +208,7 @@ class App(TuiProps):
         return f"{i:{index_len}d}"
 
     def _get_formatted_text(self) -> AnyFormattedText:
-        result = []
+        result: List[AnyFormattedText] = []
         for i, line in enumerate(self.page_lines):
             if i == self.index:
                 result.append([("[SetCursorPosition]", "")])
@@ -216,7 +221,7 @@ class App(TuiProps):
         return merge_formatted_text(result)
 
     def _get_formatted_help_text(self) -> AnyFormattedText:
-        result = []
+        result: List[AnyFormattedText] = []
         for i, line in enumerate(self.help_lines):
             if i == self.help_index:
                 result.append([("[SetCursorPosition]", "")])
@@ -299,6 +304,7 @@ class App(TuiProps):
     def get_parent_channel_id(self) -> Optional[str]:
         if self.last_index > -1 and self.last_index < len(self.channels):
             return self.channels[self.last_index].channel_id
+        return None
 
     @override
     def reload_lines(self, channel_id: Optional[str] = None) -> None:
@@ -574,6 +580,7 @@ class App(TuiProps):
             self.selected_data = self.page_lines[self.index]
             if not isinstance(self.selected_data, Entry):
                 return
+            # FIXME: will fail if tsp or notify-send not an executable
             utils.download_video(self.selected_data, self.c.download_output)
             if not self.selected_data.is_viewed:
                 self.mark_as_watched()

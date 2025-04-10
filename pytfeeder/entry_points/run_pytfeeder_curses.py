@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 import logging
 import subprocess as sp
-from typing import List, Literal, Optional, Union, override
+from typing import List, Literal, Optional, Union
+from typing_extensions import override
 import sys
 
 from pytfeeder import Config, Feeder, Storage, utils, __version__
@@ -91,7 +92,7 @@ class App(TuiProps):
             Key.F4: self.c.macro4,
         }
         self.scroll_top = 0
-        self.selected_data = None
+        self.selected_data: Optional[Union[Channel, Entry]] = None
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -199,13 +200,10 @@ class App(TuiProps):
                             "unexpected selected data type %s: %r"
                             % (type(selected_data), selected_data)
                         )
-                    if err := utils.download_video(
-                        selected_data, self.c.download_output
-                    ):
-                        self.status_msg = f"download failed: {err}"
-                    else:
-                        if not selected_data.is_viewed:
-                            self.mark_as_watched()
+                    # FIXME: will fail if tsp or notify-send not an executable
+                    utils.download_video(selected_data, self.c.download_output)
+                    if not selected_data.is_viewed:
+                        self.mark_as_watched()
                 case Key.D:
                     self.selected_data = self.lines[self.index].data
                     if not (
@@ -480,6 +478,7 @@ class App(TuiProps):
     def get_parent_channel_id(self) -> Optional[str]:
         if self.last_page_index > -1 and len(self.channels) >= self.last_page_index + 1:
             return self.channels[self.last_page_index].channel_id
+        return None
 
     @override
     def reload_lines(self, channel_id: Optional[str] = None) -> None:
