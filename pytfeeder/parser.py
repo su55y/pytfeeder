@@ -1,7 +1,6 @@
 import datetime as dt
 import logging
 import re
-from typing import List, Optional
 from xml.etree.ElementTree import XML
 
 from .models import Entry
@@ -15,16 +14,16 @@ NAMESPACE = {"yt": "http://www.youtube.com/xml/schemas/2015"}
 
 
 class YTFeedParser:
-    def __init__(self, raw: str, log: Optional[logging.Logger] = None) -> None:
+    def __init__(self, raw: str, log: logging.Logger | None = None) -> None:
         self.log = log or logging.getLogger()
         self.default_published = dt.datetime.now(dt.timezone.utc)
         self.__tree = XML(text=raw)
-        self.__entries: List[Entry] = list()
+        self.__entries: list[Entry] = list()
 
         self.__parse_entries()
 
     @property
-    def entries(self) -> List[Entry]:
+    def entries(self) -> list[Entry]:
         return self.__entries
 
     def __parse_entries(self):

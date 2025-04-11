@@ -4,9 +4,15 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 import logging
 import subprocess as sp
-from typing import List, Literal, Optional, Union
-from typing_extensions import override
+from typing import Literal
 import sys
+
+# added in python 3.12
+# https://docs.python.org/3/library/typing.html#typing.override
+if sys.version_info < (3, 12):
+    from typing_extensions import override
+else:
+    from typing import override
 
 from pytfeeder import Config, Feeder, Storage, utils, __version__
 from pytfeeder.models import Channel, Entry
@@ -16,7 +22,7 @@ from pytfeeder.tui.props import TuiProps, PageState
 
 @dataclass
 class Line:
-    data: Union[Channel, Entry]
+    data: Channel | Entry
     is_active: bool = False
 
 
@@ -92,7 +98,7 @@ class App(TuiProps):
             Key.F4: self.c.macro4,
         }
         self.scroll_top = 0
-        self.selected_data: Optional[Union[Channel, Entry]] = None
+        self.selected_data: Channel | Entry | None = None
 
     def start(self) -> None:
         curses.wrapper(self._start)
@@ -475,13 +481,13 @@ class App(TuiProps):
             self.last_channel_index = self.last_page_index
 
     @override
-    def get_parent_channel_id(self) -> Optional[str]:
+    def get_parent_channel_id(self) -> str | None:
         if self.last_page_index > -1 and len(self.channels) >= self.last_page_index + 1:
             return self.channels[self.last_page_index].channel_id
         return None
 
     @override
-    def reload_lines(self, channel_id: Optional[str] = None) -> None:
+    def reload_lines(self, channel_id: str | None = None) -> None:
         if self.page_state == PageState.CHANNELS:
             self.lines = list(map(Line, self.channels))
         elif self.page_state == PageState.ENTRIES and channel_id:
@@ -512,7 +518,7 @@ class App(TuiProps):
         self,
         screen: "curses._CursesWindow",
         cli_type: CLIType = CLIType.FILTER,
-        n: Optional[int] = None,
+        n: int | None = None,
     ) -> None:
         prefix = "/"
         keyword = ""
@@ -653,7 +659,7 @@ class App(TuiProps):
             ).split()
         )
 
-    def lines_by_id(self, channel_id: str) -> List[Line]:
+    def lines_by_id(self, channel_id: str) -> list[Line]:
         if channel_id == "feed":
             self._is_feed_opened = True
             return list(map(Line, self.feed()))

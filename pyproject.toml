@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pytfeeder"
 dynamic = ["version"]
-dependencies = ["aiohttp", "PyYAML"]
-requires-python = ">= 3.7"
+dependencies = ["aiohttp", "PyYAML", "typing-extensions>=4.5.0; python_version<'3.12'"]
+requires-python = ">= 3.10"
 # license = "GPL-3.0-or-later"
 # license-files = ["LICEN[CS]E*"]
 

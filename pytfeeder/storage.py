@@ -4,7 +4,6 @@ from importlib import resources
 import logging
 from pathlib import Path
 import sqlite3
-from typing import List, Optional, Tuple
 
 from .models import Entry
 import pytfeeder.migrations as migrations_dir
@@ -69,12 +68,12 @@ class Storage:
 
     def select_entries(
         self,
-        channel_id: Optional[str] = None,
-        limit: Optional[int] = None,
-        timedelta: Optional[str] = None,
-        unwatched_first: Optional[bool] = None,
-    ) -> List[Entry]:
-        entries: List[Entry] = []
+        channel_id: str | None = None,
+        limit: int | None = None,
+        timedelta: str | None = None,
+        unwatched_first: bool | None = None,
+    ) -> list[Entry]:
+        entries: list[Entry] = []
         with self.get_cursor() as cursor:
             query = "SELECT id, title, published, channel_id, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unwatched_first} published DESC {limit}".format(
                 where="" if (not channel_id and not timedelta) else "WHERE",
@@ -99,7 +98,7 @@ class Storage:
                 )
         return entries
 
-    def select_unwatched(self, channel_id: Optional[str] = None) -> int:
+    def select_unwatched(self, channel_id: str | None = None) -> int:
         with self.get_cursor() as cursor:
             query = "SELECT COUNT(*) FROM tb_entries WHERE is_viewed = 0 {for_channel}".format(
                 for_channel=f"AND channel_id = '{channel_id}'" if channel_id else ""
@@ -108,7 +107,7 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
-    def select_entries_count(self, channel_id: Optional[str] = None) -> int:
+    def select_entries_count(self, channel_id: str | None = None) -> int:
         with self.get_cursor() as cursor:
             query = "SELECT COUNT(*) FROM tb_entries {for_channel}".format(
                 for_channel=f"WHERE channel_id = '{channel_id}'" if channel_id else ""
@@ -117,7 +116,7 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
-    def select_stats(self) -> List[Tuple[str, int, int]]:
+    def select_stats(self) -> list[tuple[str, int, int]]:
         with self.get_cursor() as cursor:
             query = "SELECT channel_id, COUNT(channel_id) AS c1, SUM(is_viewed = 0) FROM tb_entries GROUP BY channel_id ORDER BY c1 DESC;"
             self.log.debug(query)
@@ -150,7 +149,7 @@ class Storage:
             self.log.debug(query)
             cursor.execute(query)
 
-    def add_entries(self, entries: List[Entry]) -> int:
+    def add_entries(self, entries: list[Entry]) -> int:
         if not entries:
             return 0
         with self.get_cursor() as cursor:

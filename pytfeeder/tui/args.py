@@ -1,12 +1,11 @@
 import argparse
 from pathlib import Path
-from typing import List
 
 from pytfeeder.defaults import default_config_path
 from . import consts
 
 
-def format_keybindings() -> List[str]:
+def format_keybindings() -> list[str]:
     max_keys_w = max(len(keys) for keys, _ in consts.HELP_KEYBINDINGS)
     tab = " " * 4
     return [

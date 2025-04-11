@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 from . import consts
 
@@ -28,7 +28,7 @@ class ConfigTUI:
     macro3: str = ""
     macro4: str = ""
 
-    def update(self, kwargs: Dict[str, Any]) -> None:
+    def update(self, kwargs: dict[str, Any]) -> None:
         for k, v in kwargs.items():
             if k in vars(self) and v is not None:
                 if isinstance(v, bool):

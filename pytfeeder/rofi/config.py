@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 from . import consts
 
@@ -16,7 +16,7 @@ class ConfigRofi:
     separator: str = consts.DEFAULT_SEPARATOR
     unwatched_first: bool = False
 
-    def update(self, kwargs: Dict[str, Any]) -> None:
+    def update(self, kwargs: dict[str, Any]) -> None:
         for k, v in kwargs.items():
             if k in vars(self) and v is not None:
                 if isinstance(v, bool):

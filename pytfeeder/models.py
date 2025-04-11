@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 import datetime as dt
-from typing import List, Dict
 
 
 @dataclass
@@ -29,7 +28,7 @@ class InvalidChannelError(ValueError):
 class Channel:
     title: str = ""
     channel_id: str = ""
-    entries: List[Entry] = field(default_factory=list)
+    entries: list[Entry] = field(default_factory=list)
     have_updates: bool = False
 
     def __post_init__(self) -> None:
@@ -40,5 +39,5 @@ class Channel:
                 f"Invalid channel_id {len(self.channel_id) = } ({self.channel_id!r}), should be 24)"
             )
 
-    def dump(self) -> Dict:
+    def dump(self) -> dict:
         return {"title": self.title, "channel_id": self.channel_id}

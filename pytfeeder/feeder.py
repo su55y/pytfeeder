@@ -1,7 +1,6 @@
 from functools import lru_cache, cached_property
 import logging
 import time
-from typing import List, Optional, Tuple
 
 import asyncio
 from aiohttp import ClientSession
@@ -22,7 +21,7 @@ class Feeder:
         self.__channels_map = {c.channel_id: c for c in self.config.channels}
 
     @cached_property
-    def channels(self) -> List[Channel]:
+    def channels(self) -> list[Channel]:
         self.refresh_channels()
         return self.config.channels
 
@@ -33,7 +32,7 @@ class Feeder:
             )
 
     @lru_cache
-    def channel(self, channel_id: str) -> Optional[Channel]:
+    def channel(self, channel_id: str) -> Channel | None:
         return self.__channels_map.get(channel_id)
 
     @lru_cache
@@ -43,9 +42,9 @@ class Feeder:
     def channel_feed(
         self,
         channel_id: str,
-        limit: Optional[int] = None,
-        unwatched_first: Optional[bool] = None,
-    ) -> List[Entry]:
+        limit: int | None = None,
+        unwatched_first: bool | None = None,
+    ) -> list[Entry]:
         return self.stor.select_entries(
             channel_id=channel_id,
             limit=limit,
@@ -54,9 +53,9 @@ class Feeder:
 
     def feed(
         self,
-        limit: Optional[int] = None,
-        unwatched_first: Optional[bool] = None,
-    ) -> List[Entry]:
+        limit: int | None = None,
+        unwatched_first: bool | None = None,
+    ) -> list[Entry]:
         return self.stor.select_entries(
             limit=limit,
             unwatched_first=unwatched_first,
@@ -64,8 +63,8 @@ class Feeder:
 
     def mark_as_watched(
         self,
-        id: Optional[str] = None,
-        channel_id: Optional[str] = None,
+        id: str | None = None,
+        channel_id: str | None = None,
         unwatched: bool = False,
     ) -> None:
         if id:
@@ -75,7 +74,7 @@ class Feeder:
         else:
             self.stor.mark_all_entries_as_watched(unwatched)
 
-    def unwatched_count(self, channel_id: Optional[str] = None) -> int:
+    def unwatched_count(self, channel_id: str | None = None) -> int:
         if channel_id == "feed":
             return self.stor.select_unwatched()
         return self.stor.select_unwatched(channel_id)
@@ -86,7 +85,7 @@ class Feeder:
             ", ".join(f"{c.channel_id!r}" for c in self.config.channels)
         )
 
-    async def sync_entries(self) -> Tuple[int, Optional[Exception]]:
+    async def sync_entries(self) -> tuple[int, Exception | None]:
         try:
             r = await self._sync_entries()
         except Exception as e:
@@ -112,7 +111,7 @@ class Feeder:
 
     async def _sync_channel(
         self, session: ClientSession, channel: Channel
-    ) -> Tuple[int, Optional[Exception]]:
+    ) -> tuple[int, Exception | None]:
         try:
             self.log.debug(f"trying to sync {channel.title!r} ({channel.channel_id!r})")
             count = await self._fetch_and_sync_entries(session, channel.channel_id)

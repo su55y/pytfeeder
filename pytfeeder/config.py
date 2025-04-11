@@ -4,7 +4,6 @@ import os
 from os.path import expandvars
 from pathlib import Path
 import tempfile
-from typing import List, Optional, Union
 import shutil
 
 import yaml
@@ -46,21 +45,21 @@ class Config:
     rofi: ConfigRofi
     tui: ConfigTUI
     lock_file: Path
-    __channels: List[Channel] = dc.field(default_factory=list, repr=False, kw_only=True)
+    __channels: list[Channel] = dc.field(default_factory=list, repr=False, kw_only=True)
 
     def __init__(
         self,
-        config_file: Optional[Path] = None,
-        channels_filepath: Optional[Path] = None,
-        data_dir: Optional[Path] = None,
-        channels: Optional[List[Channel]] = None,
-        log_level: Optional[int] = None,
-        log_file: Optional[Path] = None,
-        log_fmt: Optional[str] = None,
-        storage_path: Optional[Path] = None,
-        rofi: Optional[ConfigRofi] = None,
-        tui: Optional[ConfigTUI] = None,
-        lock_file: Optional[Path] = None,
+        config_file: Path | None = None,
+        channels_filepath: Path | None = None,
+        data_dir: Path | None = None,
+        channels: list[Channel] | None = None,
+        log_level: int | None = None,
+        log_file: Path | None = None,
+        log_fmt: str | None = None,
+        storage_path: Path | None = None,
+        rofi: ConfigRofi | None = None,
+        tui: ConfigTUI | None = None,
+        lock_file: Path | None = None,
     ) -> None:
         self.__is_channels_set = False
         if channels is not None:
@@ -89,11 +88,11 @@ class Config:
             self.channels = self._load_channels_from_file(self.channels_filepath)
 
     @property
-    def channels(self) -> List[Channel]:
+    def channels(self) -> list[Channel]:
         return self.__channels
 
     @channels.setter
-    def channels(self, channels_: List[Channel]) -> None:
+    def channels(self, channels_: list[Channel]) -> None:
         assert isinstance(channels_, list), "Unexpected channels value type"
         self.__channels = channels_
         self.__is_channels_set = True
@@ -130,9 +129,9 @@ class Config:
 
     def _set_data_paths(
         self,
-        data_dir: Optional[Path] = None,
-        log_file: Optional[Path] = None,
-        storage_path: Optional[Path] = None,
+        data_dir: Path | None = None,
+        log_file: Path | None = None,
+        storage_path: Path | None = None,
     ) -> None:
         if data_dir:
             self.data_dir = expand_path(data_dir)
@@ -149,7 +148,7 @@ class Config:
         else:
             self.storage_path = self.data_dir.joinpath(STORAGE_FILENAME)
 
-    def _load_channels_from_file(self, file: Path) -> List[Channel]:
+    def _load_channels_from_file(self, file: Path) -> list[Channel]:
         try:
             with file.open() as f:
                 channels_list = yaml.safe_load(f)

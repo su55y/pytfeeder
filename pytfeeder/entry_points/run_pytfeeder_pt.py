@@ -1,8 +1,14 @@
 import logging
 import subprocess as sp
-from typing import List, Optional, Union
-from typing_extensions import override
 import sys
+
+# added in python 3.12
+# https://docs.python.org/3/library/typing.html#typing.override
+if sys.version_info < (3, 12):
+    from typing_extensions import override
+else:
+    from typing import override
+
 
 from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
@@ -34,7 +40,7 @@ from pytfeeder.tui import args as tui_args
 from pytfeeder.tui.props import TuiProps, PageState
 
 
-Lines = Union[List[Channel], List[Entry]]
+Lines = list[Channel] | list[Entry]
 
 
 class PromptContainer(ConditionalContainer):
@@ -67,9 +73,9 @@ class App(TuiProps):
     def __init__(self, feeder: Feeder) -> None:
         super().__init__(feeder)
 
-        self._app_link: Optional[Application] = None
+        self._app_link: Application | None = None
         self.classnames = {0: "entry", 1: "new_entry"}
-        self.entries: List[Entry] = []
+        self.entries: list[Entry] = []
         self.filter_text = ""
         self.help_index = 0
         self.is_help_opened = False
@@ -184,7 +190,7 @@ class App(TuiProps):
             return self.entries
         return []
 
-    def format_channel(self, i: int, channel: Channel) -> List[OneStyleAndTextTuple]:
+    def format_channel(self, i: int, channel: Channel) -> list[OneStyleAndTextTuple]:
         line = self.c.channels_fmt.format(
             index=self.format_line_index(i + 1),
             new_mark=self.new_marks[channel.have_updates],
@@ -193,7 +199,7 @@ class App(TuiProps):
         )
         return [(f"class:{self.classnames[channel.have_updates]}", line)]
 
-    def format_entry(self, i: int, entry: Entry) -> List[OneStyleAndTextTuple]:
+    def format_entry(self, i: int, entry: Entry) -> list[OneStyleAndTextTuple]:
         line = self.current_entry_format.format(
             index=self.format_line_index(i + 1),
             new_mark=self.new_marks[not entry.is_viewed],
@@ -208,7 +214,7 @@ class App(TuiProps):
         return f"{i:{index_len}d}"
 
     def _get_formatted_text(self) -> AnyFormattedText:
-        result: List[AnyFormattedText] = []
+        result: list[AnyFormattedText] = []
         for i, line in enumerate(self.page_lines):
             if i == self.index:
                 result.append([("[SetCursorPosition]", "")])
@@ -221,7 +227,7 @@ class App(TuiProps):
         return merge_formatted_text(result)
 
     def _get_formatted_help_text(self) -> AnyFormattedText:
-        result: List[AnyFormattedText] = []
+        result: list[AnyFormattedText] = []
         for i, line in enumerate(self.help_lines):
             if i == self.help_index:
                 result.append([("[SetCursorPosition]", "")])
@@ -301,13 +307,13 @@ class App(TuiProps):
             self.index = (self.index + 1) % len(self.page_lines)
 
     @override
-    def get_parent_channel_id(self) -> Optional[str]:
+    def get_parent_channel_id(self) -> str | None:
         if self.last_index > -1 and self.last_index < len(self.channels):
             return self.channels[self.last_index].channel_id
         return None
 
     @override
-    def reload_lines(self, channel_id: Optional[str] = None) -> None:
+    def reload_lines(self, channel_id: str | None = None) -> None:
         if self.page_state == PageState.ENTRIES and channel_id:
             self.index = 0
             self.set_entries_by_id(channel_id)

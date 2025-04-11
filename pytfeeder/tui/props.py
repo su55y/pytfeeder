@@ -2,7 +2,6 @@ import asyncio
 import datetime as dt
 from enum import Enum, auto
 import time
-from typing import List, Optional
 
 from pytfeeder import Feeder, __version__  # FIXME: circular import
 from pytfeeder.models import Channel, Entry
@@ -21,7 +20,7 @@ class TuiProps:
         self.c = self.feeder.config.tui
         if self.c.alphabetic_sort:
             self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
-        self.channels: List[Channel] = list()
+        self.channels: list[Channel] = list()
         self._set_channels()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
         self.help_status = " version {version} [h,q,Left]: close help".format(
@@ -46,12 +45,12 @@ class TuiProps:
         self.refresh_last_update()
         self.is_channels_outdated = False
 
-    def feed(self) -> List[Entry]:
+    def feed(self) -> list[Entry]:
         return self.feeder.feed(
             limit=self.c.feed_limit, unwatched_first=self.c.unwatched_first
         )
 
-    def channel_feed(self, channel_id: str) -> List[Entry]:
+    def channel_feed(self, channel_id: str) -> list[Entry]:
         return self.feeder.channel_feed(
             channel_id=channel_id,
             limit=self.c.channel_feed_limit,
@@ -155,10 +154,10 @@ class TuiProps:
         else:
             self.status_last_update = dt_str.strftime(self.c.last_update_fmt)
 
-    def get_parent_channel_id(self) -> Optional[str]:
+    def get_parent_channel_id(self) -> str | None:
         raise NotImplementedError("")
 
-    def reload_lines(self, channel_id: Optional[str] = None) -> None:
+    def reload_lines(self, channel_id: str | None = None) -> None:
         raise NotImplementedError("")
 
     async def sync_and_reload(self) -> None:

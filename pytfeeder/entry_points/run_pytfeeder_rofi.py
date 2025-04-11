@@ -1,5 +1,4 @@
 import logging
-from typing import List
 import sys
 
 from pytfeeder import Config, Feeder, Storage
@@ -67,7 +66,7 @@ class RofiPrinter:
         ):
             self.print_entries(entries, self.c.entries_fmt)
 
-    def print_entries(self, entries: List[Entry], fmt: str) -> None:
+    def print_entries(self, entries: list[Entry], fmt: str) -> None:
         for entry in entries:
             channel_title = self.feeder.channel_title(entry.channel_id)
             meta = channel_title

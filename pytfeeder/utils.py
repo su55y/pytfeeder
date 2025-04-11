@@ -1,5 +1,4 @@
 import subprocess as sp
-from typing import List
 
 from .models import Channel, Entry
 
@@ -89,7 +88,7 @@ def notify(msg: str) -> bool:
     return True
 
 
-def download_all(entries: List[Entry], output: str) -> None:
+def download_all(entries: list[Entry], output: str) -> None:
     _ = notify(f"⬇️Start downloading {len(entries)} entries...")
     for e in entries:
         download_video(e, output, send_notification=False)
