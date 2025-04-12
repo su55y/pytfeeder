@@ -1,10 +1,10 @@
 import argparse
 import asyncio
-import logging
 from pathlib import Path
 import sys
 
 from pytfeeder import Config, Feeder, Storage, utils, defaults, __version__
+from pytfeeder.logger import init_logger
 
 
 def parse_args() -> argparse.Namespace:
@@ -54,14 +54,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def init_logger(config: Config):
-    logger = logging.getLogger()
-    logger.setLevel(config.log_level)
-    handler = logging.FileHandler(config.log_file)
-    handler.setFormatter(logging.Formatter(config.log_fmt))
-    logger.addHandler(handler)
-
-
 def entries_stats(feeder: Feeder) -> str:
     max_title_len = max(len(c.title) for c in feeder.config.channels)
     channels_map = {c.channel_id: c.title for c in feeder.config.channels}
@@ -101,8 +93,7 @@ def run():
     if not config.data_dir.exists():
         config.data_dir.mkdir(parents=True)
 
-    if config.log_level > 0:
-        init_logger(config)
+    init_logger(config.logger)
 
     if args.add_channel:
         try:

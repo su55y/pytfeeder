@@ -14,10 +14,15 @@ YT_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=%s"
 
 
 class Feeder:
-    def __init__(self, config: Config, storage: Storage) -> None:
+    def __init__(
+        self,
+        config: Config,
+        storage: Storage,
+        log: logging.Logger | None = None,
+    ) -> None:
         self.stor = storage
         self.config = config
-        self.log = logging.getLogger()
+        self.log = log or logging.getLogger()
         self.__channels_map = {c.channel_id: c for c in self.config.channels}
 
     @cached_property

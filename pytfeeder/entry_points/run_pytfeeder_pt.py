@@ -35,6 +35,7 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
 
 from pytfeeder import Config, Feeder, Storage, utils, __version__
+from pytfeeder.logger import init_logger
 from pytfeeder.models import Channel, Entry
 from pytfeeder.tui import args as tui_args
 from pytfeeder.tui.props import TuiProps, PageState
@@ -627,24 +628,16 @@ class App(TuiProps):
         return kb
 
 
-def init_logger(c: Config):
-    log = logging.getLogger()
-    log.setLevel(c.log_level)
-    h = logging.FileHandler(c.log_file)
-    h.setFormatter(logging.Formatter(c.log_fmt))
-    log.addHandler(h)
-
-
 def main():
     args = tui_args.parse_args()
     config_path = args.config
     config = Config(config_file=config_path)
-    init_logger(config)
+    config.tui.update(vars(args))
 
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
 
-    config.tui.update(vars(args))
+    init_logger(config.logger)
 
     feeder = Feeder(config, Storage(config.storage_path))
     if len(feeder.channels) == 0:

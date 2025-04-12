@@ -16,9 +16,9 @@ class StorageError(Exception):
 
 
 class Storage:
-    def __init__(self, db_file: Path) -> None:
+    def __init__(self, db_file: Path, log: logging.Logger | None = None) -> None:
         self.db_file = db_file
-        self.log = logging.getLogger()
+        self.log = log or logging.getLogger()
         sqlite3.register_adapter(dt.datetime, lambda v: v.isoformat())
         self.__init_db()
 

@@ -1,7 +1,7 @@
-import logging
 import sys
 
 from pytfeeder import Config, Feeder, Storage
+from pytfeeder.logger import init_logger
 from pytfeeder.models import Entry
 from pytfeeder.rofi import args as rofi_args
 
@@ -99,14 +99,6 @@ class RofiPrinter:
             print(message, end=self.c.separator)
 
 
-def init_logger(c: Config):
-    log = logging.getLogger()
-    log.setLevel(c.log_level)
-    h = logging.FileHandler(c.log_file)
-    h.setFormatter(logging.Formatter(c.log_fmt))
-    log.addHandler(h)
-
-
 def print_error(message: str):
     print(f"\000message\037{message}\n \n")
 
@@ -124,11 +116,12 @@ def wrapped_main():
 
     args = rofi_args.parse_args()
     config = Config(config_file=args.config_file)
-    init_logger(config)
     config.rofi.update(vars(args))
 
     if not config.storage_path.exists():
         config.storage_path.mkdir(parents=True)
+
+    init_logger(config.logger)
 
     feeder = Feeder(config, Storage(config.storage_path))
     if args.watched:

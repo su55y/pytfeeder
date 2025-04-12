@@ -1,6 +1,12 @@
+from os.path import expandvars
+from pathlib import Path
 import subprocess as sp
 
 from .models import Channel, Entry
+
+
+def expand_path(path: Path) -> Path:
+    return Path(expandvars(path)).expanduser()
 
 
 def fetch_channel_info(url: str) -> Channel:

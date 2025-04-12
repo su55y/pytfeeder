@@ -1,7 +1,5 @@
 import dataclasses as dc
-import logging
 import os
-from os.path import expandvars
 from pathlib import Path
 import tempfile
 import shutil
@@ -13,34 +11,20 @@ from .defaults import (
     default_channels_filepath,
     default_lockfile_path,
 )
+from .logger import LoggerConfig
 from .models import Channel
+from .utils import expand_path
 from pytfeeder.rofi import ConfigRofi
 from pytfeeder.tui import ConfigTUI
 
-DEFAULT_LOG_FMT = (
-    "[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
-)
-LOGS_FILENAME = "pytfeeder.log"
+
 STORAGE_FILENAME = "pytfeeder.db"
-
-log_levels_map = {
-    "debug": logging.DEBUG,
-    "info": logging.INFO,
-    "warning": logging.WARNING,
-    "error": logging.ERROR,
-}
-
-
-def expand_path(path: Path) -> Path:
-    return Path(expandvars(path)).expanduser()
 
 
 @dc.dataclass
 class Config:
     channels_filepath: Path
-    log_level: int
-    log_file: Path
-    log_fmt: str
+    logger: LoggerConfig
     storage_path: Path
     rofi: ConfigRofi
     tui: ConfigTUI
@@ -53,9 +37,7 @@ class Config:
         channels_filepath: Path | None = None,
         data_dir: Path | None = None,
         channels: list[Channel] | None = None,
-        log_level: int | None = None,
-        log_file: Path | None = None,
-        log_fmt: str | None = None,
+        logger_config: LoggerConfig | None = None,
         storage_path: Path | None = None,
         rofi: ConfigRofi | None = None,
         tui: ConfigTUI | None = None,
@@ -69,9 +51,8 @@ class Config:
         if channels_filepath and channels is None:
             self.channels = self._load_channels_from_file(channels_filepath)
 
-        self.log_level = log_level or logging.NOTSET
-        self.log_fmt = log_fmt or DEFAULT_LOG_FMT
         self.lock_file = lock_file or default_lockfile_path()
+        self.logger = logger_config or LoggerConfig()
         self.rofi = rofi or ConfigRofi()
         self.tui = tui or ConfigTUI()
 
@@ -81,7 +62,6 @@ class Config:
 
         self._set_data_paths(
             data_dir=data_dir,
-            log_file=log_file,
             storage_path=storage_path,
         )
         if self.__is_channels_set is False:
@@ -112,16 +92,13 @@ class Config:
 
         if data_dir := config_dict.get("data_dir"):
             self.data_dir = expand_path(data_dir)
-            self.log_file = self.data_dir.joinpath(LOGS_FILENAME)
             self.storage_path = self.data_dir.joinpath(STORAGE_FILENAME)
             self.__is_data_dir_set = True
 
-        if log_fmt := config_dict.get("log_fmt"):
-            self.log_fmt = str(log_fmt)
-        if isinstance((log_level := config_dict.get("log_level")), str):
-            self.log_level = log_levels_map.get(log_level.lower(), self.log_level)
         if lock_file := config_dict.get("lock_file"):
             self.lock_file = expand_path(lock_file)
+        if logger_object := config_dict.get("logger"):
+            self.logger.update(logger_object)
         if rofi_object := config_dict.get("rofi"):
             self.rofi.update(rofi_object)
         if tui_object := config_dict.get("tui"):
@@ -130,18 +107,12 @@ class Config:
     def _set_data_paths(
         self,
         data_dir: Path | None = None,
-        log_file: Path | None = None,
         storage_path: Path | None = None,
     ) -> None:
         if data_dir:
             self.data_dir = expand_path(data_dir)
         elif not self.__is_data_dir_set:
             self.data_dir = default_data_path()
-
-        if log_file:
-            self.log_file = expand_path(log_file)
-        else:
-            self.log_file = self.data_dir.joinpath(LOGS_FILENAME)
 
         if storage_path:
             self.storage_path = expand_path(storage_path)
@@ -181,6 +152,7 @@ class Config:
         repr_str = ""
         repr_str += f"channels_filepath: {self.channels_filepath!s}\n"
         repr_str += f"data_dir: {self.data_dir!s}\n"
+
         if self.channels:
             repr_str += "channels:\n"
             repr_str += "".join(
@@ -189,9 +161,8 @@ class Config:
             )
         else:
             repr_str += "channels: []\n"
-        repr_str += f"log_fmt: {self.log_fmt!r}\n"
-        log_level_name = {v: k for k, v in log_levels_map.items()}.get(self.log_level)
-        repr_str += f"log_level: {log_level_name}\n"
+
+        repr_str += f"{repr(self.logger).strip()}\n"
         repr_str += f"{repr(self.rofi).strip()}\n"
         repr_str += f"{repr(self.tui).strip()}\n"
         return repr_str.strip()
