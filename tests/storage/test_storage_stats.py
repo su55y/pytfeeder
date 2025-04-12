@@ -1,16 +1,14 @@
-import logging
 from pathlib import Path
 import unittest
 
 from pytfeeder.storage import Storage
-from .. import mocks
-
-logging.basicConfig(level=logging.DEBUG, filename="/tmp/test_storage.log")
+from .. import mocks, utils
 
 
 class TestStats(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        utils.setup_logging(filename=f"{Path(__file__).name}.log")
         cls.db_file = Path("/tmp/test_storage.db")
         if cls.db_file.exists():
             cls.db_file.unlink()

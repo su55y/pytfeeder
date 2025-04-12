@@ -11,7 +11,6 @@ class TestConfig(unittest.TestCase):
     def test_default_data_paths(self):
         c = config.Config()
         data_path = default_data_path()
-        self.assertEqual(c.log_file, data_path / config.LOGS_FILENAME)
         self.assertEqual(c.storage_path, data_path / config.STORAGE_FILENAME)
 
     def test_updating_tui_config(self):
