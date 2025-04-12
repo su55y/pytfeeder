@@ -1,16 +1,21 @@
-# dir to store db and logs, defaults to $XDG_DATA_HOME/pytfeeder
-# data_dir:
+# directory to store database, defaults to $XDG_DATA_HOME/pytfeeder or $HOME/.local/share/pytfeeder
+data_dir: null
 
 # feeds sources filepath, defaults to $XDG_CONFIG_HOME/pytfeeder/channels.yaml
-# should be yaml and contain collection of channels objects
+# should be yaml and contain collection of channel objects with title and channel_id
 # - { channel_id: foo, title: bar }
-channels_filepath:
+channels_filepath: null
 
-# log format
-log_fmt: '[%(asctime)-.19s %(levelname)s] %(message)s (%(filename)s:%(lineno)d)'
-
-# available logging levels: debug, info, warning, error
-log_level: none
+# by default initializes NullHandler, if `file` given FileHandler
+# and if `file` is null and `stream` set to true then StreamHandler.
+logger:
+  file: null
+  # logging format, used default if null
+  # reference: https://docs.python.org/3/library/logging.html#logrecord-attributes
+  fmt: null
+  # logging level name, valid options are: debug, info, warning, error
+  level: null
+  stream: false
 
 #
 # rofi config
