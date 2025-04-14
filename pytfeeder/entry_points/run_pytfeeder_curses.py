@@ -88,7 +88,7 @@ class App(TuiProps):
 
         self._g_pressed = False
         self.gravity = Gravity.DOWN
-        self.last_channel_index = -1
+        self.parent_index = -1
         self.last_page_index = -1
         self.lines = list(map(Line, self.channels))
         self.macros = {
@@ -396,48 +396,48 @@ class App(TuiProps):
         self.index = len(self.lines) - 1
 
     def move(self, channel_index: int) -> None:
-        self.last_channel_index = channel_index
+        self.parent_index = channel_index
         self.last_page_index = channel_index
         self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
         self.index = 0
         self.scroll_top = 0
 
     def move_next(self) -> None:
-        if self.last_channel_index == len(self.channels) - 1:
+        if self.parent_index == len(self.channels) - 1:
             self.move(0)
         else:
-            self.move(min(len(self.channels) - 1, self.last_channel_index + 1))
+            self.move(min(len(self.channels) - 1, self.parent_index + 1))
 
     def move_prev(self) -> None:
-        if self.last_channel_index == 0:
+        if self.parent_index == 0:
             self.move(len(self.channels) - 1)
         else:
-            self.move(max(0, self.last_channel_index - 1))
+            self.move(max(0, self.parent_index - 1))
 
     def handle_follow(self) -> bool:
         if (
             self.page_state != PageState.ENTRIES
             or not self._is_feed_opened
-            or self.last_channel_index != 0
+            or self.parent_index != 0
         ):
             return False
-        new_last_channel_index = -1
+        new_parent_index = -1
         for i in range(len(self.channels)):
             if self.channels[i].channel_id == self.lines[self.index].data.channel_id:
-                new_last_channel_index = i
+                new_parent_index = i
                 break
-        if new_last_channel_index < 1:
+        if new_parent_index < 1:
             return False
         self.lines = self.lines_by_id(self.lines[self.index].data.channel_id)
-        self.last_channel_index = new_last_channel_index
-        self.last_page_index = new_last_channel_index
+        self.parent_index = new_parent_index
+        self.last_page_index = new_parent_index
         self.index = 0
         self.scroll_top = 0
         return True
 
-    def move_right(self, last_channel_index: int = -1) -> None:
-        if last_channel_index > -1:  # FIXME: close filter logic
-            self.selected_data = self.channels[last_channel_index]
+    def move_right(self, parent_index: int = -1) -> None:
+        if parent_index > -1:  # FIXME: close filter logic
+            self.selected_data = self.channels[parent_index]
         else:
             self.selected_data = self.lines[self.index].data
 
@@ -445,15 +445,15 @@ class App(TuiProps):
             self.page_state = PageState.ENTRIES
             self.lines = self.lines_by_id(self.selected_data.channel_id)
 
-            if self.is_filtered and last_channel_index > -1:  # FIXME: close filter logic
-                self.last_channel_index = last_channel_index
+            if self.is_filtered and parent_index > -1:  # FIXME: close filter logic
+                self.parent_index = parent_index
             elif self.is_filtered:
-                self.last_channel_index = self.find_channel_index_by_id(
+                self.parent_index = self.find_channel_index_by_id(
                     self.selected_data.channel_id
                 )
             else:
-                self.last_channel_index = self.index
-            self.last_page_index = self.last_channel_index
+                self.parent_index = self.index
+            self.last_page_index = self.parent_index
 
             self.is_filtered = False
             self.index = 0
@@ -477,7 +477,7 @@ class App(TuiProps):
     def move_left_entries(self) -> None:
         self.page_state = PageState.CHANNELS
         if self.is_filtered:
-            self.move_right(self.last_channel_index)  # FIXME: close filter logic
+            self.move_right(self.parent_index)  # FIXME: close filter logic
             return
         if self.is_channels_outdated:
             self.update_channels()
