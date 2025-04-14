@@ -436,18 +436,26 @@ class App(TuiProps):
         return True
 
     def move_right(self, last_channel_index: int = -1) -> None:
-        if last_channel_index > -1:
+        if last_channel_index > -1:  # FIXME: close filter logic
             self.selected_data = self.channels[last_channel_index]
         else:
             self.selected_data = self.lines[self.index].data
 
         if self.page_state == PageState.CHANNELS:
             self.page_state = PageState.ENTRIES
-            self.is_filtered = False
-            if last_channel_index == -1:
-                self.last_page_index = self.index
             self.lines = self.lines_by_id(self.selected_data.channel_id)
-            self.last_channel_index = self.index
+
+            if self.is_filtered and last_channel_index > -1:  # FIXME: close filter logic
+                self.last_channel_index = last_channel_index
+            elif self.is_filtered:
+                self.last_channel_index = self.find_channel_index_by_id(
+                    self.selected_data.channel_id
+                )
+            else:
+                self.last_channel_index = self.index
+            self.last_page_index = self.last_channel_index
+
+            self.is_filtered = False
             self.index = 0
             self.scroll_top = 0
         elif self.page_state == PageState.ENTRIES:
@@ -468,17 +476,22 @@ class App(TuiProps):
 
     def move_left_entries(self) -> None:
         self.page_state = PageState.CHANNELS
-        if not self.is_filtered:
-            if self.is_channels_outdated:
-                self.update_channels()
-            self.lines = list(map(Line, self.channels))
-            self.index = min(self.last_page_index, len(self.lines) - 1)
-            self.last_page_index = -1
-            self.scroll_top = 0
-            self.gravity = Gravity.DOWN
-        else:
-            self.move_right(self.last_channel_index)
-            self.last_channel_index = self.last_page_index
+        if self.is_filtered:
+            self.move_right(self.last_channel_index)  # FIXME: close filter logic
+            return
+        if self.is_channels_outdated:
+            self.update_channels()
+        self.lines = list(map(Line, self.channels))
+        self.index = min(self.last_page_index, len(self.lines) - 1)
+        self.last_page_index = -1
+        self.scroll_top = 0
+        self.gravity = Gravity.DOWN
+
+    def find_channel_index_by_id(self, channel_id: str) -> int:
+        i = self.channel_indexes_map.get(channel_id)
+        if i is None:
+            raise Exception(f"Unknown {channel_id = !r}\nin {self.channels = !r}")
+        return i
 
     @override
     def get_parent_channel_id(self) -> str | None:

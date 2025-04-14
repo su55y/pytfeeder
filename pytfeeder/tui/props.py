@@ -22,6 +22,9 @@ class TuiProps:
             self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
         self.channels: list[Channel] = list()
         self._set_channels()
+        self.channel_indexes_map = {
+            c.channel_id: i for i, c in enumerate(self.channels)
+        }
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
         self.help_status = " version {version} [h,q,Left]: close help".format(
             version=__version__
