@@ -59,8 +59,10 @@ class Key(IntEnum):
     N7 = ord("7")
     N8 = ord("8")
     N9 = ord("9")
+    CTRL_D = 4
     TAB = 9
     SLASH = ord("/")
+    CTRL_X = 24
     ESC = 27
     RETURN = ord("\n")
     QUESTION_MARK = ord("?")
@@ -222,6 +224,21 @@ class App(TuiProps):
                     if len(entries) > 0:
                         utils.download_all(entries, self.c.download_output)  # type: ignore
                     self.mark_as_watched_all()
+                case Key.CTRL_X | curses.KEY_DC:
+                    if len(self.lines) == 0:
+                        continue
+                    selected_data = self.lines[self.index].data
+                    if not (
+                        self.page_state == PageState.ENTRIES
+                        and isinstance(selected_data, Entry)
+                    ):
+                        continue
+                    if self.feeder.mark_entry_as_deleted(selected_data.id):
+                        del self.lines[self.index]
+                        self.index = max(0, self.index - 1)
+                        screen.clear()
+                    else:
+                        self.status_msg = f"Something went wrong"
                 case Key.s:
                     self.c.hide_statusbar = not self.c.hide_statusbar
                     max_y, _ = screen.getmaxyx()

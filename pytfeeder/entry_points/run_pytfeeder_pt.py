@@ -1,4 +1,3 @@
-import logging
 import subprocess as sp
 import sys
 
@@ -605,6 +604,21 @@ class App(TuiProps):
             if len(entries) > 0:
                 utils.download_all(entries, self.c.download_output)  # type: ignore
                 self.mark_as_watched_all()
+
+        @kb.add("delete")
+        @kb.add("c-x")
+        def _mark_entry_as_deleted(_) -> None:
+            selected_data = self.page_lines[self.index]
+            if not (
+                self.page_state is PageState.ENTRIES
+                and isinstance(selected_data, Entry)
+            ):
+                return
+            if self.feeder.mark_entry_as_deleted(selected_data.id):
+                del self.page_lines[self.index]
+                self.index = max(0, self.index - 1)
+            else:
+                self.status_msg = "Something went wrong"
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
