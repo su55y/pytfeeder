@@ -66,6 +66,18 @@ class Storage:
         finally:
             conn.close()
 
+    def add_entries(self, entries: list[Entry]) -> int:
+        if not entries:
+            return 0
+        with self.get_cursor() as cursor:
+            query = "INSERT OR IGNORE INTO tb_entries (id, title, published, channel_id) VALUES (?, ?, ?, ?)"
+            new_entries = [
+                (entry.id, entry.title, entry.published, entry.channel_id)
+                for entry in entries
+            ]
+            self.log.debug(f"{query}, entries count: {len(new_entries)}")
+            return cursor.executemany(query, new_entries).rowcount
+
     def select_entries(
         self,
         channel_id: str | None = None,
@@ -75,18 +87,20 @@ class Storage:
     ) -> list[Entry]:
         entries: list[Entry] = []
         with self.get_cursor() as cursor:
-            query = "SELECT id, title, published, channel_id, is_viewed FROM tb_entries {where} {channel_id} {and_} {timedelta} ORDER BY {unwatched_first} published DESC {limit}".format(
-                where="" if (not channel_id and not timedelta) else "WHERE",
-                channel_id=f"channel_id = '{channel_id}'" if channel_id else "",
-                and_="AND" if (timedelta and channel_id) else "",
-                timedelta=f"published > '{timedelta}'" if timedelta else "",
+            query = """
+            SELECT id, title, published, channel_id, is_viewed, is_deleted
+            FROM tb_entries
+            WHERE is_deleted = 0 {and_channel_id} {and_timedelta}
+            ORDER BY {unwatched_first} published DESC {limit}""".format(
+                and_channel_id=f"AND channel_id = '{channel_id}'" if channel_id else "",
+                and_timedelta=f"AND published > '{timedelta}'" if timedelta else "",
                 unwatched_first="is_viewed," if unwatched_first else "",
                 limit=f"LIMIT {limit}" if limit else "",
             )
             self.log.debug(query)
             rows = cursor.execute(query).fetchall()
             self.log.debug("selected %d entries" % len(rows))
-            for id, title, published, c_id, is_viewed in rows:
+            for id, title, published, c_id, is_viewed, is_deleted in rows:
                 entries.append(
                     Entry(
                         id=id,
@@ -94,13 +108,16 @@ class Storage:
                         published=dt.datetime.fromisoformat(published),
                         channel_id=c_id,
                         is_viewed=bool(is_viewed),
+                        is_deleted=bool(is_deleted),
                     )
                 )
         return entries
 
     def select_unwatched(self, channel_id: str | None = None) -> int:
         with self.get_cursor() as cursor:
-            query = "SELECT COUNT(*) FROM tb_entries WHERE is_viewed = 0 {for_channel}".format(
+            query = """
+            SELECT COUNT(*) FROM tb_entries
+            WHERE is_viewed = 0 AND is_deleted = 0 {for_channel}""".format(
                 for_channel=f"AND channel_id = '{channel_id}'" if channel_id else ""
             )
             self.log.debug(query)
@@ -118,7 +135,10 @@ class Storage:
 
     def select_stats(self) -> list[tuple[str, int, int]]:
         with self.get_cursor() as cursor:
-            query = "SELECT channel_id, COUNT(channel_id) AS c1, SUM(is_viewed = 0) FROM tb_entries GROUP BY channel_id ORDER BY c1 DESC;"
+            query = """
+            SELECT channel_id, COUNT(channel_id) AS c1, SUM(is_viewed = 0 AND is_deleted = 0)
+            FROM tb_entries
+            GROUP BY channel_id ORDER BY c1 DESC;"""
             self.log.debug(query)
             rows = cursor.execute(query).fetchall()
             self.log.debug("selected %d rows" % len(rows))
@@ -149,17 +169,14 @@ class Storage:
             self.log.debug(query)
             cursor.execute(query)
 
-    def add_entries(self, entries: list[Entry]) -> int:
-        if not entries:
-            return 0
+    def mark_entry_as_deleted(self, id: str) -> bool:
         with self.get_cursor() as cursor:
-            query = "INSERT OR IGNORE INTO tb_entries (id, title, published, channel_id) VALUES (?, ?, ?, ?)"
-            new_entries = [
-                (entry.id, entry.title, entry.published, entry.channel_id)
-                for entry in entries
-            ]
-            self.log.debug(f"{query}, entries count: {len(new_entries)}")
-            return cursor.executemany(query, new_entries).rowcount
+            query = f"UPDATE tb_entries SET is_deleted = 1 WHERE id = ?"
+            self.log.debug("%s, id: %s" % (query, id))
+            count = cursor.execute(query, (id,)).rowcount
+            if count != 1:
+                self.log.warning("rowcount != 1 for mark_entry_as_deleted(%s)" % id)
+            return count == 1
 
     def delete_all_entries(self, force: bool = False) -> None:
         with self.get_cursor() as cursor:

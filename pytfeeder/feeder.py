@@ -79,6 +79,13 @@ class Feeder:
         else:
             self.stor.mark_all_entries_as_watched(unwatched)
 
+    def mark_entry_as_deleted(self, id: str) -> bool:
+        try:
+            return self.stor.mark_entry_as_deleted(id)
+        except Exception as e:
+            self.log.error(f"Can't mark entry as deleted: {e!r}")
+            return False
+
     def unwatched_count(self, channel_id: str | None = None) -> int:
         if channel_id == "feed":
             return self.stor.select_unwatched()

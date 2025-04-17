@@ -9,6 +9,7 @@ class Entry:
     channel_id: str
     published: dt.datetime = dt.datetime.now(dt.timezone.utc)
     is_viewed: bool = False
+    is_deleted: bool = False
 
     def __eq__(self, obj: object) -> bool:
         if not isinstance(obj, Entry):
