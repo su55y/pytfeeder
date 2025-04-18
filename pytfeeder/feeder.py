@@ -31,10 +31,15 @@ class Feeder:
         return self.config.channels
 
     def refresh_channels(self) -> None:
-        for i in range(len(self.config.channels)):
-            self.config.channels[i].have_updates = bool(
-                self.stor.select_unwatched(self.config.channels[i].channel_id)
-            )
+        stats = self.stor.select_all_unwatched()
+        for c in self.config.channels:
+            stat = stats.get(c.channel_id)
+            if stat is None:
+                self.log.warning(f"No stats for {c!r} in db")
+                continue
+            _, unwatched = stat
+            c.have_updates = bool(unwatched)
+            c.unwatched_count = unwatched
 
     @lru_cache
     def channel(self, channel_id: str) -> Channel | None:

@@ -124,6 +124,17 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
+    def select_all_unwatched(self) -> dict[str, tuple[int, int]]:
+        with self.get_cursor() as cursor:
+            query = """
+            SELECT channel_id, SUM(is_deleted = 0), SUM(is_viewed = 0 AND is_deleted = 0)
+            FROM tb_entries
+            GROUP BY channel_id;"""
+            self.log.debug(query)
+            rows = cursor.execute(query).fetchall()
+            self.log.debug("selected %d rows" % len(rows))
+            return {c_id: (count, unwatched) for c_id, count, unwatched in rows}
+
     def select_entries_count(self, channel_id: str | None = None) -> int:
         with self.get_cursor() as cursor:
             query = "SELECT COUNT(*) FROM tb_entries {for_channel}".format(

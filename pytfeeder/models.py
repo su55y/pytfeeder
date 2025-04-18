@@ -31,6 +31,7 @@ class Channel:
     channel_id: str = ""
     entries: list[Entry] = field(default_factory=list)
     have_updates: bool = False
+    unwatched_count: int = 0
 
     def __post_init__(self) -> None:
         if self.title == "":
