@@ -49,6 +49,7 @@ HELP_KEYBINDINGS = [
     ("r", "Reload/sync feeds"),
     ("d", "Download video"),
     ("D", "Download all unwatched from current page"),
+    ("C-x, Del", "Delete entry"),
     ("/", "Open filter"),
     ("s", "Toggle statusbar visability"),
     ("h", "Cancel filter"),
