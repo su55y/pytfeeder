@@ -195,7 +195,7 @@ class App(TuiProps):
             index=self.format_line_index(i + 1),
             new_mark=self.new_marks[channel.have_updates],
             title=channel.title,
-            unwatched_count=self.unwatched_method(channel.channel_id),
+            unwatched_count=channel.unwatched_count,
         )
         return [(f"class:{self.classnames[channel.have_updates]}", line)]
 
@@ -295,8 +295,7 @@ class App(TuiProps):
             self.feeder.mark_as_watched(
                 channel_id=self.selected_data.channel_id, unwatched=unwatched
             )
-            self.is_channels_outdated = True
-            self.selected_data.have_updates = unwatched
+            self.update_channels()
         elif self.page_state == PageState.ENTRIES:
             if not isinstance(self.selected_data, Entry):
                 return
@@ -569,7 +568,7 @@ class App(TuiProps):
 
         @kb.add("a")
         def _mark_as_watched(_) -> None:
-            if len(self.page_lines) > 1:
+            if len(self.page_lines) > 0:
                 self.mark_as_watched()
 
         @kb.add("A")
@@ -615,6 +614,7 @@ class App(TuiProps):
             ):
                 return
             if self.feeder.mark_entry_as_deleted(selected_data.id):
+                self.is_channels_outdated = True
                 del self.page_lines[self.index]
                 self.index = max(0, self.index - 1)
             else:

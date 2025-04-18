@@ -40,9 +40,6 @@ class TuiProps:
         self.status_msg_lifetime = 3
         self._status_msg_creation_time = 0.0
         self._status_msg_text = ""
-        self.unwatched_method = lambda _: 0
-        if "{unwatched_count}" in self.c.channels_fmt:
-            self.unwatched_method = lambda c_id: self.feeder.unwatched_count(c_id)
         if self.is_update_needed:
             self.initial_update()
         self.refresh_last_update()
@@ -140,10 +137,12 @@ class TuiProps:
         if self.c.hide_feed:
             self.channels = self.feeder.channels
         else:
+            unwatched_count = self.feeder.unwatched_count("feed")
             feed_channel = Channel(
                 title="Feed",
                 channel_id="feed",
-                have_updates=bool(self.feeder.unwatched_count()),
+                have_updates=bool(unwatched_count),
+                unwatched_count=unwatched_count,
             )
             self.channels = [feed_channel, *self.feeder.channels]
 
