@@ -74,9 +74,10 @@ class Gravity(Enum):
 
 
 class Color(IntEnum):
-    NONE = 0
-    ACTIVE = 1
-    NEW = 2
+    NONE = 17
+    ACTIVE = 18
+    NEW = 19
+    ACTIVE_NEW = 20
 
 
 class CLIType(Enum):
@@ -113,13 +114,12 @@ class App(TuiProps):
             pass
 
     def config_curses(self) -> None:
-        try:
-            curses.use_default_colors()
-            curses.curs_set(0)
-            curses.init_pair(Color.ACTIVE, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-            curses.init_pair(Color.NEW, curses.COLOR_YELLOW, -1)
-        except:
-            curses.initscr()
+        curses.curs_set(0)
+        curses.use_default_colors()
+        curses.init_pair(Color.NONE, 15, -1)
+        curses.init_pair(Color.ACTIVE, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+        curses.init_pair(Color.NEW, curses.COLOR_YELLOW, -1)
+        curses.init_pair(Color.ACTIVE_NEW, 16, curses.COLOR_YELLOW)
 
     def run_loop(self, screen: "curses._CursesWindow") -> None:
         while True:
@@ -139,19 +139,17 @@ class App(TuiProps):
                 case Key.h | curses.KEY_LEFT:
                     if len(self.lines) > 0:
                         screen.clear()
-                    match self.page_state:
-                        case PageState.CHANNELS:
-                            if not self.is_filtered:
-                                sys.exit(0)
-                            self.move_left_channels()
-                            self.draw(screen)
-                            screen.refresh()
-                        case PageState.ENTRIES:
-                            self.move_left_entries()
-                        case _:
-                            continue
-                    if self.is_filtered:
-                        self.is_filtered = False
+                    if self.page_state == PageState.CHANNELS:
+                        if not self.is_filtered:
+                            sys.exit(0)
+                        self.move_left_channels()
+                        self.draw(screen)
+                        screen.refresh()
+                    elif self.page_state == PageState.ENTRIES:
+                        self.move_left_entries()
+                    else:
+                        continue
+                    self.is_filtered = False
                 case Key.r:
                     self.status_msg = "updating..."
                     self.draw(screen)
@@ -281,44 +279,48 @@ class App(TuiProps):
         for i, line in enumerate(
             self.lines[self.scroll_top : self.scroll_top + max_rows]
         ):
-            color_pair = Color.NONE
+            attr = None
+            color = Color.NONE
             text = "-"
             index = f"{i + 1 + self.scroll_top:{index_len}d}"
+            highlight = False
 
             if isinstance(line.data, Entry):
-                if line.data.is_viewed is False:
-                    color_pair = Color.NEW
+                highlight = not line.data.is_viewed
                 published = line.data.published.strftime(self.c.datetime_fmt)
                 text = self.current_entry_format.format(
                     index=index,
-                    new_mark=self.new_marks[not line.data.is_viewed],
+                    new_mark=self.new_marks[highlight],
                     published=published,
                     title=line.data.title,
                     channel_title=self.channel_title(line.data.channel_id),
                 )
 
             elif isinstance(line.data, Channel):
-                if line.data.have_updates:
-                    color_pair = Color.NEW
+                highlight = line.data.have_updates
                 text = self.c.channels_fmt.format(
                     index=index,
-                    new_mark=self.new_marks[line.data.have_updates],
+                    new_mark=self.new_marks[highlight],
                     title=line.data.title,
                     unwatched_count=line.data.unwatched_count,
                 )
 
-            if line.is_active:
-                color_pair = Color.ACTIVE
+            if highlight and line.is_active:
+                color = Color.ACTIVE_NEW
+                attr = curses.A_BOLD
+            elif line.is_active:
+                color = Color.ACTIVE
+            elif highlight:
+                color = Color.NEW
+
+            if attr is None:
+                attr = curses.color_pair(color)
+            else:
+                attr = curses.color_pair(color) | attr
 
             text = f"{text:<{max_x}}"
             try:
-                screen.addnstr(
-                    i,
-                    x,
-                    text,
-                    max_x,
-                    curses.color_pair(color_pair),
-                )
+                screen.addnstr(i, x, text, max_x, attr)
             except:
                 pass
 
