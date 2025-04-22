@@ -2,6 +2,7 @@ import asyncio
 import curses
 from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
+import re
 import subprocess as sp
 from typing import Literal
 import sys
@@ -16,7 +17,7 @@ else:
 from pytfeeder import Config, Feeder, Storage, utils, __version__
 from pytfeeder.logger import init_logger
 from pytfeeder.models import Channel, Entry
-from pytfeeder.tui import args as tui_args
+from pytfeeder.tui import args as tui_args, ConfigTUI
 from pytfeeder.tui.props import TuiProps, PageState
 
 
@@ -73,11 +74,46 @@ class Gravity(Enum):
     UP = auto()
 
 
-class Color(IntEnum):
-    NONE = 17
-    ACTIVE = 18
-    NEW = 19
-    ACTIVE_NEW = 20
+class ColorIndex(IntEnum):
+    BLACK = 17
+    WHITE = 18
+    ACCENT = 19
+
+
+class ColorPair(IntEnum):
+    NONE = 1
+    ACTIVE = 2
+    NEW = 3
+
+
+def parse_colors(conf: ConfigTUI) -> tuple[int, int, int]:
+    bwa = [curses.COLOR_BLACK, curses.COLOR_WHITE, curses.COLOR_YELLOW]
+    reserved = [ColorIndex.BLACK, ColorIndex.WHITE, ColorIndex.ACCENT]
+    for i, c in enumerate([conf.color_black, conf.color_white, conf.color_accent]):
+        if isinstance(c, str):
+            new_c = getattr(curses, f"COLOR_{c.upper()}", None)
+            if isinstance(new_c, int):
+                c = new_c
+            elif re.match("^#[a-f0-9]{3,6}$", c):
+                curses.init_color(reserved[i], *hex_to_rgb(c))
+                c = reserved[i]
+            else:
+                raise ValueError(f"Invalid color value {c!r}")
+        else:
+            if c in reserved:
+                raise ValueError(f"Color index {c} are reserved")
+        bwa[i] = c
+    return bwa[0], bwa[1], bwa[2]
+
+
+def hex_to_rgb(c: str) -> tuple[int, int, int]:
+    if len(c) == 7:
+        r, g, b = int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16)
+    elif len(c) == 4:
+        r, g, b = int(c[1] * 2, 16), int(c[2] * 2, 16), int(c[3] * 2, 16)
+    else:
+        raise ValueError(f"Unexpected hex color value {len(c) = } ({c = })")
+    return (r * 1000) // 255, (g * 1000) // 255, (b * 1000) // 255
 
 
 class CLIType(Enum):
@@ -115,11 +151,15 @@ class App(TuiProps):
 
     def config_curses(self) -> None:
         curses.curs_set(0)
-        curses.use_default_colors()
-        curses.init_pair(Color.NONE, 15, -1)
-        curses.init_pair(Color.ACTIVE, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-        curses.init_pair(Color.NEW, curses.COLOR_YELLOW, -1)
-        curses.init_pair(Color.ACTIVE_NEW, 16, curses.COLOR_YELLOW)
+        if curses.has_colors():
+            curses.use_default_colors()
+        if not curses.has_extended_color_support() or not curses.can_change_color():
+            return
+
+        black, white, accent = parse_colors(self.c)
+        curses.init_pair(ColorPair.NONE, white, -1)
+        curses.init_pair(ColorPair.ACTIVE, black, accent)
+        curses.init_pair(ColorPair.NEW, accent, -1)
 
     def run_loop(self, screen: "curses._CursesWindow") -> None:
         while True:
@@ -280,7 +320,7 @@ class App(TuiProps):
             self.lines[self.scroll_top : self.scroll_top + max_rows]
         ):
             attr = None
-            color = Color.NONE
+            color = ColorPair.NONE
             text = "-"
             index = f"{i + 1 + self.scroll_top:{index_len}d}"
             highlight = False
@@ -306,12 +346,12 @@ class App(TuiProps):
                 )
 
             if highlight and line.is_active:
-                color = Color.ACTIVE_NEW
+                color = ColorPair.ACTIVE
                 attr = curses.A_BOLD
             elif line.is_active:
-                color = Color.ACTIVE
+                color = ColorPair.ACTIVE
             elif highlight:
-                color = Color.NEW
+                color = ColorPair.NEW
 
             if attr is None:
                 attr = curses.color_pair(color)
@@ -331,7 +371,7 @@ class App(TuiProps):
                     x,
                     f"{self.status:<{max_x}}",
                     max_x,
-                    curses.color_pair(Color.ACTIVE),
+                    curses.color_pair(ColorPair.ACTIVE),
                 )
             except:
                 pass
@@ -380,7 +420,7 @@ class App(TuiProps):
                     0,
                     f"{self.help_status:<{max_x}}",
                     max_x,
-                    curses.color_pair(Color.ACTIVE),
+                    curses.color_pair(ColorPair.ACTIVE),
                 )
             except:
                 pass
@@ -572,7 +612,7 @@ class App(TuiProps):
                 0,
                 f"{self.status:<{max_x}}",
                 max_x,
-                curses.color_pair(Color.ACTIVE),
+                curses.color_pair(ColorPair.ACTIVE),
             )
         screen.move(max_y - 1, 0)
         screen.clrtoeol()

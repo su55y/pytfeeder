@@ -74,6 +74,15 @@ tui:
   # -- unwatched_count - count of unwatched entries
   channels_fmt: ''
 
+  # colorscheme, valid values:
+  # - ansi name (black red green yellow blue magenta cyan white)
+  # - ansi value [curses] (0-255, except 17-19 that reserved)
+  # - ansi value [pt] (0-16)
+  # - hex value short ('#000') or long ('#abc126')
+  color_accent: red
+  color_black: black
+  color_white: white
+
   # datetime format for the {published} key of entry format
   datetime_fmt: '%D %T'
 

@@ -36,7 +36,7 @@ from prompt_toolkit.widgets import Label
 from pytfeeder import Config, Feeder, Storage, utils, __version__
 from pytfeeder.logger import init_logger
 from pytfeeder.models import Channel, Entry
-from pytfeeder.tui import args as tui_args
+from pytfeeder.tui import args as tui_args, ConfigTUI
 from pytfeeder.tui.props import TuiProps, PageState
 
 
@@ -642,6 +642,45 @@ class App(TuiProps):
         return kb
 
 
+def parse_colors(conf: ConfigTUI) -> tuple[str, str, str]:
+    ansi_colors = [
+        "black",
+        "red",
+        "green",
+        "yellow",
+        "blue",
+        "magenta",
+        "cyan",
+        "white",
+        "brightblack",
+        "brightred",
+        "brightgreen",
+        "brightyellow",
+        "brightblue",
+        "brightmagenta",
+        "brightcyan",
+        "white",
+        "black",
+    ]
+    bwa = ["black", "white", "yellow"]
+    for i, c in enumerate([conf.color_black, conf.color_white, conf.color_accent]):
+        if isinstance(c, int):
+            if c < len(ansi_colors) and c >= 0:
+                if c < 16:
+                    bwa[i] = f"ansi{ansi_colors[c]}"
+                else:
+                    bwa[i] = ansi_colors[c]
+            else:
+                raise ValueError(f"Color index {c} not supported")
+        else:
+            if c in ansi_colors:
+                bwa[i] = f"ansi{c}"
+            else:
+                bwa[i] = c
+
+    return bwa[0], bwa[1], bwa[2]
+
+
 def main():
     args = tui_args.parse_args()
     config_path = args.config
@@ -667,15 +706,17 @@ def main():
         event.app.exit()
 
     try:
+        black, white, accent = parse_colors(config.tui)
         Application(
             layout=Layout(VSplit([Label("", width=1), pager])),
             full_screen=True,
             style=Style.from_dict(
                 {
-                    "select-box cursor-line": "nounderline bg:orange fg:black",
-                    "entry": "white",
-                    "new_entry": "#ffb71a",
-                    "statusbar": "bg:orange fg:black",
+                    "select-box cursor-line": f"nounderline bg:{accent} fg:{black}",
+                    "select-box cursor-line new_entry": f"bold nounderline bg:{accent} fg:{black}",
+                    "entry": f"fg:{white}",
+                    "new_entry": f"fg:{accent}",
+                    "statusbar": f"bg:{accent} fg:{black}",
                     "statusbar.text": "",
                 },
             ),
