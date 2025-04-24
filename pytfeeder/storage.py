@@ -135,10 +135,18 @@ class Storage:
             self.log.debug("selected %d rows" % len(rows))
             return {c_id: (count, unwatched) for c_id, count, unwatched in rows}
 
-    def select_entries_count(self, channel_id: str | None = None) -> int:
+    def select_entries_count(
+        self,
+        channel_id: str | None = None,
+        exclude_deleted: bool = False,
+    ) -> int:
         with self.get_cursor() as cursor:
-            query = "SELECT COUNT(*) FROM tb_entries {for_channel}".format(
-                for_channel=f"WHERE channel_id = '{channel_id}'" if channel_id else ""
+            query = """
+            SELECT COUNT(*) FROM tb_entries {where} {for_channel} {and_} {is_deleted}""".format(
+                where="WHERE" if channel_id or exclude_deleted else "",
+                for_channel=f"channel_id = '{channel_id}'" if channel_id else "",
+                is_deleted="is_deleted = 0" if exclude_deleted else "",
+                and_="AND" if channel_id and exclude_deleted else "",
             )
             self.log.debug(query)
             count, *_ = cursor.execute(query).fetchone()

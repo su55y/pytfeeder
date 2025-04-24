@@ -30,6 +30,7 @@ class Channel:
     title: str = ""
     channel_id: str = ""
     entries: list[Entry] = field(default_factory=list)
+    entries_count: int = 0
     have_updates: bool = False
     unwatched_count: int = 0
 

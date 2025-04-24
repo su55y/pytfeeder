@@ -37,7 +37,8 @@ class Feeder:
             if stat is None:
                 self.log.warning(f"No stats for {c!r} in db")
                 continue
-            _, unwatched = stat
+            count, unwatched = stat
+            c.entries_count = count
             c.have_updates = bool(unwatched)
             c.unwatched_count = unwatched
 
@@ -90,6 +91,9 @@ class Feeder:
         except Exception as e:
             self.log.error(f"Can't mark entry as deleted: {e!r}")
             return False
+
+    def total_entries_count(self, exclude_deleted: bool = True) -> int:
+        return self.stor.select_entries_count(exclude_deleted=exclude_deleted)
 
     def unwatched_count(self, channel_id: str | None = None) -> int:
         if channel_id == "feed":
