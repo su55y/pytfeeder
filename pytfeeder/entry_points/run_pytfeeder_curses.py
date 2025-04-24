@@ -338,6 +338,8 @@ class App(TuiProps):
 
             elif isinstance(line.data, Channel):
                 highlight = line.data.have_updates
+                if line.data.entries_count == 0:
+                    attr = curses.A_DIM | curses.A_ITALIC
                 text = self.c.channels_fmt.format(
                     index=index,
                     new_mark=self.new_marks[highlight],
@@ -501,7 +503,12 @@ class App(TuiProps):
         else:
             self.selected_data = self.lines[self.index].data
 
-        if self.page_state == PageState.CHANNELS:
+        if (
+            isinstance(self.selected_data, Channel)
+            and self.page_state == PageState.CHANNELS
+        ):
+            if self.selected_data.entries_count == 0:
+                return
             self.page_state = PageState.ENTRIES
             self.lines = self.lines_by_id(self.selected_data.channel_id)
 

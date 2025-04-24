@@ -197,7 +197,10 @@ class App(TuiProps):
             title=channel.title,
             unwatched_count=channel.unwatched_count,
         )
-        return [(f"class:{self.classnames[channel.have_updates]}", line)]
+        classname = self.classnames[channel.have_updates]
+        if channel.entries_count == 0:
+            classname = "empty"
+        return [(f"class:{classname}", line)]
 
     def format_entry(self, i: int, entry: Entry) -> list[OneStyleAndTextTuple]:
         line = self.current_entry_format.format(
@@ -402,6 +405,8 @@ class App(TuiProps):
                         if len(self.page_lines) < self.index + 1:
                             return
                         channel = self.page_lines[self.index]
+                        if channel.entries_count == 0:  # type: ignore
+                            return
                         last_index = 0
                         for i in range(len(self.channels)):
                             if channel.channel_id == self.channels[i].channel_id:
@@ -411,6 +416,8 @@ class App(TuiProps):
                         self.reset_filter()
                     else:
                         channel = self.channels[self.index]
+                        if channel.entries_count == 0:
+                            return
                         self.last_index = self.index
                     self.set_entries_by_id(channel.channel_id)
                     self.page_state = PageState.ENTRIES
@@ -716,6 +723,7 @@ def main():
                     "select-box cursor-line new_entry": f"bold nounderline bg:{accent} fg:{black}",
                     "entry": f"fg:{white}",
                     "new_entry": f"fg:{accent}",
+                    "empty": f"italic fg:{white}",
                     "statusbar": f"bg:{accent} fg:{black}",
                     "statusbar.text": "",
                 },

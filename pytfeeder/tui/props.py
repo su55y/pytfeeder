@@ -141,6 +141,7 @@ class TuiProps:
             feed_channel = Channel(
                 title="Feed",
                 channel_id="feed",
+                entries_count=self.feeder.total_entries_count(),
                 have_updates=bool(unwatched_count),
                 unwatched_count=unwatched_count,
             )
