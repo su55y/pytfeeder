@@ -117,16 +117,19 @@ def run():
     feeder = Feeder(config, Storage(config.storage_path))
 
     if args.storage_stats:
+        total = feeder.total_entries_count(exclude_deleted=False)
+        deleted = total - feeder.total_entries_count(exclude_deleted=True)
         print(
-            " Total entries count: {total} ({new} new)\n".format(
-                total=feeder.stor.select_entries_count(),
+            " Total entries count: {total} (new: {new}, deleted: {deleted})\n".format(
+                total=total,
                 new=feeder.unwatched_count(),
+                deleted=deleted,
             ),
             end="",
         )
         print(entries_stats(feeder))
         print(" File stats:\n" + storage_file_stats(config.storage_path))
-        exit(0)
+        sys.exit(0)
 
     if args.clean_cache:
         feeder.clean_cache(args.force)
