@@ -258,17 +258,13 @@ class App(TuiProps):
         )
 
     def mark_as_watched_all(self) -> None:
-        self.selected_data = self.page_lines[self.index]
-        if self.page_state == PageState.CHANNELS and isinstance(
-            self.selected_data, Channel
-        ):
+        selected_data = self.page_lines[self.index]
+        if self.page_state == PageState.CHANNELS and isinstance(selected_data, Channel):
             self.feeder.mark_as_watched(
                 unwatched=all(not c.have_updates for c in self.feeder.channels)
             )
             self.update_channels()
-        elif self.page_state == PageState.ENTRIES and isinstance(
-            self.selected_data, Entry
-        ):
+        elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
             if self.channels[self.last_index].channel_id == "feed":
                 unwatched = all(not c.have_updates for c in self.channels)
                 self.feeder.mark_as_watched(unwatched=unwatched)
@@ -280,7 +276,7 @@ class App(TuiProps):
             else:
                 unwatched = not self.channels[self.last_index].have_updates
                 self.feeder.mark_as_watched(
-                    channel_id=self.selected_data.channel_id, unwatched=unwatched
+                    channel_id=selected_data.channel_id, unwatched=unwatched
                 )
                 self.is_channels_outdated = True
                 self.channels[self.last_index].have_updates = unwatched
@@ -288,24 +284,24 @@ class App(TuiProps):
                     self.page_lines[i].is_viewed = not unwatched  # type: ignore
 
     def mark_as_watched(self) -> None:
-        self.selected_data = self.page_lines[self.index]
+        selected_data = self.page_lines[self.index]
         if self.page_state == PageState.CHANNELS:
-            if not isinstance(self.selected_data, Channel):
+            if not isinstance(selected_data, Channel):
                 return
-            if self.selected_data.channel_id == "feed":
+            if selected_data.channel_id == "feed":
                 return
-            unwatched = not self.selected_data.have_updates
+            unwatched = not selected_data.have_updates
             self.feeder.mark_as_watched(
-                channel_id=self.selected_data.channel_id, unwatched=unwatched
+                channel_id=selected_data.channel_id, unwatched=unwatched
             )
             self.update_channels()
         elif self.page_state == PageState.ENTRIES:
-            if not isinstance(self.selected_data, Entry):
+            if not isinstance(selected_data, Entry):
                 return
-            unwatched = self.selected_data.is_viewed
-            self.feeder.mark_as_watched(id=self.selected_data.id, unwatched=unwatched)
+            unwatched = selected_data.is_viewed
+            self.feeder.mark_as_watched(id=selected_data.id, unwatched=unwatched)
             self.is_channels_outdated = True
-            self.selected_data.is_viewed = not unwatched
+            selected_data.is_viewed = not unwatched
             self.index = (self.index + 1) % len(self.page_lines)
 
     @override
@@ -563,12 +559,12 @@ class App(TuiProps):
 
             self.status_msg = f"executing {macro!r}..."
 
-            self.selected_data = self.page_lines[self.index]
-            if not isinstance(self.selected_data, Entry):
+            selected_data = self.page_lines[self.index]
+            if not isinstance(selected_data, Entry):
                 return
 
             sp.Popen(
-                [macro, self.selected_data.id, self.selected_data.title],
+                [macro, selected_data.id, selected_data.title],
                 stdout=sp.DEVNULL,
                 stderr=sp.DEVNULL,
             )
@@ -589,12 +585,12 @@ class App(TuiProps):
             if len(self.page_lines) == 0:
                 return
 
-            self.selected_data = self.page_lines[self.index]
-            if not isinstance(self.selected_data, Entry):
+            selected_data = self.page_lines[self.index]
+            if not isinstance(selected_data, Entry):
                 return
             # FIXME: will fail if tsp or notify-send not an executable
-            utils.download_video(self.selected_data, self.c.download_output)
-            if not self.selected_data.is_viewed:
+            utils.download_video(selected_data, self.c.download_output)
+            if not selected_data.is_viewed:
                 self.mark_as_watched()
 
         @kb.add("D")
@@ -603,8 +599,8 @@ class App(TuiProps):
                 return
             if len(self.page_lines) == 0:
                 return
-            self.selected_data = self.page_lines[self.index]
-            if not isinstance(self.selected_data, Entry):
+            selected_data = self.page_lines[self.index]
+            if not isinstance(selected_data, Entry):
                 return
             entries = [l for l in self.page_lines if l.is_viewed is False]  # type: ignore
             if len(entries) > 0:
@@ -620,12 +616,12 @@ class App(TuiProps):
                 and isinstance(selected_data, Entry)
             ):
                 return
-            if self.feeder.mark_entry_as_deleted(selected_data.id):
-                self.is_channels_outdated = True
-                del self.page_lines[self.index]
-                self.index = max(0, self.index - 1)
-            else:
+            if not self.feeder.mark_entry_as_deleted(selected_data.id):
                 self.status_msg = "Something went wrong"
+                return
+            self.is_channels_outdated = True
+            del self.page_lines[self.index]
+            self.index = max(0, self.index - 1)
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
