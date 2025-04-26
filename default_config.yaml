@@ -30,6 +30,7 @@ rofi:
   # channels print format, available keys:
   # -- id              - 24 characters long channel id
   # -- title           - channel title
+  # -- entries_count   - total entries count except deleted
   # -- unwatched_count - count of new entries
   channels_fmt: "{title}\0info\x1f{id}"
 
@@ -71,8 +72,9 @@ tui:
   # -- id              - 24 characters long channel id
   # -- title           - channel title
   # -- new_mark        - mark if have updates, otherwise whitespace
+  # -- entries_count   - total entries count except deleted
   # -- unwatched_count - count of unwatched entries
-  channels_fmt: ''
+  channels_fmt: '{new_mark} | {title}'
 
   # colorscheme, valid values:
   # - ansi name (black red green yellow blue magenta cyan white)
