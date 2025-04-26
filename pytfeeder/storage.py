@@ -152,10 +152,11 @@ class Storage:
             count, *_ = cursor.execute(query).fetchone()
             return count
 
-    def select_stats(self) -> list[tuple[str, int, int]]:
+    def select_stats(self) -> list[tuple[str, int, int, int]]:
         with self.get_cursor() as cursor:
             query = """
-            SELECT channel_id, COUNT(channel_id) AS c1, SUM(is_viewed = 0 AND is_deleted = 0)
+            SELECT channel_id, COUNT(channel_id) AS c1,
+            SUM(is_viewed = 0 AND is_deleted = 0), SUM(is_deleted = 1)
             FROM tb_entries
             GROUP BY channel_id ORDER BY c1 DESC;"""
             self.log.debug(query)

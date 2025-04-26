@@ -58,12 +58,29 @@ def entries_stats(feeder: Feeder) -> str:
     max_title_len = max(len(c.title) for c in feeder.config.channels)
     channels_map = {c.channel_id: c.title for c in feeder.config.channels}
     stats = feeder.stor.select_stats()
-    max_count_number_len = max(len(str(c)) for _, c, _ in stats) if len(stats) else 1
+    c1, c2, c3 = 1, 1, 1
+    deleted_channels = {}
+    for cid, c, n, d in stats:
+        c1 = max(len(str(c)), c1)
+        c2 = max(len(str(n)), c2)
+        c3 = max(len(str(d)), c3)
+        if cid not in channels_map:
+            deleted_channels[cid] = (c, n, d)
+
     entries_stats_str = ""
-    for channel_id, count, new in stats:
-        title = channels_map.get(channel_id, f"{channel_id} (DELETED)")
-        entries_stats_str += f"  - {title + ':': <{max_title_len + 3}}{count:{max_count_number_len}d} ({new})\n"
-    return entries_stats_str
+    deleted_stats_str = ""
+    for channel_id, count, new, deleted in stats:
+        nums = f"{count:{c1}d} | {new:{c2}d} | {deleted:{c3}d}"
+        title = channels_map.get(channel_id)
+        if title is None:
+            deleted_stats_str += f"{channel_id:<24} | {nums}\n"
+        else:
+            entries_stats_str += f"{title:<{max_title_len}} | {nums}\n"
+    header = (
+        f"{'TITLE':^{max_title_len}} |{'TOT':^{c1+2}}|{'NEW':^{c2+2}}|{'DEL':^{c3+2}}"
+    )
+    header += f"\n{'-'*len(header)}"
+    return f"\n{header}\n{entries_stats_str}\nDeleted channels:\n{deleted_stats_str}"
 
 
 def storage_file_stats(storage_path: Path) -> str:
