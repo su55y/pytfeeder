@@ -19,6 +19,7 @@ channels-fmt keys:
     {index}           - line index
     {new_mark}        - show mark if have updates, otherwise `' '*len(new_mark)`
     {title}           - title of the channel
+    {entries_count}   - total entries count except deleted
     {unwatched_count} - count of unwatched entries
 
 entries-fmt keys:

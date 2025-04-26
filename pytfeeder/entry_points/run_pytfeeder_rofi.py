@@ -15,17 +15,16 @@ class RofiPrinter:
         self.__message_printed = False
 
     def print_channels(self) -> None:
-        self.print_message("%d unwatched entries" % self.feeder.unwatched_count())
+        self.print_message("%d unwatched entries" % self.feeder.unwatched_count("feed"))
         print("\000data\037main", end=self.c.separator)
-        unwatched_count = lambda _: 0
-        if "{unwatched_count}" in self.c.channels_fmt:
-            unwatched_count = lambda channel_id: self.feeder.unwatched_count(channel_id)
+
         for channel in self.feeder.channels:
             print(
                 self.c.channels_fmt.format(
                     id=channel.channel_id,
                     title=channel.title,
-                    unwatched_count=unwatched_count(channel.channel_id),
+                    entries_count=channel.entries_count,
+                    unwatched_count=channel.unwatched_count,
                     active=["false", "true"][channel.have_updates],
                 ),
                 end=self.c.separator,

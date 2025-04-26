@@ -333,6 +333,7 @@ class App(TuiProps):
                     index=index,
                     new_mark=self.new_marks[highlight],
                     title=line.data.title,
+                    entries_count=line.data.entries_count,
                     unwatched_count=line.data.unwatched_count,
                 )
 

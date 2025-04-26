@@ -39,7 +39,8 @@ class TestStats(unittest.TestCase):
                     self.sample_entries[0].channel_id,
                     len(self.sample_entries),
                     len(self.sample_entries) - 1,
+                    0,
                 ),
-                (self.another_entry.channel_id, 1, 1),
+                (self.another_entry.channel_id, 1, 1, 0),
             ],
         )
