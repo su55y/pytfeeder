@@ -396,9 +396,9 @@ class App(TuiProps):
 
         for i, line in enumerate(self.help_lines):
             text = f"{line}"
-            pad.addnstr(i, 0, text, min(len(text), max_x), curses.color_pair(2))
+            pad.addnstr(i, 0, text, min(len(text), max_x))
 
-        pad.addnstr(len(self.help_lines), 0, "~", 1, curses.color_pair(2))
+        pad.addnstr(len(self.help_lines), 0, "~", 1)
 
         pad.refresh(pad_pos, 0, 0, 0, max_y - 2, max_x - 1)
         screen.refresh()
@@ -430,6 +430,8 @@ class App(TuiProps):
                     pad_pos = 0
                 case Key.G | curses.KEY_END:
                     pad_pos = (len(self.help_lines) + 1) - max_y
+                case curses.KEY_RESIZE:
+                    screen.refresh()
 
     def move_up(self) -> None:
         self.gravity = Gravity.UP
