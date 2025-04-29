@@ -462,19 +462,35 @@ class App(TuiProps):
         def _go_bottom(_) -> None:
             self.index = max(0, len(self.page_lines) - 1)
 
-        def move_index(prev: bool = False) -> int:
-            if prev:
-                if self.last_index == 0:
+        def move_index(last_index: int, is_prev: bool = False) -> int:
+            if is_prev:
+                if last_index == 0:
                     return len(self.channels) - 1
-                return max(0, self.last_index - 1)
-            if self.last_index == len(self.channels) - 1:
+                return last_index - 1
+            if last_index == len(self.channels) - 1:
                 return 0
-            return min(len(self.channels) - 1, self.last_index + 1)
+            return last_index + 1
 
-        def do_move(prev: bool = False) -> None:
-            if not (self.page_state == PageState.ENTRIES and not self.is_filtered):
+        def do_move(is_prev: bool = False) -> None:
+            if (
+                self.page_state != PageState.ENTRIES
+                or self.is_filtered
+                or len(self.channels) < 2
+                or self.last_index > len(self.channels)
+                or self.last_index < 0
+            ):
                 return
-            index = move_index(prev)
+            gravity = -1 if is_prev else 1
+            index = move_index(self.last_index, is_prev)
+            for i in range(1, len(self.channels) + 1):
+                if self.channels[index].entries_count > 0:
+                    break
+                index = move_index(self.last_index + (i * gravity), is_prev)
+            else:
+                return
+            if index == self.last_index:
+                return
+
             self.last_index = index
             self.set_entries_by_id(self.channels[index].channel_id)
             self.index = 0
@@ -486,7 +502,7 @@ class App(TuiProps):
 
         @kb.add("K")
         def _go_prev(_) -> None:
-            do_move(prev=True)
+            do_move(is_prev=True)
 
         @kb.add("f")
         def _follow(_) -> None:

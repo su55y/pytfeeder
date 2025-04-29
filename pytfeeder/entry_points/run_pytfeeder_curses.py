@@ -69,9 +69,9 @@ class Key(IntEnum):
     QUESTION_MARK = ord("?")
 
 
-class Gravity(Enum):
-    DOWN = auto()
-    UP = auto()
+class Gravity(IntEnum):
+    DOWN = 1
+    UP = -1
 
 
 class ColorIndex(IntEnum):
@@ -222,12 +222,10 @@ class App(TuiProps):
                 case Key.A:
                     self.mark_as_watched_all()
                 case Key.J:
-                    if self.page_state == PageState.ENTRIES and not self.is_filtered:
-                        self.move_next()
+                    if self.handle_move_next_prev(Gravity.DOWN):
                         screen.clear()
                 case Key.K:
-                    if self.page_state == PageState.ENTRIES and not self.is_filtered:
-                        self.move_prev()
+                    if self.handle_move_next_prev(Gravity.UP):
                         screen.clear()
                 case Key.f:
                     if self.handle_follow():
@@ -449,24 +447,48 @@ class App(TuiProps):
         self.gravity = Gravity.DOWN
         self.index = len(self.lines) - 1
 
-    def move(self, channel_index: int) -> None:
-        self.parent_index = channel_index
-        self.last_page_index = channel_index
-        self.lines = self.lines_by_id(self.channels[channel_index].channel_id)
+    def calc_next_parent_index(self, parent_index: int) -> int:
+        if parent_index == len(self.channels) - 1:
+            return 0
+        return parent_index + 1
+
+    def calc_prev_parent_index(self, parent_index: int) -> int:
+        if parent_index == 0:
+            return len(self.channels) - 1
+        return parent_index - 1
+
+    def handle_move_next_prev(self, gravity: Gravity) -> bool:
+        if (
+            self.page_state != PageState.ENTRIES
+            or self.is_filtered
+            or len(self.channels) < 2
+            or self.parent_index > len(self.channels)
+            or abs(gravity) != 1
+            or self.parent_index < 0
+        ):
+            return False
+
+        calc_new_parent_index = {
+            Gravity.UP: self.calc_prev_parent_index,
+            Gravity.DOWN: self.calc_next_parent_index,
+        }[gravity]
+        new_parent_index = calc_new_parent_index(self.parent_index)
+        for i in range(1, len(self.channels)):
+            if self.channels[new_parent_index].entries_count > 0:
+                break
+            new_parent_index = calc_new_parent_index(self.parent_index + (i * gravity))
+        else:
+            return False
+
+        if new_parent_index == self.parent_index:
+            return False
+
+        self.parent_index = new_parent_index
+        self.last_page_index = new_parent_index
+        self.lines = self.lines_by_id(self.channels[new_parent_index].channel_id)
         self.index = 0
         self.scroll_top = 0
-
-    def move_next(self) -> None:
-        if self.parent_index == len(self.channels) - 1:
-            self.move(0)
-        else:
-            self.move(min(len(self.channels) - 1, self.parent_index + 1))
-
-    def move_prev(self) -> None:
-        if self.parent_index == 0:
-            self.move(len(self.channels) - 1)
-        else:
-            self.move(max(0, self.parent_index - 1))
+        return True
 
     def handle_follow(self) -> bool:
         if (
