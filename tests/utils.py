@@ -12,9 +12,11 @@ def setup_logging(
 ) -> None:
     dir = os.environ.get("PYTFEEDER_TESTLOG_DIR")
     if not dir:
+        init_logger(LoggerConfig())
         return
     dirpath = Path(dir)
     if not dirpath.is_dir():
+        init_logger(LoggerConfig())
         return
 
     init_logger(LoggerConfig(file=dirpath / filename, fmt=fmt, level=level))

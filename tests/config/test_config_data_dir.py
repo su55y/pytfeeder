@@ -8,13 +8,16 @@ from pytfeeder.defaults import default_data_path
 
 class TestDataDir(unittest.TestCase):
     def test_storage_path(self):
-        self.assertEqual(Config().storage_path, default_data_path() / STORAGE_FILENAME)
         self.assertEqual(
-            Config(data_dir=Path("test")).storage_path,
+            Config(channels=list()).storage_path,
+            default_data_path() / STORAGE_FILENAME,
+        )
+        self.assertEqual(
+            Config(channels=list(), data_dir=Path("test")).storage_path,
             Path("test") / STORAGE_FILENAME,
         )
         self.assertEqual(
-            Config(storage_path=Path("test")).storage_path,
+            Config(channels=list(), storage_path=Path("test")).storage_path,
             Path("test"),
         )
 
@@ -30,10 +33,14 @@ class TestDataDir(unittest.TestCase):
         tmp_config.close()
 
         self.assertEqual(
-            Config(config_file=tmp_config.name).storage_path,
+            Config(channels=list(), config_file=Path(tmp_config.name)).storage_path,
             tmp_dir_path / STORAGE_FILENAME,
         )
         self.assertEqual(
-            Config(config_file=tmp_config.name, storage_path=Path("test")).storage_path,
+            Config(
+                channels=list(),
+                config_file=Path(tmp_config.name),
+                storage_path=Path("test"),
+            ).storage_path,
             Path("test"),
         )

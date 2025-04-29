@@ -9,7 +9,7 @@ from pytfeeder.tui import ConfigTUI
 
 class TestConfig(unittest.TestCase):
     def test_default_data_paths(self):
-        c = config.Config()
+        c = config.Config(channels=list())
         data_path = default_data_path()
         self.assertEqual(c.storage_path, data_path / config.STORAGE_FILENAME)
 
