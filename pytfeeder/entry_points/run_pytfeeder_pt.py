@@ -508,21 +508,15 @@ class App(TuiProps):
         def _follow(_) -> None:
             if (
                 self.page_state != PageState.ENTRIES
-                or self.last_index != 0
                 or not self._is_feed_opened
-                or self.is_filtered
+                or self.last_index != 0
             ):
                 return
-            # find new last_index value
-            new_last_index = -1
-            for i in range(len(self.channels)):
-                if self.entries[self.index].channel_id == self.channels[i].channel_id:
-                    new_last_index = i
-                    break
-            if new_last_index < 1:
-                return
-            self.set_entries_by_id(self.entries[self.index].channel_id)
-            self.last_index = new_last_index
+
+            channel_id = self.page_lines[self.index].channel_id
+            self.last_index = self.find_channel_index_by_id(channel_id)
+            self.is_filtered = False
+            self.set_entries_by_id(channel_id)
             self.index = 0
             self.status_title = self.channels[self.last_index].title
 

@@ -497,16 +497,12 @@ class App(TuiProps):
             or self.parent_index != 0
         ):
             return False
-        new_parent_index = -1
-        for i in range(len(self.channels)):
-            if self.channels[i].channel_id == self.lines[self.index].data.channel_id:
-                new_parent_index = i
-                break
-        if new_parent_index < 1:
-            return False
-        self.lines = self.lines_by_id(self.lines[self.index].data.channel_id)
-        self.parent_index = new_parent_index
-        self.last_page_index = new_parent_index
+
+        channel_id = self.lines[self.index].data.channel_id
+        self.parent_index = self.find_channel_index_by_id(channel_id)
+        self.is_filtered = False
+        self.lines = self.lines_by_id(channel_id)
+        self.last_page_index = self.parent_index
         self.index = 0
         self.scroll_top = 0
         return True
@@ -559,12 +555,6 @@ class App(TuiProps):
         self.last_page_index = -1
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
-
-    def find_channel_index_by_id(self, channel_id: str) -> int:
-        i = self.channel_indexes_map.get(channel_id)
-        if i is None:
-            raise Exception(f"Unknown {channel_id = !r}\nin {self.channels = !r}")
-        return i
 
     @override
     def get_parent_channel_id(self) -> str | None:

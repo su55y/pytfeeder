@@ -64,6 +64,14 @@ class TuiProps:
     def current_entry_format(self) -> str:
         return self.entry_formats[self._is_feed_opened]
 
+    def find_channel_index_by_id(self, channel_id: str) -> int:
+        i = self.channel_indexes_map.get(channel_id)
+        if i is None:
+            raise Exception(
+                f"Unknown {channel_id = !r}\nin {self.channel_indexes_map.keys() = !r}"
+            )
+        return i
+
     def initial_update(self) -> None:
         print("updating...")
         new, err = asyncio.run(self.feeder.sync_entries())
