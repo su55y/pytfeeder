@@ -1,17 +1,39 @@
 #!/bin/sh
 
 ICON=""
+UPDATE_LOCK_PATH=/tmp/pytfeeder_update.lock
+UPDATE_INTERVAL_SEC=$((3600 * 2))
+LAST_UPDATE_TIMESTAMP=0
+
+notify() {
+    [ -n "$1" ] || return
+    notify-send -i youtube -a pytfeeder "$1"
+}
 
 update() {
-    updates="$(pytfeeder -s)"
-    case $updates in
-    0) notify-send -a pytfeeder "No updates" ;;
-    *) notify-send -a pytfeeder "$updates new updates" ;;
+    notify "Start updating..."
+    UPDATES="$(pytfeeder -s)"
+    case $UPDATES in
+    0) notify "No updates" ;;
+    0* | *[!0-9]*) notify "Error: $UPDATES" ;;
+    [[:digit:]]*) notify "$UPDATES new updates" ;;
+    *) notify "Error: $UPDATES" ;;
     esac
 }
 
 case $BLOCK_BUTTON in
 1) update ;;
+*)
+    if [ -f "$UPDATE_LOCK_PATH" ]; then
+        NOW=$(date +%s)
+        LAST_UPDATE_TIMESTAMP=$(cat "$UPDATE_LOCK_PATH")
+        [ $((NOW - LAST_UPDATE_TIMESTAMP)) -gt $UPDATE_INTERVAL_SEC ] &&
+            update
+    else
+        UPTIME_SEC=$(uptime -r | cut -d' ' -f2 | cut -d. -f1)
+        [ $UPTIME_SEC -gt $UPDATE_INTERVAL_SEC ] && update
+    fi
+    ;;
 esac
 
 VALUE="$(pytfeeder -u)"
