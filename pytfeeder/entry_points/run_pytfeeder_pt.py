@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import subprocess as sp
 import sys
 
@@ -40,7 +41,9 @@ from pytfeeder.tui import args as tui_args, ConfigTUI
 from pytfeeder.tui.props import TuiProps, PageState
 
 
-Lines = list[Channel] | list[Entry]
+@dataclass
+class Line:
+    data: Channel | Entry
 
 
 class PromptContainer(ConditionalContainer):
@@ -75,11 +78,12 @@ class App(TuiProps):
 
         self._app_link: Application | None = None
         self.classnames = {0: "entry", 1: "new_entry"}
-        self.entries: list[Entry] = []
         self.filter_text = ""
         self.help_index = 0
         self.is_help_opened = False
         self.last_index = -1
+        self.lines = list(map(Line, self.channels))
+        self.__lines_backup: list[Line] = list()
         self.macros = {
             "f1": self.c.macro1,
             "f2": self.c.macro2,
@@ -116,7 +120,8 @@ class App(TuiProps):
                 self._app_link.layout.focus(self.main_window)
                 self._app_link.vi_state.input_mode = InputMode.NAVIGATION
                 self._app_link = None
-                self.filter_text = buf.text
+                condition = lambda v: buf.text.lower() in v.data.title.lower()
+                self.lines = list(filter(condition, self.__lines_backup))
                 self.is_filtered = True
                 self.index = 0
             buf.text = ""
@@ -135,7 +140,7 @@ class App(TuiProps):
                 except:
                     return False
 
-                if number > len(self.page_lines) or number < 1:
+                if number > len(self.lines) or number < 1:
                     return False
 
                 self.index = number - 1
@@ -170,25 +175,12 @@ class App(TuiProps):
     def __pt_container__(self) -> HSplit:
         return self.container
 
-    @property
-    def page_lines(self) -> Lines:
-        if self.page_state == PageState.CHANNELS:
-            if self.is_filtered and self.filter_text:
-                return [
-                    channel
-                    for channel in self.channels
-                    if self.filter_text.lower() in channel.title.lower()
-                ]
-            return self.channels
-        elif self.page_state == PageState.ENTRIES:
-            if self.is_filtered and self.filter_text:
-                return [
-                    entry
-                    for entry in self.entries
-                    if self.filter_text.lower() in entry.title.lower()
-                ]
-            return self.entries
-        return []
+    def lines_by_id(self, channel_id: str) -> list[Line]:
+        if channel_id == "feed":
+            self._is_feed_opened = True
+            return list(map(Line, self.feed()))
+        self._is_feed_opened = False
+        return list(map(Line, self.channel_feed(channel_id)))
 
     def format_channel(self, i: int, channel: Channel) -> list[OneStyleAndTextTuple]:
         line = self.c.channels_fmt.format(
@@ -214,18 +206,18 @@ class App(TuiProps):
         return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
 
     def format_line_index(self, i: int) -> str:
-        index_len = max(1, len(str(len(self.page_lines))))
+        index_len = max(1, len(str(len(self.lines))))
         return f"{i:{index_len}d}"
 
     def _get_formatted_text(self) -> AnyFormattedText:
         result: list[AnyFormattedText] = []
-        for i, line in enumerate(self.page_lines):
+        for i, line in enumerate(self.lines):
             if i == self.index:
                 result.append([("[SetCursorPosition]", "")])
-            if isinstance(line, Entry):
-                result.append(self.format_entry(i, line))
-            elif isinstance(line, Channel):
-                result.append(self.format_channel(i, line))
+            if isinstance(line.data, Entry):
+                result.append(self.format_entry(i, line.data))
+            elif isinstance(line.data, Channel):
+                result.append(self.format_channel(i, line.data))
             result.append("\n")
 
         return merge_formatted_text(result)
@@ -246,12 +238,12 @@ class App(TuiProps):
 
         title = self.status_title
         if self.is_filtered:
-            title = "%d found" % len(self.page_lines)
+            title = "%d found" % len(self.lines)
 
         return " ".join(
             self.c.status_fmt.format(
                 msg=self.status_msg,
-                index=self.status_index(lines_count=len(self.page_lines)),
+                index=self.status_index(lines_count=len(self.lines)),
                 title=title,
                 keybinds=self.status_keybinds,
                 last_update=self.status_last_update,
@@ -259,7 +251,7 @@ class App(TuiProps):
         )
 
     def mark_as_watched_all(self) -> None:
-        selected_data = self.page_lines[self.index]
+        selected_data = self.lines[self.index].data
         if self.page_state == PageState.CHANNELS and isinstance(selected_data, Channel):
             self.feeder.mark_as_watched(
                 unwatched=all(not c.have_updates for c in self.feeder.channels)
@@ -272,8 +264,8 @@ class App(TuiProps):
                 self.is_channels_outdated = True
                 for i in range(len(self.channels)):
                     self.channels[i].have_updates = unwatched
-                for i in range(len(self.page_lines)):
-                    self.page_lines[i].is_viewed = not unwatched  # type: ignore
+                for i in range(len(self.lines)):
+                    self.lines[i].data.is_viewed = not unwatched  # type: ignore
             else:
                 unwatched = not self.channels[self.last_index].have_updates
                 self.feeder.mark_as_watched(
@@ -281,11 +273,11 @@ class App(TuiProps):
                 )
                 self.is_channels_outdated = True
                 self.channels[self.last_index].have_updates = unwatched
-                for i in range(len(self.page_lines)):
-                    self.page_lines[i].is_viewed = not unwatched  # type: ignore
+                for i in range(len(self.lines)):
+                    self.lines[i].data.is_viewed = not unwatched  # type: ignore
 
     def mark_as_watched(self) -> None:
-        selected_data = self.page_lines[self.index]
+        selected_data = self.lines[self.index].data
         if self.page_state == PageState.CHANNELS:
             if not isinstance(selected_data, Channel):
                 return
@@ -296,6 +288,8 @@ class App(TuiProps):
                 channel_id=selected_data.channel_id, unwatched=unwatched
             )
             self.update_channels()
+            if not self.c.hide_feed:
+                self.reload_lines()
         elif self.page_state == PageState.ENTRIES:
             if not isinstance(selected_data, Entry):
                 return
@@ -303,7 +297,7 @@ class App(TuiProps):
             self.feeder.mark_as_watched(id=selected_data.id, unwatched=unwatched)
             self.is_channels_outdated = True
             selected_data.is_viewed = not unwatched
-            self.index = (self.index + 1) % len(self.page_lines)
+            self.index = (self.index + 1) % len(self.lines)
 
     @override
     def get_parent_channel_id(self) -> str | None:
@@ -315,23 +309,18 @@ class App(TuiProps):
     def reload_lines(self, channel_id: str | None = None) -> None:
         if self.page_state == PageState.ENTRIES and channel_id:
             self.index = 0
-            self.set_entries_by_id(channel_id)
+            self.lines = self.lines_by_id(channel_id)
+        elif self.page_state == PageState.CHANNELS:
+            self.lines = list(map(Line, self.channels))
 
     def reset_filter(self) -> None:
         self.filter_text = ""
         self.is_filtered = False
+        self.lines = self.__lines_backup.copy()
+        self.__lines_backup = list()
+        self.status_title = ""
         if self.page_state == PageState.ENTRIES:
             self.status_title = self.channels[self.last_index].title
-        elif self.page_state == PageState.CHANNELS:
-            self.status_title = ""
-
-    def set_entries_by_id(self, channel_id: str) -> None:
-        if channel_id == "feed":
-            self._is_feed_opened = True
-            self.entries = self.feed()
-        else:
-            self._is_feed_opened = False
-            self.entries = self.channel_feed(channel_id)
 
     @property
     def _help_keybindings(self) -> KeyBindings:
@@ -358,7 +347,7 @@ class App(TuiProps):
         @kb.add("left")
         @kb.add("q")
         @kb.add("?")
-        def _back(event: KeyPressEvent) -> None:
+        def _go_back(event: KeyPressEvent) -> None:
             self.is_help_opened = False
             self.help_window.height = 0
             self.main_window.height = self.container.height
@@ -377,60 +366,56 @@ class App(TuiProps):
         @kb.add("p")
         @kb.add("s-tab")
         def _go_up(_) -> None:
-            if len(self.page_lines) > 1:
-                self.index = (self.index - 1) % len(self.page_lines)
+            if len(self.lines) > 1:
+                self.index = (self.index - 1) % len(self.lines)
 
         @kb.add("j")
         @kb.add("down")
         @kb.add("n")
         @kb.add("tab")
         def _go_down(_) -> None:
-            if len(self.page_lines) > 1:
-                self.index = (self.index + 1) % len(self.page_lines)
+            if len(self.lines) > 1:
+                self.index = (self.index + 1) % len(self.lines)
 
         @kb.add("l")
         @kb.add("enter")
         @kb.add("right")
-        def _choose_line(event: KeyPressEvent) -> None:
-            if len(self.page_lines) == 0:
+        def _enter_line(event: KeyPressEvent) -> None:
+            if len(self.lines) == 0:
                 return
-            match self.page_state:
-                case PageState.CHANNELS:
-                    if self.index >= len(self.channels):
-                        return
-                    if self.is_filtered:
-                        if len(self.page_lines) < self.index + 1:
-                            return
-                        channel = self.page_lines[self.index]
-                        if channel.entries_count == 0:  # type: ignore
-                            return
-                        last_index = 0
-                        for i in range(len(self.channels)):
-                            if channel.channel_id == self.channels[i].channel_id:
-                                last_index = i
-                        self.last_index = last_index
+            if self.index not in range(len(self.lines)):
+                raise Exception(f"{self.index=} out of range 0-{len(self.lines)}")
 
-                        self.reset_filter()
-                    else:
-                        channel = self.channels[self.index]
-                        if channel.entries_count == 0:
-                            return
-                        self.last_index = self.index
-                    self.set_entries_by_id(channel.channel_id)
-                    self.page_state = PageState.ENTRIES
-                    self.index = 0
-                    self.status_title = channel.title
-                case PageState.ENTRIES:
-                    if self.index >= len(self.entries) or self.index < 0:
-                        return
-                    self.feeder.mark_as_watched(id=self.entries[self.index].id)
-                    utils.play_video(self.entries[self.index])
-                    if not self.entries[self.index].is_viewed:
-                        self.mark_as_watched()
+            if self.page_state == PageState.ENTRIES:
+                entry = self.lines[self.index].data
+                if not isinstance(entry, Entry):
+                    raise Exception(f"Unexpected entry type {type(entry) = !r}")
+
+                utils.play_video(entry)
+                if not entry.is_viewed:
+                    self.mark_as_watched()
+                return
+
+            channel = self.lines[self.index].data
+            if not isinstance(channel, Channel):
+                raise Exception(f"Unexpected channel type {type(channel) = !r}")
+
+            if channel.entries_count == 0:
+                return
+
+            if self.is_filtered:
+                self.last_index = self.find_channel_index_by_id(channel.channel_id)
+                self.reset_filter()
+            else:
+                self.last_index = self.index
+            self.lines = self.lines_by_id(channel.channel_id)
+            self.page_state = PageState.ENTRIES
+            self.index = 0
+            self.status_title = channel.title
 
         @kb.add("h")
         @kb.add("left")
-        def _back(event) -> None:
+        def _go_back(event) -> None:
             if self.is_help_opened:
                 self.is_help_opened = False
                 return
@@ -447,7 +432,7 @@ class App(TuiProps):
                     event.app.exit()
                 case PageState.ENTRIES:
                     self.page_state = PageState.CHANNELS
-                    self.entries = []
+                    self.lines = list(map(Line, self.channels))
                     self.index = self.last_index
                     self.last_index = -1
                     self.status_title = ""
@@ -460,7 +445,7 @@ class App(TuiProps):
         @kb.add("G")
         @kb.add("end")
         def _go_bottom(_) -> None:
-            self.index = max(0, len(self.page_lines) - 1)
+            self.index = max(0, len(self.lines) - 1)
 
         def move_index(last_index: int, is_prev: bool = False) -> int:
             if is_prev:
@@ -492,7 +477,7 @@ class App(TuiProps):
                 return
 
             self.last_index = index
-            self.set_entries_by_id(self.channels[index].channel_id)
+            self.lines = self.lines_by_id(self.channels[index].channel_id)
             self.index = 0
             self.status_title = self.channels[index].title
 
@@ -513,10 +498,10 @@ class App(TuiProps):
             ):
                 return
 
-            channel_id = self.page_lines[self.index].channel_id
+            channel_id = self.lines[self.index].data.channel_id
             self.last_index = self.find_channel_index_by_id(channel_id)
             self.is_filtered = False
-            self.set_entries_by_id(channel_id)
+            self.lines = self.lines_by_id(channel_id)
             self.index = 0
             self.status_title = self.channels[self.last_index].title
 
@@ -531,6 +516,9 @@ class App(TuiProps):
 
         @kb.add("/")
         def _prompt_search(event: KeyPressEvent) -> None:
+            if self.is_filtered:
+                return
+            self.__lines_backup = self.lines.copy()
             event.app.layout.focus(self.filter_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
             self._app_link = event.app
@@ -556,11 +544,11 @@ class App(TuiProps):
         @kb.add("f3")
         @kb.add("f4")
         def _macro(event: KeyPressEvent) -> None:
-            if len(self.page_lines) == 0:
-                return
-            if len(event.key_sequence) != 1:
-                return
-            if self.page_state != PageState.ENTRIES:
+            if (
+                self.page_state != PageState.ENTRIES
+                or len(self.lines) == 0
+                or len(event.key_sequence) != 1
+            ):
                 return
 
             macro = self.macros.get(key := event.key_sequence.pop().key)
@@ -570,7 +558,7 @@ class App(TuiProps):
 
             self.status_msg = f"executing {macro!r}..."
 
-            selected_data = self.page_lines[self.index]
+            selected_data = self.lines[self.index].data
             if not isinstance(selected_data, Entry):
                 return
 
@@ -582,7 +570,7 @@ class App(TuiProps):
 
         @kb.add("a")
         def _mark_as_watched(_) -> None:
-            if len(self.page_lines) > 0:
+            if len(self.lines) > 0:
                 self.mark_as_watched()
 
         @kb.add("A")
@@ -593,10 +581,10 @@ class App(TuiProps):
         def _download(_) -> None:
             if self.page_state != PageState.ENTRIES:
                 return
-            if len(self.page_lines) == 0:
+            if len(self.lines) == 0:
                 return
 
-            selected_data = self.page_lines[self.index]
+            selected_data = self.lines[self.index].data
             if not isinstance(selected_data, Entry):
                 return
             # FIXME: will fail if tsp or notify-send not an executable
@@ -608,12 +596,12 @@ class App(TuiProps):
         def _download_all(_) -> None:
             if self.page_state != PageState.ENTRIES:
                 return
-            if len(self.page_lines) == 0:
+            if len(self.lines) == 0:
                 return
-            selected_data = self.page_lines[self.index]
+            selected_data = self.lines[self.index].data
             if not isinstance(selected_data, Entry):
                 return
-            entries = [l for l in self.page_lines if l.is_viewed is False]  # type: ignore
+            entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
             if len(entries) > 0:
                 utils.download_all(entries, self.c.download_output)  # type: ignore
                 self.mark_as_watched_all()
@@ -621,7 +609,7 @@ class App(TuiProps):
         @kb.add("delete")
         @kb.add("c-x")
         def _mark_entry_as_deleted(_) -> None:
-            selected_data = self.page_lines[self.index]
+            selected_data = self.lines[self.index].data
             if not (
                 self.page_state is PageState.ENTRIES
                 and isinstance(selected_data, Entry)
@@ -631,7 +619,7 @@ class App(TuiProps):
                 self.status_msg = "Something went wrong"
                 return
             self.is_channels_outdated = True
-            del self.page_lines[self.index]
+            del self.lines[self.index]
             self.index = max(0, self.index - 1)
 
         @kb.add("?")
