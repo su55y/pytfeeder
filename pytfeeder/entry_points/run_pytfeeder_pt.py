@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import subprocess as sp
 import sys
 
@@ -38,12 +37,7 @@ from pytfeeder import Config, Feeder, Storage, utils, __version__
 from pytfeeder.logger import init_logger
 from pytfeeder.models import Channel, Entry
 from pytfeeder.tui import args as tui_args, ConfigTUI
-from pytfeeder.tui.props import TuiProps, PageState
-
-
-@dataclass
-class Line:
-    data: Channel | Entry
+from pytfeeder.tui.props import TuiProps, PageState, Line
 
 
 class PromptContainer(ConditionalContainer):
@@ -82,7 +76,6 @@ class App(TuiProps):
         self.help_index = 0
         self.is_help_opened = False
         self.last_index = -1
-        self.lines = list(map(Line, self.channels))
         self.__lines_backup: list[Line] = list()
         self.macros = {
             "f1": self.c.macro1,
@@ -175,13 +168,6 @@ class App(TuiProps):
     def __pt_container__(self) -> HSplit:
         return self.container
 
-    def lines_by_id(self, channel_id: str) -> list[Line]:
-        if channel_id == "feed":
-            self._is_feed_opened = True
-            return list(map(Line, self.feed()))
-        self._is_feed_opened = False
-        return list(map(Line, self.channel_feed(channel_id)))
-
     def format_channel(self, i: int, channel: Channel) -> list[OneStyleAndTextTuple]:
         line = self.c.channels_fmt.format(
             index=self.format_line_index(i + 1),
@@ -250,68 +236,11 @@ class App(TuiProps):
             ).split()
         )
 
-    def mark_as_watched_all(self) -> None:
-        selected_data = self.lines[self.index].data
-        if self.page_state == PageState.CHANNELS and isinstance(selected_data, Channel):
-            self.feeder.mark_as_watched(
-                unwatched=all(not c.have_updates for c in self.feeder.channels)
-            )
-            self.update_channels()
-        elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
-            if self.channels[self.last_index].channel_id == "feed":
-                unwatched = all(not c.have_updates for c in self.channels)
-                self.feeder.mark_as_watched(unwatched=unwatched)
-                self.is_channels_outdated = True
-                for i in range(len(self.channels)):
-                    self.channels[i].have_updates = unwatched
-                for i in range(len(self.lines)):
-                    self.lines[i].data.is_viewed = not unwatched  # type: ignore
-            else:
-                unwatched = not self.channels[self.last_index].have_updates
-                self.feeder.mark_as_watched(
-                    channel_id=selected_data.channel_id, unwatched=unwatched
-                )
-                self.is_channels_outdated = True
-                self.channels[self.last_index].have_updates = unwatched
-                for i in range(len(self.lines)):
-                    self.lines[i].data.is_viewed = not unwatched  # type: ignore
-
-    def mark_as_watched(self) -> None:
-        selected_data = self.lines[self.index].data
-        if self.page_state == PageState.CHANNELS:
-            if not isinstance(selected_data, Channel):
-                return
-            if selected_data.channel_id == "feed":
-                return
-            unwatched = not selected_data.have_updates
-            self.feeder.mark_as_watched(
-                channel_id=selected_data.channel_id, unwatched=unwatched
-            )
-            self.update_channels()
-            if not self.c.hide_feed:
-                self.reload_lines()
-        elif self.page_state == PageState.ENTRIES:
-            if not isinstance(selected_data, Entry):
-                return
-            unwatched = selected_data.is_viewed
-            self.feeder.mark_as_watched(id=selected_data.id, unwatched=unwatched)
-            self.is_channels_outdated = True
-            selected_data.is_viewed = not unwatched
-            self.index = (self.index + 1) % len(self.lines)
-
     @override
     def get_parent_channel_id(self) -> str | None:
         if self.last_index > -1 and self.last_index < len(self.channels):
             return self.channels[self.last_index].channel_id
         return None
-
-    @override
-    def reload_lines(self, channel_id: str | None = None) -> None:
-        if self.page_state == PageState.ENTRIES and channel_id:
-            self.index = 0
-            self.lines = self.lines_by_id(channel_id)
-        elif self.page_state == PageState.CHANNELS:
-            self.lines = list(map(Line, self.channels))
 
     def reset_filter(self) -> None:
         self.filter_text = ""
@@ -408,7 +337,7 @@ class App(TuiProps):
                 self.reset_filter()
             else:
                 self.last_index = self.index
-            self.lines = self.lines_by_id(channel.channel_id)
+            self.lines = self.get_lines_by_id(channel.channel_id)
             self.page_state = PageState.ENTRIES
             self.index = 0
             self.status_title = channel.title
@@ -447,39 +376,12 @@ class App(TuiProps):
         def _go_bottom(_) -> None:
             self.index = max(0, len(self.lines) - 1)
 
-        def move_index(last_index: int, is_prev: bool = False) -> int:
-            if is_prev:
-                if last_index == 0:
-                    return len(self.channels) - 1
-                return last_index - 1
-            if last_index == len(self.channels) - 1:
-                return 0
-            return last_index + 1
-
-        def do_move(is_prev: bool = False) -> None:
-            if (
-                self.page_state != PageState.ENTRIES
-                or self.is_filtered
-                or len(self.channels) < 2
-                or self.last_index > len(self.channels)
-                or self.last_index < 0
-            ):
+        def do_move(gravity: int = 1) -> None:
+            new_parent_index = self.handle_move(self.last_index, gravity)
+            if new_parent_index is None:
                 return
-            gravity = -1 if is_prev else 1
-            index = move_index(self.last_index, is_prev)
-            for i in range(1, len(self.channels) + 1):
-                if self.channels[index].entries_count > 0:
-                    break
-                index = move_index(self.last_index + (i * gravity), is_prev)
-            else:
-                return
-            if index == self.last_index:
-                return
-
-            self.last_index = index
-            self.lines = self.lines_by_id(self.channels[index].channel_id)
-            self.index = 0
-            self.status_title = self.channels[index].title
+            self.last_index = new_parent_index
+            self.status_title = self.channels[new_parent_index].title
 
         @kb.add("J")
         def _go_next(_) -> None:
@@ -487,7 +389,7 @@ class App(TuiProps):
 
         @kb.add("K")
         def _go_prev(_) -> None:
-            do_move(is_prev=True)
+            do_move(gravity=-1)
 
         @kb.add("f")
         def _follow(_) -> None:
@@ -501,7 +403,7 @@ class App(TuiProps):
             channel_id = self.lines[self.index].data.channel_id
             self.last_index = self.find_channel_index_by_id(channel_id)
             self.is_filtered = False
-            self.lines = self.lines_by_id(channel_id)
+            self.lines = self.get_lines_by_id(channel_id)
             self.index = 0
             self.status_title = self.channels[self.last_index].title
 
@@ -575,7 +477,7 @@ class App(TuiProps):
 
         @kb.add("A")
         def _mark_as_watched_all(_) -> None:
-            self.mark_as_watched_all()
+            self.mark_as_watched_all(self.last_index)
 
         @kb.add("d")
         def _download(_) -> None:
@@ -604,23 +506,12 @@ class App(TuiProps):
             entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
             if len(entries) > 0:
                 utils.download_all(entries, self.c.download_output)  # type: ignore
-                self.mark_as_watched_all()
+                self.mark_as_watched_all(self.last_index)
 
         @kb.add("delete")
         @kb.add("c-x")
         def _mark_entry_as_deleted(_) -> None:
-            selected_data = self.lines[self.index].data
-            if not (
-                self.page_state is PageState.ENTRIES
-                and isinstance(selected_data, Entry)
-            ):
-                return
-            if not self.feeder.mark_entry_as_deleted(selected_data.id):
-                self.status_msg = "Something went wrong"
-                return
-            self.is_channels_outdated = True
-            del self.lines[self.index]
-            self.index = max(0, self.index - 1)
+            _ = self.mark_as_deleted()
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:

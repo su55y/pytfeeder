@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import asyncio
 import datetime as dt
 from enum import Enum, auto
@@ -12,6 +13,12 @@ from .consts import DEFAULT_KEYBINDS
 class PageState(Enum):
     CHANNELS = auto()
     ENTRIES = auto()
+
+
+@dataclass
+class Line:
+    data: Channel | Entry
+    is_active: bool = False
 
 
 class TuiProps:
@@ -33,6 +40,7 @@ class TuiProps:
         self.index = 0
         self.is_filtered = False
         self._is_feed_opened = False
+        self.lines = list(map(Line, self.channels))
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
@@ -72,6 +80,13 @@ class TuiProps:
             )
         return i
 
+    def get_lines_by_id(self, channel_id: str) -> list[Line]:
+        if channel_id == "feed":
+            self._is_feed_opened = True
+            return list(map(Line, self.feed()))
+        self._is_feed_opened = False
+        return list(map(Line, self.channel_feed(channel_id)))
+
     def initial_update(self) -> None:
         print("updating...")
         new, err = asyncio.run(self.feeder.sync_entries())
@@ -103,6 +118,96 @@ class TuiProps:
             return True
 
         return False
+
+    def handle_move(self, parent_index: int, gravity: int) -> int | None:
+        if (
+            self.page_state != PageState.ENTRIES
+            or self.is_filtered
+            or len(self.channels) < 2
+            or parent_index not in range(len(self.channels))
+            or abs(gravity) != 1
+        ):
+            return None
+
+        new_parent_index = (parent_index + gravity) % len(self.channels)
+        for i in range(1, len(self.channels)):
+            if self.channels[new_parent_index].entries_count > 0:
+                break
+            next_candidate = parent_index + (i * gravity)
+            new_parent_index = (next_candidate + gravity) % len(self.channels)
+        else:
+            return None
+
+        if new_parent_index == parent_index:
+            return None
+        self.lines = self.get_lines_by_id(self.channels[new_parent_index].channel_id)
+        self.index = 0
+        return new_parent_index
+
+    def mark_as_deleted(self) -> bool:
+        if len(self.lines) == 0:
+            return False
+        selected_data = self.lines[self.index].data
+        if self.page_state != PageState.ENTRIES or not isinstance(selected_data, Entry):
+            return False
+        if not self.feeder.mark_entry_as_deleted(selected_data.id):
+            self.status_msg = "Something went wrong"
+            return False
+        self.is_channels_outdated = True
+        del self.lines[self.index]
+        self.index = max(0, self.index - 1)
+        return True
+
+    def mark_as_watched(self) -> None:
+        selected_data = self.lines[self.index].data
+        if self.page_state == PageState.CHANNELS:
+            if not isinstance(selected_data, Channel):
+                raise Exception(f"Unexpected channel type {type(selected_data)!r}")
+            if selected_data.channel_id == "feed":
+                return
+            unwatched = not selected_data.have_updates
+            self.feeder.mark_as_watched(
+                channel_id=selected_data.channel_id, unwatched=unwatched
+            )
+            self.update_channels()
+            if not self.c.hide_feed:
+                self.reload_lines()
+        elif self.page_state == PageState.ENTRIES:
+            if not isinstance(selected_data, Entry):
+                raise Exception(f"Unexpected entry type {type(selected_data)!r}")
+            unwatched = selected_data.is_viewed
+            self.feeder.mark_as_watched(id=selected_data.id, unwatched=unwatched)
+            self.is_channels_outdated = True
+            selected_data.is_viewed = not unwatched
+            self.index = (self.index + 1) % len(self.lines)
+
+    def mark_as_watched_all(self, parent_index: int = -1) -> None:
+        selected_data = self.lines[self.index].data
+        if self.page_state == PageState.CHANNELS and isinstance(selected_data, Channel):
+            self.feeder.mark_as_watched(
+                unwatched=all(not c.have_updates for c in self.feeder.channels)
+            )
+            self.update_channels()
+            if not self.c.hide_feed:
+                self.reload_lines()
+        elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
+            if self.channels[parent_index].channel_id == "feed":
+                unwatched = all(not c.have_updates for c in self.channels)
+                self.feeder.mark_as_watched(unwatched=unwatched)
+                self.is_channels_outdated = True
+                for i in range(len(self.channels)):
+                    self.channels[i].have_updates = unwatched
+                for i in range(len(self.lines)):
+                    self.lines[i].data.is_viewed = not unwatched  # type: ignore
+            else:
+                unwatched = not self.channels[parent_index].have_updates
+                self.feeder.mark_as_watched(
+                    channel_id=selected_data.channel_id, unwatched=unwatched
+                )
+                self.is_channels_outdated = True
+                self.channels[parent_index].have_updates = unwatched
+                for i in range(len(self.lines)):
+                    self.lines[i].data.is_viewed = not unwatched  # type: ignore
 
     @property
     def statusbar_height(self) -> int:
@@ -169,7 +274,11 @@ class TuiProps:
         raise NotImplementedError("")
 
     def reload_lines(self, channel_id: str | None = None) -> None:
-        raise NotImplementedError("")
+        if self.page_state == PageState.CHANNELS:
+            self.lines = list(map(Line, self.channels))
+        elif self.page_state == PageState.ENTRIES and channel_id:
+            self.index = 0
+            self.lines = self.get_lines_by_id(channel_id)
 
     async def sync_and_reload(self) -> None:
         channel_id = self.get_parent_channel_id()
