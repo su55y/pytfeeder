@@ -481,32 +481,11 @@ class App(TuiProps):
 
         @kb.add("d")
         def _download(_) -> None:
-            if self.page_state != PageState.ENTRIES:
-                return
-            if len(self.lines) == 0:
-                return
-
-            selected_data = self.lines[self.index].data
-            if not isinstance(selected_data, Entry):
-                return
-            # FIXME: will fail if tsp or notify-send not an executable
-            utils.download_video(selected_data, self.c.download_output)
-            if not selected_data.is_viewed:
-                self.mark_as_watched()
+            self.download()
 
         @kb.add("D")
         def _download_all(_) -> None:
-            if self.page_state != PageState.ENTRIES:
-                return
-            if len(self.lines) == 0:
-                return
-            selected_data = self.lines[self.index].data
-            if not isinstance(selected_data, Entry):
-                return
-            entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
-            if len(entries) > 0:
-                utils.download_all(entries, self.c.download_output)  # type: ignore
-                self.mark_as_watched_all(self.last_index)
+            self.download_all(self.last_index)
 
         @kb.add("delete")
         @kb.add("c-x")

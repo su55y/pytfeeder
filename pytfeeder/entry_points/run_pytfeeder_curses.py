@@ -227,7 +227,7 @@ class App(TuiProps):
                 case Key.d:
                     self.download()
                 case Key.D:
-                    self.download_all()
+                    self.download_all(self.last_page_index)
                 case Key.CTRL_X | curses.KEY_DC:
                     if self.mark_as_deleted():
                         screen.clear()
@@ -241,32 +241,6 @@ class App(TuiProps):
                     screen.clear()
                 case Key.q:
                     sys.exit(0)
-
-    def download(self) -> None:
-        if self.page_state != PageState.ENTRIES or len(self.lines) == 0:
-            return
-        selected_data = self.lines[self.index].data
-        if not isinstance(selected_data, Entry):
-            raise Exception(
-                "unexpected selected data type %s: %r"
-                % (type(selected_data), selected_data)
-            )
-        # FIXME: will fail if tsp or notify-send not an executable
-        utils.download_video(selected_data, self.c.download_output)
-        if not selected_data.is_viewed:
-            self.mark_as_watched()
-
-    def download_all(self) -> None:
-        selected_data = self.lines[self.index].data
-        if not (
-            self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry)
-        ):
-            return
-
-        entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
-        if len(entries) > 0:
-            utils.download_all(entries, self.c.download_output)  # type: ignore
-        self.mark_as_watched_all(self.last_page_index)
 
     def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
         if self.page_state != PageState.ENTRIES:

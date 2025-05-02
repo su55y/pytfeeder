@@ -4,7 +4,7 @@ import datetime as dt
 from enum import Enum, auto
 import time
 
-from pytfeeder import Feeder, __version__  # FIXME: circular import
+from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
 from pytfeeder.models import Channel, Entry
 from .args import format_keybindings
 from .consts import DEFAULT_KEYBINDS
@@ -191,6 +191,8 @@ class TuiProps:
             if not self.c.hide_feed:
                 self.reload_lines()
         elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
+            if self.is_channels_outdated:
+                self.update_channels()
             if self.channels[parent_index].channel_id == "feed":
                 unwatched = all(not c.have_updates for c in self.channels)
                 self.feeder.mark_as_watched(unwatched=unwatched)
@@ -208,6 +210,31 @@ class TuiProps:
                 self.channels[parent_index].have_updates = unwatched
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = not unwatched  # type: ignore
+
+    def download(self) -> None:
+        if len(self.lines) == 0 or self.page_state != PageState.ENTRIES:
+            return
+        selected_data = self.lines[self.index].data
+        if not isinstance(selected_data, Entry):
+            raise Exception(f"Unexpected entry type {type(selected_data)!r}")
+
+        # FIXME: will fail if tsp or notify-send not an executable
+        utils.download_video(selected_data, self.c.download_output)
+        if not selected_data.is_viewed:
+            self.mark_as_watched()
+
+    def download_all(self, parent_index: int) -> None:
+        if len(self.lines) == 0:
+            return
+        selected_data = self.lines[self.index].data
+        if self.page_state != PageState.ENTRIES or not isinstance(selected_data, Entry):
+            return
+
+        entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
+        if len(entries) > 0:
+            # FIXME: will fail if tsp or notify-send not an executable
+            utils.download_all(entries, self.c.download_output)  # type: ignore
+            self.mark_as_watched_all(parent_index)
 
     @property
     def statusbar_height(self) -> int:
