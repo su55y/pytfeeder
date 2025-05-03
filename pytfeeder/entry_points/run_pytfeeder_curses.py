@@ -170,17 +170,14 @@ class App(TuiProps):
                 case Key.h | curses.KEY_LEFT:
                     if len(self.lines) > 0:
                         screen.clear()
-                    if self.page_state == PageState.CHANNELS:
-                        if not self.is_filtered:
-                            sys.exit(0)
-                        self.move_left_channels()
+                    if self.is_filtered:
+                        self.reset_filter()
                         self.draw(screen)
-                        screen.refresh()
+                    elif self.page_state == PageState.CHANNELS:
+                        sys.exit(0)
                     elif self.page_state == PageState.ENTRIES:
-                        self.move_left_entries()
-                    else:
-                        continue
-                    self.is_filtered = False
+                        self.move_back_to_channels()
+                    screen.refresh()
                 case Key.r:
                     self.status_msg = "updating..."
                     self.draw(screen)
@@ -440,11 +437,8 @@ class App(TuiProps):
         self.scroll_top = 0
         return True
 
-    def move_right(self, parent_index: int = -1) -> None:
-        if parent_index > -1:  # FIXME: close filter logic
-            selected_data = self.channels[parent_index]
-        else:
-            selected_data = self.lines[self.index].data
+    def move_right(self) -> None:
+        selected_data = self.lines[self.index].data
 
         if self.page_state == PageState.CHANNELS and isinstance(selected_data, Channel):
             if selected_data.entries_count == 0:
@@ -452,17 +446,15 @@ class App(TuiProps):
             self.page_state = PageState.ENTRIES
             self.lines = self.get_lines_by_id(selected_data.channel_id)
 
-            if self.is_filtered and parent_index > -1:  # FIXME: close filter logic
-                self.parent_index = parent_index
-            elif self.is_filtered:
+            if self.is_filtered:
                 self.parent_index = self.find_channel_index_by_id(
                     selected_data.channel_id
                 )
+                self.is_filtered = False
             else:
                 self.parent_index = self.index
-            self.last_page_index = self.parent_index
 
-            self.is_filtered = False
+            self.last_page_index = self.parent_index
             self.index = 0
             self.scroll_top = 0
         elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
@@ -470,32 +462,22 @@ class App(TuiProps):
             if not selected_data.is_viewed:
                 self.mark_as_watched()
 
-    def move_left_channels(self) -> None:
-        self.lines = list(map(Line, self.channels))
-        self.index = max(0, self.last_page_index)
-        self.last_page_index = -1
-        self.scroll_top = 0
-
-    def move_left_entries(self) -> None:
-        self.page_state = PageState.CHANNELS
-        if self.is_filtered:
-            self.move_right(self.parent_index)  # FIXME: close filter logic
-            return
+    def move_back_to_channels(self) -> None:
         if self.is_channels_outdated:
             self.update_channels()
+        self.page_state = PageState.CHANNELS
         self.lines = list(map(Line, self.channels))
-        self.index = min(self.last_page_index, len(self.lines) - 1)
-        self.last_page_index = -1
+        self.index = self.parent_index
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
 
     @property
     def status(self) -> str:
         title = ""
-        if self.last_page_index > -1 and len(self.channels) >= self.last_page_index + 1:
-            title = "%s " % self.channels[self.last_page_index].title
+        if self.page_state == PageState.ENTRIES:
+            title = self.channels[self.parent_index].title
         if self.is_filtered:
-            title = "%d found " % len(self.lines)
+            title = "%d found" % len(self.lines)
 
         return " ".join(
             self.c.status_fmt.format(
@@ -514,24 +496,33 @@ class App(TuiProps):
         return None
 
     def filter_lines(self, keyword: str) -> None:
-        if not keyword:
-            return
-        keyword = keyword.lower()
-        self.lines = list(filter(lambda v: keyword in v.data.title.lower(), self.lines))
-        if self.page_state == PageState.CHANNELS:
-            self.last_page_index = self.index
+        condition = lambda v: keyword.lower() in v.data.title.lower()
+        self.lines = list(filter(condition, self.lines))
         self.index = 0
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
         self.is_filtered = True
-        curses.curs_set(0)
 
-    def jump(self, key_index: int) -> None:
-        if key_index > len(self.lines) + 1:
+    def reset_filter(self) -> None:
+        self.is_filtered = False
+        self.index = 0
+        self.scroll_top = 0
+        self.gravity = Gravity.DOWN
+        if self.page_state == PageState.CHANNELS:
+            self.lines = list(map(Line, self.channels))
+        elif self.page_state == PageState.ENTRIES:
+            selected_data = self.channels[self.parent_index]
+            self.lines = self.get_lines_by_id(selected_data.channel_id)
+
+    def jump(self, keyword: str) -> None:
+        try:
+            key_index = int(keyword)
+        except:
+            return
+        if (key_index - 1) not in range(len(self.lines)):
             return
         self.index = key_index - 1
         self.gravity = Gravity.DOWN
-        curses.curs_set(0)
 
     def handle_input(
         self,
@@ -575,16 +566,8 @@ class App(TuiProps):
                     curses.curs_set(0)
                     if not keyword:
                         return
-
                     if cli_type is CLIType.JUMP:
-                        try:
-                            key_index = int(keyword)
-                        except:
-                            return
-                        if key_index < 1:
-                            return
-
-                        self.jump(key_index)
+                        self.jump(keyword)
                     else:
                         self.filter_lines(keyword)
                     return
