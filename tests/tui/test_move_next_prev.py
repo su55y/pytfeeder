@@ -58,7 +58,7 @@ class TestNextPrev(unittest.TestCase):
         self.assertEqual(app.parent_index, 0)
         self.assertEqual(app.status, sample_channels[0].title)
 
-        self.assertTrue(app.handle_move_next_prev(Gravity.DOWN))
+        self.assertTrue(app.handle_move(Gravity.DOWN))
         self.assertEqual(app.parent_index, 2)
         self.assertEqual(app.status, sample_channels[2].title)
 
@@ -91,7 +91,7 @@ class TestNextPrev(unittest.TestCase):
         self.assertEqual(app.parent_index, 2)
         self.assertEqual(app.status, sample_channels[2].title)
 
-        self.assertTrue(app.handle_move_next_prev(Gravity.UP))
+        self.assertTrue(app.handle_move(Gravity.UP))
         self.assertEqual(app.parent_index, 0)
         self.assertEqual(app.status, sample_channels[0].title)
 
@@ -116,10 +116,10 @@ class TestNextPrev(unittest.TestCase):
         self.assertEqual(app.parent_index, 0)
         self.assertEqual(app.status, sample_channels[0].title)
 
-        self.assertFalse(app.handle_move_next_prev(Gravity.DOWN))
+        self.assertFalse(app.handle_move(Gravity.DOWN))
         self.assertEqual(app.parent_index, 0)
         self.assertEqual(app.status, sample_channels[0].title)
 
-        self.assertFalse(app.handle_move_next_prev(Gravity.UP))
+        self.assertFalse(app.handle_move(Gravity.UP))
         self.assertEqual(app.parent_index, 0)
         self.assertEqual(app.status, sample_channels[0].title)
