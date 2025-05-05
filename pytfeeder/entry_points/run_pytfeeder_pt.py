@@ -1,17 +1,9 @@
 import subprocess as sp
 import sys
 
-# added in python 3.12
-# https://docs.python.org/3/library/typing.html#typing.override
-if sys.version_info < (3, 12):
-    from typing_extensions import override
-else:
-    from typing import override
-
-
-from prompt_toolkit.filters import has_focus
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.filters import has_focus
 from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     OneStyleAndTextTuple,
@@ -75,7 +67,6 @@ class App(TuiProps):
         self.filter_text = ""
         self.help_index = 0
         self.is_help_opened = False
-        self.last_index = -1
         self.__lines_backup: list[Line] = list()
         self.macros = {
             "f1": self.c.macro1,
@@ -236,12 +227,6 @@ class App(TuiProps):
             ).split()
         )
 
-    @override
-    def get_parent_channel_id(self) -> str | None:
-        if self.last_index > -1 and self.last_index < len(self.channels):
-            return self.channels[self.last_index].channel_id
-        return None
-
     def reset_filter(self) -> None:
         self.filter_text = ""
         self.is_filtered = False
@@ -249,7 +234,7 @@ class App(TuiProps):
         self.__lines_backup = list()
         self.status_title = ""
         if self.page_state == PageState.ENTRIES:
-            self.status_title = self.channels[self.last_index].title
+            self.status_title = self.channels[self.parent_index].title
 
     @property
     def _help_keybindings(self) -> KeyBindings:
@@ -333,10 +318,10 @@ class App(TuiProps):
                 return
 
             if self.is_filtered:
-                self.last_index = self.find_channel_index_by_id(channel.channel_id)
+                self.parent_index = self.find_channel_index_by_id(channel.channel_id)
                 self.reset_filter()
             else:
-                self.last_index = self.index
+                self.parent_index = self.index
             self.lines = self.get_lines_by_id(channel.channel_id)
             self.page_state = PageState.ENTRIES
             self.index = 0
@@ -362,8 +347,8 @@ class App(TuiProps):
                 case PageState.ENTRIES:
                     self.page_state = PageState.CHANNELS
                     self.lines = list(map(Line, self.channels))
-                    self.index = self.last_index
-                    self.last_index = -1
+                    self.index = self.parent_index
+                    self.parent_index = -1
                     self.status_title = ""
 
         @kb.add("g", "g")
@@ -376,36 +361,31 @@ class App(TuiProps):
         def _go_bottom(_) -> None:
             self.index = max(0, len(self.lines) - 1)
 
-        def do_move(gravity: int = 1) -> None:
-            new_parent_index = self.handle_move(self.last_index, gravity)
-            if new_parent_index is None:
-                return
-            self.last_index = new_parent_index
-            self.status_title = self.channels[new_parent_index].title
-
         @kb.add("J")
         def _go_next(_) -> None:
-            do_move()
+            if self.handle_move(gravity=1):
+                self.status_title = self.channels[self.parent_index].title
 
         @kb.add("K")
         def _go_prev(_) -> None:
-            do_move(gravity=-1)
+            if self.handle_move(gravity=-1):
+                self.status_title = self.channels[self.parent_index].title
 
         @kb.add("f")
         def _follow(_) -> None:
             if (
                 self.page_state != PageState.ENTRIES
                 or not self._is_feed_opened
-                or self.last_index != 0
+                or self.parent_index != 0
             ):
                 return
 
             channel_id = self.lines[self.index].data.channel_id
-            self.last_index = self.find_channel_index_by_id(channel_id)
+            self.parent_index = self.find_channel_index_by_id(channel_id)
             self.is_filtered = False
             self.lines = self.get_lines_by_id(channel_id)
             self.index = 0
-            self.status_title = self.channels[self.last_index].title
+            self.status_title = self.channels[self.parent_index].title
 
         @kb.add("s")
         def _toggle_status_visability(_) -> None:
@@ -477,7 +457,7 @@ class App(TuiProps):
 
         @kb.add("A")
         def _mark_as_watched_all(_) -> None:
-            self.mark_as_watched_all(self.last_index)
+            self.mark_as_watched_all()
 
         @kb.add("d")
         def _download(_) -> None:
@@ -485,7 +465,7 @@ class App(TuiProps):
 
         @kb.add("D")
         def _download_all(_) -> None:
-            self.download_all(self.last_index)
+            self.download_all()
 
         @kb.add("delete")
         @kb.add("c-x")

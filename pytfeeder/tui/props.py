@@ -44,6 +44,7 @@ class TuiProps:
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
+        self.parent_index = -1
         self.status_last_update = ""
         self.status_msg_lifetime = 3
         self._status_msg_creation_time = 0.0
@@ -119,30 +120,32 @@ class TuiProps:
 
         return False
 
-    def handle_move(self, parent_index: int, gravity: int) -> int | None:
+    def handle_move(self, gravity: int) -> bool:
         if (
             self.page_state != PageState.ENTRIES
             or self.is_filtered
             or len(self.channels) < 2
-            or parent_index not in range(len(self.channels))
+            or self.parent_index not in range(len(self.channels))
             or abs(gravity) != 1
         ):
-            return None
+            return False
 
-        new_parent_index = (parent_index + gravity) % len(self.channels)
+        new_parent_index = (self.parent_index + gravity) % len(self.channels)
         for i in range(1, len(self.channels)):
             if self.channels[new_parent_index].entries_count > 0:
                 break
-            next_candidate = parent_index + (i * gravity)
+            next_candidate = self.parent_index + (i * gravity)
             new_parent_index = (next_candidate + gravity) % len(self.channels)
         else:
-            return None
+            return False
 
-        if new_parent_index == parent_index:
-            return None
+        if new_parent_index == self.parent_index:
+            return False
+
         self.lines = self.get_lines_by_id(self.channels[new_parent_index].channel_id)
+        self.parent_index = new_parent_index
         self.index = 0
-        return new_parent_index
+        return True
 
     def mark_as_deleted(self) -> bool:
         if len(self.lines) == 0:
@@ -181,7 +184,7 @@ class TuiProps:
             selected_data.is_viewed = not unwatched
             self.index = (self.index + 1) % len(self.lines)
 
-    def mark_as_watched_all(self, parent_index: int = -1) -> None:
+    def mark_as_watched_all(self) -> None:
         selected_data = self.lines[self.index].data
         if self.page_state == PageState.CHANNELS and isinstance(selected_data, Channel):
             self.feeder.mark_as_watched(
@@ -193,7 +196,7 @@ class TuiProps:
         elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
             if self.is_channels_outdated:
                 self.update_channels()
-            if self.channels[parent_index].channel_id == "feed":
+            if self.channels[self.parent_index].channel_id == "feed":
                 unwatched = all(not c.have_updates for c in self.channels)
                 self.feeder.mark_as_watched(unwatched=unwatched)
                 self.is_channels_outdated = True
@@ -202,12 +205,12 @@ class TuiProps:
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = not unwatched  # type: ignore
             else:
-                unwatched = not self.channels[parent_index].have_updates
+                unwatched = not self.channels[self.parent_index].have_updates
                 self.feeder.mark_as_watched(
                     channel_id=selected_data.channel_id, unwatched=unwatched
                 )
                 self.is_channels_outdated = True
-                self.channels[parent_index].have_updates = unwatched
+                self.channels[self.parent_index].have_updates = unwatched
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = not unwatched  # type: ignore
 
@@ -223,7 +226,7 @@ class TuiProps:
         if not selected_data.is_viewed:
             self.mark_as_watched()
 
-    def download_all(self, parent_index: int) -> None:
+    def download_all(self) -> None:
         if len(self.lines) == 0:
             return
         selected_data = self.lines[self.index].data
@@ -234,7 +237,7 @@ class TuiProps:
         if len(entries) > 0:
             # FIXME: will fail if tsp or notify-send not an executable
             utils.download_all(entries, self.c.download_output)  # type: ignore
-            self.mark_as_watched_all(parent_index)
+            self.mark_as_watched_all()
 
     @property
     def statusbar_height(self) -> int:
@@ -297,9 +300,6 @@ class TuiProps:
         else:
             self.status_last_update = dt_str.strftime(self.c.last_update_fmt)
 
-    def get_parent_channel_id(self) -> str | None:
-        raise NotImplementedError("")
-
     def reload_lines(self, channel_id: str | None = None) -> None:
         if self.page_state == PageState.CHANNELS:
             self.lines = list(map(Line, self.channels))
@@ -308,7 +308,10 @@ class TuiProps:
             self.lines = self.get_lines_by_id(channel_id)
 
     async def sync_and_reload(self) -> None:
-        channel_id = self.get_parent_channel_id()
+        channel_id = None
+        if self.page_state == PageState.ENTRIES:
+            channel_id = self.channels[self.parent_index].channel_id
+
         new, err = await self.feeder.sync_entries()
         if err:
             self.status_msg = f"Error: {err}"

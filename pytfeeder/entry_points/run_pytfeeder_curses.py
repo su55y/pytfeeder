@@ -6,13 +6,6 @@ import subprocess as sp
 from typing import Literal
 import sys
 
-# added in python 3.12
-# https://docs.python.org/3/library/typing.html#typing.override
-if sys.version_info < (3, 12):
-    from typing_extensions import override
-else:
-    from typing import override
-
 from pytfeeder import Config, Feeder, Storage, utils, __version__
 from pytfeeder.logger import init_logger
 from pytfeeder.models import Channel, Entry
@@ -120,8 +113,6 @@ class App(TuiProps):
 
         self._g_pressed = False
         self.gravity = Gravity.DOWN
-        self.parent_index = -1
-        self.last_page_index = -1
         self.macros = {
             Key.F1: self.c.macro1,
             Key.F2: self.c.macro2,
@@ -209,12 +200,14 @@ class App(TuiProps):
                 case Key.a:
                     self.mark_as_watched()
                 case Key.A:
-                    self.mark_as_watched_all(self.last_page_index)
+                    self.mark_as_watched_all()
                 case Key.J:
-                    if self.handle_move_next_prev(Gravity.DOWN):
+                    if self.handle_move(Gravity.DOWN):
+                        self.scroll_top = 0
                         screen.clear()
                 case Key.K:
-                    if self.handle_move_next_prev(Gravity.UP):
+                    if self.handle_move(Gravity.UP):
+                        self.scroll_top = 0
                         screen.clear()
                 case Key.f:
                     if self.handle_follow():
@@ -224,7 +217,7 @@ class App(TuiProps):
                 case Key.d:
                     self.download()
                 case Key.D:
-                    self.download_all(self.last_page_index)
+                    self.download_all()
                 case Key.CTRL_X | curses.KEY_DC:
                     if self.mark_as_deleted():
                         screen.clear()
@@ -410,16 +403,6 @@ class App(TuiProps):
         self.gravity = Gravity.DOWN
         self.index = len(self.lines) - 1
 
-    def handle_move_next_prev(self, gravity: Gravity) -> bool:
-        new_parent_index = self.handle_move(self.parent_index, gravity)
-        if new_parent_index is None:
-            return False
-
-        self.parent_index = new_parent_index
-        self.last_page_index = new_parent_index
-        self.scroll_top = 0
-        return True
-
     def handle_follow(self) -> bool:
         if (
             self.page_state != PageState.ENTRIES
@@ -432,7 +415,6 @@ class App(TuiProps):
         self.parent_index = self.find_channel_index_by_id(channel_id)
         self.is_filtered = False
         self.lines = self.get_lines_by_id(channel_id)
-        self.last_page_index = self.parent_index
         self.index = 0
         self.scroll_top = 0
         return True
@@ -454,7 +436,6 @@ class App(TuiProps):
             else:
                 self.parent_index = self.index
 
-            self.last_page_index = self.parent_index
             self.index = 0
             self.scroll_top = 0
         elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
@@ -488,12 +469,6 @@ class App(TuiProps):
                 last_update=self.status_last_update,
             ).split()
         )
-
-    @override
-    def get_parent_channel_id(self) -> str | None:
-        if self.last_page_index > -1 and len(self.channels) >= self.last_page_index + 1:
-            return self.channels[self.last_page_index].channel_id
-        return None
 
     def filter_lines(self, keyword: str) -> None:
         condition = lambda v: keyword.lower() in v.data.title.lower()
