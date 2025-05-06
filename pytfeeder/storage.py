@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 import sqlite3
 
-from .models import Entry
+from .models import Channel, Entry
 import pytfeeder.migrations as migrations_dir
 
 TB_ENTRIES = "tb_entries"
@@ -84,19 +84,25 @@ class Storage:
         limit: int | None = None,
         timedelta: str | None = None,
         unwatched_first: bool | None = None,
+        in_channels: list[Channel] | None = None,
     ) -> list[Entry]:
         entries: list[Entry] = []
+        in_channels_value = ""
+        if in_channels is not None:
+            channels_ids = ", ".join(f"'{c.channel_id}'" for c in in_channels)
+            in_channels_value = f"AND channel_id IN ({channels_ids})"
+        query = """
+        SELECT id, title, published, channel_id, is_viewed, is_deleted
+        FROM tb_entries
+        WHERE is_deleted = 0 {and_channel_id} {and_timedelta} {and_in_channels}
+        ORDER BY {unwatched_first} published DESC {limit}""".format(
+            and_channel_id=f"AND channel_id = '{channel_id}'" if channel_id else "",
+            and_timedelta=f"AND published > '{timedelta}'" if timedelta else "",
+            and_in_channels=in_channels_value,
+            unwatched_first="is_viewed," if unwatched_first else "",
+            limit=f"LIMIT {limit}" if limit else "",
+        )
         with self.get_cursor() as cursor:
-            query = """
-            SELECT id, title, published, channel_id, is_viewed, is_deleted
-            FROM tb_entries
-            WHERE is_deleted = 0 {and_channel_id} {and_timedelta}
-            ORDER BY {unwatched_first} published DESC {limit}""".format(
-                and_channel_id=f"AND channel_id = '{channel_id}'" if channel_id else "",
-                and_timedelta=f"AND published > '{timedelta}'" if timedelta else "",
-                unwatched_first="is_viewed," if unwatched_first else "",
-                limit=f"LIMIT {limit}" if limit else "",
-            )
             self.log.debug(query)
             rows = cursor.execute(query).fetchall()
             self.log.debug("selected %d entries" % len(rows))

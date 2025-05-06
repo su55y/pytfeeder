@@ -66,10 +66,12 @@ class Feeder:
         self,
         limit: int | None = None,
         unwatched_first: bool | None = None,
+        include_unknown: bool = False,
     ) -> list[Entry]:
         return self.stor.select_entries(
             limit=limit,
             unwatched_first=unwatched_first,
+            in_channels=None if include_unknown else self.config.channels,
         )
 
     def mark_as_watched(
