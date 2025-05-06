@@ -56,31 +56,37 @@ def parse_args() -> argparse.Namespace:
 
 def entries_stats(feeder: Feeder) -> str:
     max_title_len = max(len(c.title) for c in feeder.config.channels)
+    max_title_len = max(max_title_len, 24)
     channels_map = {c.channel_id: c.title for c in feeder.config.channels}
     stats = feeder.stor.select_stats()
-    c1, c2, c3 = 1, 1, 1
-    deleted_channels = {}
-    for cid, c, n, d in stats:
-        c1 = max(len(str(c)), c1)
-        c2 = max(len(str(n)), c2)
-        c3 = max(len(str(d)), c3)
-        if cid not in channels_map:
-            deleted_channels[cid] = (c, n, d)
+
+    total_count = feeder.total_entries_count(exclude_deleted=False)
+    total_deleted = total_count - feeder.total_entries_count(exclude_deleted=True)
+    total_new = feeder.unwatched_count()
+
+    c1, c2, c3 = len(str(total_count)), len(str(total_new)), len(str(total_deleted))
+    c1, c2, c2 = max(c1, 3), max(c2, 3), max(c3, 3)
+    stats_line_width = max_title_len + c1 + c2 + c3 + 4
+
+    total_nums = f"{total_count:{c1}d}|{total_new:{c2}d}|{total_deleted:{c3}d}"
+    total_stats_line = (
+        f"{'='*stats_line_width}\n{'TOTAL':<{max_title_len+1}}|{total_nums}"
+    )
+    header = f"{'TITLE':^{max_title_len+1}}|{'TOT':^{c1}}|{'NEW':^{c2}}|{'DEL':^{c3}}"
+    header += f"\n{'-'*len(header)}"
+    deleted_section_header = f"{' UNKNOWN CHANNELS ':-^{stats_line_width}}"
 
     entries_stats_str = ""
     deleted_stats_str = ""
     for channel_id, count, new, deleted in stats:
-        nums = f"{count:{c1}d} | {new:{c2}d} | {deleted:{c3}d}"
+        nums = f"{count:{c1}d}|{new:{c2}d}|{deleted:{c3}d}"
         title = channels_map.get(channel_id)
         if title is None:
-            deleted_stats_str += f"{channel_id:<24} | {nums}\n"
+            deleted_stats_str += f"{channel_id:<{max_title_len+1}}|{nums}\n"
         else:
-            entries_stats_str += f"{title:<{max_title_len}} | {nums}\n"
-    header = (
-        f"{'TITLE':^{max_title_len}} |{'TOT':^{c1+2}}|{'NEW':^{c2+2}}|{'DEL':^{c3+2}}"
-    )
-    header += f"\n{'-'*len(header)}"
-    return f"\n{header}\n{entries_stats_str}\nDeleted channels:\n{deleted_stats_str}"
+            entries_stats_str += f"{title:<{max_title_len+1}}|{nums}\n"
+
+    return f"{header}\n{entries_stats_str}{deleted_section_header}\n{deleted_stats_str}{total_stats_line}\n"
 
 
 def storage_file_stats(storage_path: Path) -> str:
@@ -134,18 +140,8 @@ def run():
     feeder = Feeder(config, Storage(config.storage_path))
 
     if args.storage_stats:
-        total = feeder.total_entries_count(exclude_deleted=False)
-        deleted = total - feeder.total_entries_count(exclude_deleted=True)
-        print(
-            " Total entries count: {total} (new: {new}, deleted: {deleted})\n".format(
-                total=total,
-                new=feeder.unwatched_count(),
-                deleted=deleted,
-            ),
-            end="",
-        )
         print(entries_stats(feeder))
-        print(" File stats:\n" + storage_file_stats(config.storage_path))
+        print("File stats:\n" + storage_file_stats(config.storage_path))
         sys.exit(0)
 
     if args.clean_cache:
