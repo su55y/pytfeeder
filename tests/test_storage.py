@@ -2,7 +2,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import unittest
 
-from pytfeeder.storage import Storage
+from pytfeeder import Storage
+from pytfeeder.models import Channel
 from . import mocks, utils
 
 
@@ -51,10 +52,9 @@ class StorageTest(unittest.TestCase):
             len(mocks.sample_entries) + len(mocks.another_sample_entries),
             self.stor.select_entries_count(),
         )
-        active_channels = ", ".join(f"{c.channel_id!r}" for c in mocks.sample_entries)
-        self.stor.delete_inactive_channels(active_channels)
+        active_channels = [
+            Channel(title=e.channel_id, channel_id=e.channel_id)
+            for e in mocks.sample_entries
+        ]
+        self.stor.delete_inactive_channels(active_channels=active_channels)
         self.assertEqual(self.stor.select_entries(), mocks.sample_entries)
-
-    def test5_delete(self):
-        self.stor.delete_all_entries(force=True)
-        self.assertEqual(len(self.stor.select_entries()), 0)

@@ -175,9 +175,9 @@ class Storage:
         with self.get_cursor() as cursor:
             query = f"UPDATE tb_entries SET is_viewed = {value} WHERE id = ?"
             self.log.debug("%s, id: %s" % (query, id))
-            count = cursor.execute(query, (id,)).rowcount
-            if count != 1:
-                self.log.warning("rowcount != 1 for mark_entry_as_watched(%s)" % id)
+            rowcount = cursor.execute(query, (id,)).rowcount
+            if rowcount != 1:
+                self.log.warning(f"{rowcount = } for mark_entry_as_watched({id = !r})")
 
     def mark_channel_entries_as_watched(
         self, channel_id: str, unwatched: bool = False
@@ -199,26 +199,52 @@ class Storage:
         with self.get_cursor() as cursor:
             query = f"UPDATE tb_entries SET is_deleted = 1 WHERE id = ?"
             self.log.debug("%s, id: %s" % (query, id))
-            count = cursor.execute(query, (id,)).rowcount
-            if count != 1:
-                self.log.warning("rowcount != 1 for mark_entry_as_deleted(%s)" % id)
-            return count == 1
+            rowcount = cursor.execute(query, (id,)).rowcount
+            if rowcount != 1:
+                self.log.warning(f"{rowcount = } for mark_entry_as_deleted({id = !r})")
+            return rowcount == 1
 
-    def delete_all_entries(self, force: bool = False) -> None:
+    def delete_old_entries(self) -> int:
+        query = """
+        DELETE FROM tb_entries
+        WHERE is_deleted = 1 AND id NOT IN (
+            SELECT id
+            FROM tb_entries AS e
+            WHERE (
+                SELECT COUNT(*)
+                FROM tb_entries AS e2
+                WHERE e2.channel_id = e.channel_id AND e2.published > e.published
+            ) < 15
+        )
+        """
         with self.get_cursor() as cursor:
-            query = "DELETE FROM tb_entries {}".format(
-                "" if force else " WHERE is_viewed = 1"
-            )
             self.log.debug(query)
-            cursor.execute(query)
-            self.log.debug("%d entries removed" % cursor.rowcount)
+            rowcount = cursor.execute(query).rowcount
+            self.log.debug(f"{rowcount = }")
+            return rowcount
 
-    def delete_inactive_channels(self, channels_list_str: str) -> None:
+    def purge_deleted_entries(self) -> None:
+        query = "DELETE FROM tb_entries WHERE is_deleted = 1"
+        self.execute_query(query)
+
+    def mark_watched_as_deleted(self) -> None:
+        query = "UPDATE tb_entries SET is_deleted = 1 WHERE is_viewed = 1"
+        self.execute_query(query)
+
+    def delete_inactive_channels(self, active_channels: list[Channel]) -> None:
+        if len(active_channels) == 0:
+            return
+        channels_list = ", ".join(f"'{c.channel_id}'" for c in active_channels)
+        query = f"DELETE FROM tb_entries WHERE channel_id NOT IN ({channels_list})"
+        self.execute_query(query)
+
+    def execute_query(self, query: str) -> None:
         with self.get_cursor() as cursor:
-            query = (
-                "DELETE FROM tb_entries WHERE channel_id NOT IN (%s)"
-                % channels_list_str
-            )
-            self.log.debug(query)
             cursor.execute(query)
-            self.log.debug("%d entries removed" % cursor.rowcount)
+            self.log.debug(f"{cursor.rowcount = !r}")
+
+    def execute_vacuum(self) -> None:
+        query = "VACUUM"
+        self.log.debug(query)
+        with self.get_cursor() as cursor:
+            cursor.execute(query)

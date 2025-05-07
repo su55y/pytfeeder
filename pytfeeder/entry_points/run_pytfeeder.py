@@ -21,13 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--clean-cache",
         action="store_true",
-        help="Deletes inactive channels and watched entries (with -F/--force deletes all entries)",
-    )
-    parser.add_argument(
-        "-F",
-        "--force",
-        action="store_true",
-        help="Remove all entries when used with `--clean-cache`",
+        help="Remove old entries from database that was marked as deleted and execute VACUUM",
     )
     parser.add_argument(
         "-p", "--print-config", action="store_true", help="Prints config"
@@ -145,7 +139,9 @@ def run():
         sys.exit(0)
 
     if args.clean_cache:
-        feeder.clean_cache(args.force)
+        count = feeder.clean_cache()
+        print(f"{count} entries were deleted")
+        sys.exit(0)
 
     if args.sync:
         (new, err) = asyncio.run(feeder.sync_entries())

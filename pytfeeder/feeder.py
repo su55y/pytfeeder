@@ -102,11 +102,10 @@ class Feeder:
             return self.stor.select_unwatched()
         return self.stor.select_unwatched(channel_id)
 
-    def clean_cache(self, force=False) -> None:
-        self.stor.delete_all_entries(force)
-        self.stor.delete_inactive_channels(
-            ", ".join(f"{c.channel_id!r}" for c in self.config.channels)
-        )
+    def clean_cache(self) -> int:
+        count = self.stor.delete_old_entries()
+        self.stor.execute_vacuum()
+        return count
 
     async def sync_entries(self) -> tuple[int, Exception | None]:
         try:
