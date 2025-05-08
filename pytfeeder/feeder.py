@@ -99,8 +99,8 @@ class Feeder:
 
     def unwatched_count(self, channel_id: str | None = None) -> int:
         if channel_id == "feed":
-            return self.stor.select_unwatched()
-        return self.stor.select_unwatched(channel_id)
+            return self.stor.select_unwatched_count()
+        return self.stor.select_unwatched_count(channel_id)
 
     def clean_cache(self) -> int:
         count = self.stor.delete_old_entries()
