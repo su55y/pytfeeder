@@ -25,6 +25,9 @@ class TestStats(unittest.TestCase):
             self.stor.add_entries(mocks.sample_entries),
             len(mocks.sample_entries),
         )
-        self.assertEqual(self.stor.select_unwatched_count(), len(mocks.sample_entries))
+        self.assertEqual(
+            self.stor.select_entries_count(include_watched=False),
+            len(mocks.sample_entries),
+        )
         self.stor.mark_all_entries_as_watched()
-        self.assertEqual(self.stor.select_unwatched_count(), 0)
+        self.assertEqual(self.stor.select_entries_count(include_watched=False), 0)

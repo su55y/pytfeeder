@@ -26,4 +26,4 @@ class IsDeletedTest(unittest.TestCase):
         self.assertFalse(self.stor.select_entries()[0].is_deleted)
         self.assertTrue(self.stor.mark_entry_as_deleted(id=self.entry.id))
         self.assertEqual(len(self.stor.select_entries()), 0)
-        self.assertEqual(self.stor.select_entries_count(), 1)
+        self.assertEqual(self.stor.select_entries_count(include_deleted=True), 1)

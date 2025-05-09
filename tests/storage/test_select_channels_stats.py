@@ -28,8 +28,8 @@ class TestStats(unittest.TestCase):
         if cls.db_file.exists():
             cls.db_file.unlink()
 
-    def test_select_all_unwatched(self):
-        stats = self.stor.select_all_unwatched()
+    def test_select_channels_stats(self):
+        stats = self.stor.select_channels_stats()
         c1, u1 = stats[self.sample_entries[0].channel_id]
         self.assertEqual(c1, len(self.sample_entries) - 1)
         self.assertEqual(u1, len(self.sample_entries) - 2)
