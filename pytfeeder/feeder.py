@@ -31,7 +31,7 @@ class Feeder:
         return self.config.channels
 
     def refresh_channels(self) -> None:
-        stats = self.stor.select_all_unwatched()
+        stats = self.stor.select_channels_stats()
         for c in self.config.channels:
             stat = stats.get(c.channel_id)
             if stat is None:
@@ -94,13 +94,15 @@ class Feeder:
             self.log.error(f"Can't mark entry as deleted: {e!r}")
             return False
 
-    def total_entries_count(self, exclude_deleted: bool = True) -> int:
-        return self.stor.select_entries_count(exclude_deleted=exclude_deleted)
+    def total_entries_count(self, include_deleted: bool = False) -> int:
+        return self.stor.select_entries_count(include_deleted=include_deleted)
 
     def unwatched_count(self, channel_id: str | None = None) -> int:
         if channel_id == "feed":
-            return self.stor.select_unwatched_count()
-        return self.stor.select_unwatched_count(channel_id)
+            return self.stor.select_entries_count(include_watched=False)
+        return self.stor.select_entries_count(
+            channel_id=channel_id, include_watched=False
+        )
 
     def clean_cache(self) -> int:
         count = self.stor.delete_old_entries()

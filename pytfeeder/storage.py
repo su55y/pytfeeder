@@ -77,12 +77,21 @@ class Storage:
                 for entry in entries
             ]
             self.log.debug(f"{query}, {len(new_entries) = }")
-            return cursor.executemany(query, new_entries).rowcount
+            rowcount = cursor.executemany(query, new_entries).rowcount
+            self.log.debug(f"{rowcount = }")
+            return rowcount
 
-    def fetchall_rows(self, query: str) -> list[tuple]:
+    def fetchall_rows(
+        self,
+        query: str,
+        params: tuple[Any, ...] | dict[str, Any] | None = None,
+    ) -> list[tuple]:
         with self.get_cursor() as cursor:
-            self.log.debug(query)
-            rows = cursor.execute(query).fetchall()
+            self.log.debug(f"{query}, {params = !r}")
+            if params:
+                rows = cursor.execute(query, params).fetchall()
+            else:
+                rows = cursor.execute(query).fetchall()
             self.log.debug(f"{len(rows) = }")
             return rows
 
@@ -95,23 +104,44 @@ class Storage:
         in_channels: list[Channel] | None = None,
     ) -> list[Entry]:
         entries: list[Entry] = []
-        in_channels_value = ""
+        params: dict[str, Any] = {}
+
+        and_channel_id = ""
+        if channel_id:
+            params["channel_id"] = channel_id
+            and_channel_id = "AND channel_id=:channel_id"
+
+        and_timedelta = ""
+        if timedelta:
+            params["timedelta"] = timedelta
+            and_timedelta = "AND published > :timedelta"
+
+        and_in_channels = ""
         if in_channels is not None:
-            channels_ids = ", ".join(f"'{c.channel_id}'" for c in in_channels)
-            in_channels_value = f"AND channel_id IN ({channels_ids})"
-        query = """
+            markers = []
+            for i, c in enumerate(in_channels):
+                cid = f"cid{i}"
+                params[cid] = c.channel_id
+                markers.append(f":{cid}")
+            and_in_channels = f"AND channel_id IN ({','.join(markers)})"
+
+        and_unwatched_first = "is_viewed," if unwatched_first else ""
+
+        and_limit = ""
+        if limit:
+            params["limit"] = limit
+            and_limit = "LIMIT :limit"
+
+        query = f"""
         SELECT id, title, published, channel_id, is_viewed, is_deleted
-        FROM {tb_entries}
+        FROM {TB_ENTRIES}
         WHERE is_deleted = 0 {and_channel_id} {and_timedelta} {and_in_channels}
-        ORDER BY {unwatched_first} published DESC {limit}""".format(
-            tb_entries=TB_ENTRIES,
-            and_channel_id=f"AND channel_id = '{channel_id}'" if channel_id else "",
-            and_timedelta=f"AND published > '{timedelta}'" if timedelta else "",
-            and_in_channels=in_channels_value,
-            unwatched_first="is_viewed," if unwatched_first else "",
-            limit=f"LIMIT {limit}" if limit else "",
-        )
-        rows = self.fetchall_rows(query)
+        ORDER BY {and_unwatched_first} published DESC {and_limit}"""
+
+        rows = self.fetchall_rows(query, params=params)
+        if rows is None:
+            return entries
+
         for id, title, published, c_id, is_viewed, is_deleted in rows:
             entries.append(
                 Entry(
@@ -125,7 +155,7 @@ class Storage:
             )
         return entries
 
-    def select_all_unwatched(self) -> dict[str, tuple[int, int]]:
+    def select_channels_stats(self) -> dict[str, tuple[int, int]]:
         query = f"""
         SELECT channel_id, SUM(is_deleted = 0), SUM(is_viewed = 0 AND is_deleted = 0)
         FROM {TB_ENTRIES}
@@ -141,81 +171,69 @@ class Storage:
         GROUP BY channel_id ORDER BY c1 DESC;"""
         return self.fetchall_rows(query)
 
-    def select_count(self, query: str) -> int:
+    def select_entries_count(
+        self,
+        *,
+        channel_id: str | None = None,
+        include_deleted: bool = False,
+        include_watched: bool | None = None,
+    ) -> int:
+        params_list: list[Any] = [include_deleted]
+
+        and_is_viewed = ""
+        if include_watched is not None:
+            and_is_viewed = "AND is_viewed = ?"
+            params_list.append(include_watched)
+
+        and_for_channel = ""
+        if channel_id:
+            and_for_channel = "AND channel_id = ?"
+            params_list.append(channel_id)
+
+        query = f"SELECT COUNT(*) FROM {TB_ENTRIES} WHERE is_deleted = ? {and_is_viewed} {and_for_channel}"
+        params = tuple(params_list)
+
         with self.get_cursor() as cursor:
-            self.log.debug(query)
-            (count,) = cursor.execute(query).fetchone()
+            self.log.debug(f"{query}, {params = !r}")
+            (count,) = cursor.execute(query, params).fetchone()
             self.log.debug(f"{count = }")
             return count
 
-    def select_unwatched_count(self, channel_id: str | None = None) -> int:
-        query = """
-        SELECT COUNT(*) FROM {tb_entries}
-        WHERE is_viewed = 0 AND is_deleted = 0 {for_channel}""".format(
-            tb_entries=TB_ENTRIES,
-            for_channel=f"AND channel_id = '{channel_id}'" if channel_id else "",
-        )
-        return self.select_count(query)
-
-    def select_entries_count(
-        self,
-        channel_id: str | None = None,
-        exclude_deleted: bool = False,
-    ) -> int:
-        query = """
-        SELECT COUNT(*) FROM {tb_entries} {where} {for_channel} {and_} {is_deleted}""".format(
-            tb_entries=TB_ENTRIES,
-            where="WHERE" if channel_id or exclude_deleted else "",
-            for_channel=f"channel_id = '{channel_id}'" if channel_id else "",
-            is_deleted="is_deleted = 0" if exclude_deleted else "",
-            and_="AND" if channel_id and exclude_deleted else "",
-        )
-        return self.select_count(query)
-
-    def update_row(self, query: str, params: tuple[Any, ...]) -> bool:
+    def update_rows(self, query: str, params: tuple[Any, ...] | None = None) -> int:
         with self.get_cursor() as cursor:
             self.log.debug(f"{query}, {params = !r}")
-            rowcount = cursor.execute(query, params).rowcount
+            if params is None:
+                rowcount = cursor.execute(query).rowcount
+            else:
+                rowcount = cursor.execute(query, params).rowcount
             self.log.debug(f"{rowcount = }")
-            return rowcount == 1
+            return rowcount
 
     def mark_entry_as_watched(self, id: str, unwatched: bool = False) -> None:
         is_viewed = 0 if unwatched else 1
         query = f"UPDATE {TB_ENTRIES} SET is_viewed = ? WHERE id = ?"
-        if not self.update_row(query, (is_viewed, id)):
-            self.log.warning(f"rowcount = 0 for mark_entry_as_watched({id = !r})")
+        rowcount = self.update_rows(query, params=(is_viewed, id))
+        if rowcount != 1:
+            self.log.warning(f"{rowcount = } for mark_entry_as_watched({id = !r})")
 
     def mark_entry_as_deleted(self, id: str) -> bool:
         query = f"UPDATE {TB_ENTRIES} SET is_deleted = 1 WHERE id = ?"
-        ok = self.update_row(query, (id,))
-        if not ok:
-            self.log.warning(f"rowcount = 0 for mark_entry_as_deleted({id = !r})")
-        return ok
-
-    def update_rows(self, query: str, params: tuple[Any, ...]) -> None:
-        with self.get_cursor() as cursor:
-            self.log.debug(f"{query}, {params = !r}")
-            rowcount = cursor.execute(query, params).rowcount
-            self.log.debug(f"{rowcount = }")
+        rowcount = self.update_rows(query, params=(id,))
+        if rowcount != 1:
+            self.log.warning(f"{rowcount = } for mark_entry_as_deleted({id = !r})")
+        return rowcount == 1
 
     def mark_channel_entries_as_watched(
         self, channel_id: str, unwatched: bool = False
     ) -> None:
         is_viewed = 0 if unwatched else 1
         query = f"UPDATE {TB_ENTRIES} SET is_viewed = ? WHERE channel_id = ?"
-        self.update_rows(query, (is_viewed, channel_id))
+        _ = self.update_rows(query, params=(is_viewed, channel_id))
 
     def mark_all_entries_as_watched(self, unwatched: bool = False) -> None:
         is_viewed = 0 if unwatched else 1
         query = f"UPDATE {TB_ENTRIES} SET is_viewed = ?"
-        self.update_rows(query, (is_viewed,))
-
-    def delete_rows(self, query: str) -> int:
-        with self.get_cursor() as cursor:
-            self.log.debug(query)
-            rowcount = cursor.execute(query).rowcount
-            self.log.debug(f"{rowcount = }")
-            return rowcount
+        _ = self.update_rows(query, params=(is_viewed,))
 
     def delete_old_entries(self) -> int:
         query = f"""
@@ -230,22 +248,23 @@ class Storage:
             ) < 15
         )
         """
-        return self.delete_rows(query)
+        return self.update_rows(query)
 
     def purge_deleted_entries(self) -> None:
         query = f"DELETE FROM {TB_ENTRIES} WHERE is_deleted = 1"
-        _ = self.delete_rows(query)
+        _ = self.update_rows(query)
 
     def mark_watched_as_deleted(self) -> None:
         query = f"UPDATE {TB_ENTRIES} SET is_deleted = 1 WHERE is_viewed = 1"
-        _ = self.delete_rows(query)
+        _ = self.update_rows(query)
 
     def delete_inactive_channels(self, active_channels: list[Channel]) -> None:
         if len(active_channels) == 0:
             return
-        channels_list = ", ".join(f"'{c.channel_id}'" for c in active_channels)
-        query = f"DELETE FROM {TB_ENTRIES} WHERE channel_id NOT IN ({channels_list})"
-        _ = self.delete_rows(query)
+        markers = ",".join("?" * len(active_channels))
+        channels_ids = tuple(c.channel_id for c in active_channels)
+        query = f"DELETE FROM {TB_ENTRIES} WHERE channel_id NOT IN ({markers})"
+        _ = self.update_rows(query, params=channels_ids)
 
     def execute_vacuum(self) -> None:
         query = "VACUUM"
