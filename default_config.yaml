@@ -69,12 +69,12 @@ tui:
   # channel_feed_limit: -1
 
   # channels print format, available keys:
-  # -- id              - 24 characters long channel id
   # -- title           - channel title
   # -- new_mark        - mark if have updates, otherwise whitespace
-  # -- entries_count   - total entries count except deleted
-  # -- unwatched_count - count of unwatched entries
-  channels_fmt: '{new_mark} | {title}'
+  # -- unwatched       - count of unwatched entries
+  # -- total           - total entries count except deleted
+  # -- unwatched_total - '({unwatched}/{total})' string aligned to right
+  channels_fmt: '{index} {new_mark} {unwatched_total} {title}'
 
   # colorscheme, valid values:
   # - ansi name (black red green yellow blue magenta cyan white)
@@ -86,19 +86,19 @@ tui:
   color_white: white
 
   # datetime format for the {published} key of entry format
-  datetime_fmt: '%D %T'
+  datetime_fmt: '%b %d'
 
   # the download output template used as value for yt-dlp's option `-o`
   download_output: '~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s'
 
   # entries print format, available keys:
   # -- index         - line index
-  # -- new_mark      - mark if unwatched, otherwise whitespace
-  # -- title         - title of the entry
+  # -- new_mark      - mark with `new_mark` string if unwatched, otherwise whitespace
   # -- published     - publication date (uses `--datetime-fmt`)
   # -- channel_title - title of the channel
-  entries_fmt: '{new_mark} | {published} | {title}'
-  feed_entries_fmt: '{new_mark} | {published} | {channel_title} | {title}'
+  # -- title         - title of the entry
+  entries_fmt: '{index} {new_mark} {published} {title}'
+  feed_entries_fmt: '{index} {new_mark} {published} {channel_title} {title}'
 
   # entries limit for common feed
   # feed_limit: -1
@@ -113,7 +113,7 @@ tui:
   last_update_fmt: '%D %T'
 
   # new mark string
-  new_mark: '[+]'
+  new_mark: 'N'
 
   # never update on startup
   no_update: false
