@@ -287,8 +287,9 @@ class App(TuiProps):
                     index=index,
                     new_mark=self.new_marks[highlight],
                     title=line.data.title,
-                    entries_count=line.data.entries_count,
-                    unwatched_count=line.data.unwatched_count,
+                    unwatched=line.data.unwatched_count,
+                    total=line.data.entries_count,
+                    unwatched_total=self.format_unwatched_total_key(line.data),
                 )
 
             if highlight and line.is_active:

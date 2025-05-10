@@ -28,6 +28,8 @@ class TuiProps:
         if self.c.alphabetic_sort:
             self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
         self.channels: list[Channel] = list()
+        self.__max_unwatched_num_len = 0
+        self.__max_total_num_len = 0
         self._set_channels()
         self.channel_indexes_map = {
             c.channel_id: i for i, c in enumerate(self.channels)
@@ -80,6 +82,11 @@ class TuiProps:
                 f"Unknown {channel_id = !r}\nin {self.channel_indexes_map.keys() = !r}"
             )
         return i
+
+    def format_unwatched_total_key(self, c: Channel) -> str:
+        w = self.__max_unwatched_num_len + self.__max_total_num_len + 3
+        s = f"({c.unwatched_count}/{c.entries_count})"
+        return f"{s:>{w}}"
 
     def get_lines_by_id(self, channel_id: str) -> list[Line]:
         if channel_id == "feed":
@@ -279,12 +286,21 @@ class TuiProps:
     def _set_channels(self) -> None:
         if self.c.hide_feed:
             self.channels = self.feeder.channels
+            self.__max_unwatched_num_len = max(
+                len(str(c.unwatched_count)) for c in self.channels
+            )
+            self.__max_total_num_len = max(
+                len(str(c.entries_count)) for c in self.channels
+            )
         else:
             unwatched_count = self.feeder.unwatched_count("feed")
+            total_entries_count = self.feeder.total_entries_count()
+            self.__max_unwatched_num_len = len(str(unwatched_count))
+            self.__max_total_num_len = len(str(total_entries_count))
             feed_channel = Channel(
                 title="Feed",
                 channel_id="feed",
-                entries_count=self.feeder.total_entries_count(),
+                entries_count=total_entries_count,
                 have_updates=bool(unwatched_count),
                 unwatched_count=unwatched_count,
             )

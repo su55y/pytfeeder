@@ -164,8 +164,9 @@ class App(TuiProps):
             index=self.format_line_index(i + 1),
             new_mark=self.new_marks[channel.have_updates],
             title=channel.title,
-            entries_count=channel.entries_count,
-            unwatched_count=channel.unwatched_count,
+            unwatched=channel.unwatched_count,
+            total=channel.entries_count,
+            unwatched_total=self.format_unwatched_total_key(channel),
         )
         classname = self.classnames[channel.have_updates]
         if channel.entries_count == 0:
