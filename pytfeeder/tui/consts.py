@@ -17,10 +17,11 @@ macros args:
 
 channels-fmt keys:
     {index}           - line index
-    {new_mark}        - show mark if have updates, otherwise `' '*len(new_mark)`
     {title}           - title of the channel
-    {entries_count}   - total entries count except deleted
-    {unwatched_count} - count of unwatched entries
+    {new_mark}        - show mark if have updates, otherwise `' '*len(new_mark)`
+    {unwatched}       - count of unwatched entries
+    {total}           - total entries count except deleted
+    {unwatched_total} - '({unwatched}/{total})' string aligned to right
 
 entries-fmt keys:
     {index}         - line index

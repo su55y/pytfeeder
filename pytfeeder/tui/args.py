@@ -77,14 +77,14 @@ def create_parser() -> argparse.ArgumentParser:
         "--channel-feed-limit",
         type=int,
         metavar="INT",
-        help="Channels feed limit. Overrides config value (default: None)",
+        help="Channels feed limit (default: None)",
     )
     parser.add_argument(
         "-L",
         "--feed-limit",
         type=int,
         metavar="INT",
-        help="Feed limit. Overrides config value (default: None)",
+        help="Feed limit (default: None)",
     )
     parser.add_argument(
         "--last-update-fmt",
@@ -103,7 +103,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--macro3",
         metavar="STR",
-        help="F4 macro",
+        help="F3 macro",
     )
     parser.add_argument(
         "--macro4",
@@ -113,7 +113,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--new-mark",
         metavar="STR",
-        help=f"New mark format (default: {consts.DEFAULT_NEW_MARK!r})",
+        help=f"New mark string (default: {consts.DEFAULT_NEW_MARK!r})",
     )
     parser.add_argument(
         "-n",
@@ -125,7 +125,7 @@ def create_parser() -> argparse.ArgumentParser:
         "-N",
         "--unwatched-first",
         action="store_true",
-        help="Prioritize unwatched entries over new ones already watched",
+        help="Prioritize unwatched entries over watched",
     )
     parser.add_argument(
         "--status-fmt",

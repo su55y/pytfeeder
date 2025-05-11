@@ -69,6 +69,7 @@ tui:
   # channel_feed_limit: -1
 
   # channels print format, available keys:
+  # -- index           - line index
   # -- title           - channel title
   # -- new_mark        - mark if have updates, otherwise whitespace
   # -- unwatched       - count of unwatched entries
