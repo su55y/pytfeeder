@@ -181,22 +181,27 @@ class Storage:
         self,
         *,
         channel_id: str | None = None,
-        include_deleted: bool = False,
-        include_watched: bool | None = None,
+        is_deleted: bool | None = None,
+        is_watched: bool | None = None,
     ) -> int:
-        params_list: list[Any] = [include_deleted]
+        params_list: list[Any] = []
+
+        where_is_deleted = "is_deleted IN (0, 1)"
+        if is_deleted is not None:
+            where_is_deleted = "is_deleted = ?"
+            params_list.append(is_deleted)
 
         and_is_viewed = ""
-        if include_watched is not None:
+        if is_watched is not None:
             and_is_viewed = "AND is_viewed = ?"
-            params_list.append(include_watched)
+            params_list.append(is_watched)
 
         and_for_channel = ""
         if channel_id:
             and_for_channel = "AND channel_id = ?"
             params_list.append(channel_id)
 
-        query = f"SELECT COUNT(*) FROM {TB_ENTRIES} WHERE is_deleted = ? {and_is_viewed} {and_for_channel}"
+        query = f"SELECT COUNT(*) FROM {TB_ENTRIES} WHERE {where_is_deleted} {and_is_viewed} {and_for_channel}"
         params = tuple(params_list)
 
         with self.get_cursor() as cursor:

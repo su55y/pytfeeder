@@ -293,7 +293,7 @@ class TuiProps:
                 len(str(c.entries_count)) for c in self.channels
             )
         else:
-            unwatched_count = self.feeder.unwatched_count("feed")
+            unwatched_count = self.feeder.unwatched_count()
             total_entries_count = self.feeder.total_entries_count()
             self.__max_unwatched_num_len = len(str(unwatched_count))
             self.__max_total_num_len = len(str(total_entries_count))

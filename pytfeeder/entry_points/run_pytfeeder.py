@@ -54,8 +54,8 @@ def entries_stats(feeder: Feeder) -> str:
     channels_map = {c.channel_id: c.title for c in feeder.config.channels}
     stats = feeder.stor.select_stats()
 
-    total_count = feeder.total_entries_count(include_deleted=True)
-    total_deleted = total_count - feeder.total_entries_count()
+    total_count = feeder.total_entries_count()
+    total_deleted = feeder.deleted_count()
     total_new = feeder.unwatched_count()
 
     c1, c2, c3 = len(str(total_count)), len(str(total_new)), len(str(total_deleted))

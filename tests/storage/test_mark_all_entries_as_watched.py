@@ -26,8 +26,8 @@ class TestStats(unittest.TestCase):
             len(mocks.sample_entries),
         )
         self.assertEqual(
-            self.stor.select_entries_count(include_watched=False),
+            self.stor.select_entries_count(is_watched=False),
             len(mocks.sample_entries),
         )
         self.stor.mark_all_entries_as_watched()
-        self.assertEqual(self.stor.select_entries_count(include_watched=False), 0)
+        self.assertEqual(self.stor.select_entries_count(is_watched=False), 0)

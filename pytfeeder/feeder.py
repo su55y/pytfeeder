@@ -94,14 +94,17 @@ class Feeder:
             self.log.error(f"Can't mark entry as deleted: {e!r}")
             return False
 
-    def total_entries_count(self, include_deleted: bool = False) -> int:
-        return self.stor.select_entries_count(include_deleted=include_deleted)
+    def total_entries_count(self) -> int:
+        return self.stor.select_entries_count()
+
+    def deleted_count(self) -> int:
+        return self.stor.select_entries_count(is_deleted=True)
 
     def unwatched_count(self, channel_id: str | None = None) -> int:
-        if channel_id == "feed":
-            return self.stor.select_entries_count(include_watched=False)
         return self.stor.select_entries_count(
-            channel_id=channel_id, include_watched=False
+            channel_id=channel_id,
+            is_watched=False,
+            is_deleted=False,
         )
 
     def clean_cache(self) -> int:
