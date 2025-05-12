@@ -24,8 +24,11 @@ class Storage:
         self.__init_db()
 
     def __init_db(self) -> None:
-        self.log.debug(f"connecting to {self.db_file!r}")
+        self.log.debug(f"Connecting to {self.db_file!r}")
         conn = sqlite3.connect(self.db_file)
+        if self.log.level == logging.DEBUG:
+            conn.set_trace_callback(self.log.debug)
+
         (current_version,) = next(conn.cursor().execute("PRAGMA user_version"), (0,))
         self.log.debug(f"{current_version = }")
 
@@ -45,19 +48,22 @@ class Storage:
         for migration in migrations[current_version:]:
             cur = conn.cursor()
             try:
-                self.log.debug("applying %s", migration.name)
-                cur.executescript("begin;" + migration.read_text())
+                self.log.debug(f"Applying {migration.name}")
+                cur.executescript("BEGIN;" + migration.read_text())
             except Exception as e:
-                self.log.error("failed migration %s: %s", migration.name, e)
-                cur.execute("rollback")
+                self.log.error(f"Failed migration {migration.name}: {e}")
+                cur.execute("ROLLBACK")
                 raise StorageError(f"Migration failed ({migration.name})") from e
             else:
-                cur.execute("commit")
+                cur.execute("COMMIT")
         conn.close()
 
     @contextmanager
     def get_cursor(self):
         conn = sqlite3.connect(self.db_file, detect_types=sqlite3.PARSE_DECLTYPES)
+        if self.log.level == logging.DEBUG:
+            conn.set_trace_callback(self.log.debug)
+
         try:
             yield conn.cursor()
         except Exception as e:
@@ -76,7 +82,7 @@ class Storage:
                 (entry.id, entry.title, entry.published, entry.channel_id)
                 for entry in entries
             ]
-            self.log.debug(f"{query}, {len(new_entries) = }")
+            self.log.debug(f"{len(new_entries) = }")
             rowcount = cursor.executemany(query, new_entries).rowcount
             self.log.debug(f"{rowcount = }")
             return rowcount
@@ -87,7 +93,7 @@ class Storage:
         params: tuple[Any, ...] | dict[str, Any] | None = None,
     ) -> list[tuple]:
         with self.get_cursor() as cursor:
-            self.log.debug(f"{query}, {params = !r}")
+            self.log.debug(f"{params = !r}")
             if params:
                 rows = cursor.execute(query, params).fetchall()
             else:
@@ -194,14 +200,14 @@ class Storage:
         params = tuple(params_list)
 
         with self.get_cursor() as cursor:
-            self.log.debug(f"{query}, {params = !r}")
+            self.log.debug(f"{params = !r}")
             (count,) = cursor.execute(query, params).fetchone()
             self.log.debug(f"{count = }")
             return count
 
     def update_rows(self, query: str, params: tuple[Any, ...] | None = None) -> int:
         with self.get_cursor() as cursor:
-            self.log.debug(f"{query}, {params = !r}")
+            self.log.debug(f"{params = !r}")
             if params is None:
                 rowcount = cursor.execute(query).rowcount
             else:
@@ -269,5 +275,4 @@ class Storage:
     def execute_vacuum(self) -> None:
         query = "VACUUM"
         with self.get_cursor() as cursor:
-            self.log.debug(query)
             cursor.execute(query)
