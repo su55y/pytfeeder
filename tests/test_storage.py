@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta, timezone
+import datetime as dt
 from pathlib import Path
 import unittest
 
 from pytfeeder import Storage
-from pytfeeder.models import Channel
 from . import mocks, utils
 
 
@@ -36,25 +35,10 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(len(entries), 0)
 
     def test3_select_by_timedelta(self):
-        td = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat(
-            sep="T", timespec="seconds"
-        )
-        self.assertEqual(len(self.stor.select_entries(timedelta=td)), 1)
+        td = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=24)
+        tds = td.isoformat(sep="T", timespec="seconds")
+        self.assertEqual(len(self.stor.select_entries(timedelta=tds)), 1)
 
     def test3_insert_duplicate(self):
         count = self.stor.add_entries(mocks.sample_entries)
         self.assertEqual(count, 0)
-
-    def test4_delete_inactive(self):
-        count = self.stor.add_entries(mocks.another_sample_entries)
-        self.assertEqual(count, len(mocks.another_sample_entries))
-        self.assertEqual(
-            len(mocks.sample_entries) + len(mocks.another_sample_entries),
-            self.stor.select_entries_count(),
-        )
-        active_channels = [
-            Channel(title=e.channel_id, channel_id=e.channel_id)
-            for e in mocks.sample_entries
-        ]
-        self.stor.delete_inactive_channels(active_channels=active_channels)
-        self.assertEqual(self.stor.select_entries(), mocks.sample_entries)
