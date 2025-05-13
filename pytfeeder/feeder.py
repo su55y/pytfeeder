@@ -112,6 +112,11 @@ class Feeder:
         self.stor.execute_vacuum()
         return count
 
+    def delete_inactive(self) -> int:
+        count = self.stor.delete_inactive_channels(self.config.channels)
+        self.stor.execute_vacuum()
+        return count
+
     async def sync_entries(self) -> tuple[int, Exception | None]:
         try:
             r = await self._sync_entries()

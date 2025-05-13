@@ -24,6 +24,11 @@ def parse_args() -> argparse.Namespace:
         help="Remove old entries from database that was marked as deleted and execute VACUUM",
     )
     parser.add_argument(
+        "--delete-inactive",
+        action="store_true",
+        help="Remove entries with channel_id that unknown to channels.yaml and execute VACUUM",
+    )
+    parser.add_argument(
         "-p", "--print-config", action="store_true", help="Prints config"
     )
     parser.add_argument(
@@ -63,12 +68,12 @@ def entries_stats(feeder: Feeder) -> str:
     stats_line_width = max_title_len + c1 + c2 + c3 + 4
 
     total_nums = f"{total_count:{c1}d}|{total_new:{c2}d}|{total_deleted:{c3}d}"
-    total_stats_line = (
+    total_stats_footer = (
         f"{'='*stats_line_width}\n{'TOTAL':<{max_title_len+1}}|{total_nums}"
     )
+
     header = f"{'TITLE':^{max_title_len+1}}|{'TOT':^{c1}}|{'NEW':^{c2}}|{'DEL':^{c3}}"
     header += f"\n{'-'*len(header)}"
-    deleted_section_header = f"{' UNKNOWN CHANNELS ':-^{stats_line_width}}"
 
     entries_stats_str = ""
     deleted_stats_str = ""
@@ -80,7 +85,13 @@ def entries_stats(feeder: Feeder) -> str:
         else:
             entries_stats_str += f"{title:<{max_title_len+1}}|{nums}\n"
 
-    return f"{header}\n{entries_stats_str}{deleted_section_header}\n{deleted_stats_str}{total_stats_line}\n"
+    unknown_section = ""
+    if deleted_stats_str:
+        unknown_section = (
+            f"{' UNKNOWN CHANNELS ':-^{stats_line_width}}\n{deleted_stats_str}"
+        )
+
+    return f"{header}\n{entries_stats_str}{unknown_section}{total_stats_footer}\n"
 
 
 def storage_file_stats(storage_path: Path) -> str:
@@ -140,6 +151,10 @@ def run():
 
     if args.clean_cache:
         count = feeder.clean_cache()
+        print(f"{count} entries were deleted")
+        sys.exit(0)
+    elif args.delete_inactive:
+        count = feeder.delete_inactive()
         print(f"{count} entries were deleted")
         sys.exit(0)
 

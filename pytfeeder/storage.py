@@ -269,13 +269,13 @@ class Storage:
         query = f"UPDATE {TB_ENTRIES} SET is_deleted = 1 WHERE is_viewed = 1"
         _ = self.update_rows(query)
 
-    def delete_inactive_channels(self, active_channels: list[Channel]) -> None:
+    def delete_inactive_channels(self, active_channels: list[Channel]) -> int:
         if len(active_channels) == 0:
-            return
+            return 0
         markers = ",".join("?" * len(active_channels))
         channels_ids = tuple(c.channel_id for c in active_channels)
         query = f"DELETE FROM {TB_ENTRIES} WHERE channel_id NOT IN ({markers})"
-        _ = self.update_rows(query, params=channels_ids)
+        return self.update_rows(query, params=channels_ids)
 
     def execute_vacuum(self) -> None:
         query = "VACUUM"
