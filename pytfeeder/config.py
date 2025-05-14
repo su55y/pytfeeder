@@ -11,10 +11,10 @@ from .defaults import (
     default_channels_filepath,
     default_lockfile_path,
 )
-from .logger import LoggerConfig
+from .logger import LoggerConfig, LogLevel
 from .models import Channel
 from .utils import expand_path
-from pytfeeder.rofi import ConfigRofi
+from pytfeeder.rofi import ConfigRofi, Separator
 from pytfeeder.tui import ConfigTUI
 
 
@@ -147,6 +147,27 @@ class Config:
             )
         else:
             os.remove(tmp_name)
+
+    def dump(self) -> str:
+        strtag = "tag:yaml.org,2002:str"
+        yaml.add_representer(
+            type(Path()), lambda d, p: d.represent_scalar(strtag, str(p))
+        )
+        yaml.add_representer(
+            Separator, lambda d, s: d.represent_scalar(strtag, s, style='"')
+        )
+        yaml.add_representer(
+            LogLevel, lambda d, l: d.represent_scalar(strtag, l.name.lower())
+        )
+
+        obj = dc.asdict(self)
+        obj["data_dir"] = self.data_dir
+
+        for hidden_key in {"_Config__channels", "storage_path"}:
+            if hidden_key in obj:
+                del obj[hidden_key]
+
+        return yaml.dump(obj, allow_unicode=True, width=float("inf"))
 
     def __repr__(self) -> str:
         repr_str = ""

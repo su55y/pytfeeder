@@ -4,6 +4,10 @@ from typing import Any
 from . import consts
 
 
+class Separator(str):
+    pass
+
+
 @dataclass
 class ConfigRofi:
     alphabetic_sort: bool = False
@@ -13,7 +17,7 @@ class ConfigRofi:
     datetime_fmt: str = consts.DEFAULT_DATETIME_FMT
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_limit: int = -1
-    separator: str = consts.DEFAULT_SEPARATOR
+    separator: Separator = Separator(consts.DEFAULT_SEPARATOR)
     unwatched_first: bool = False
 
     def update(self, kwargs: dict[str, Any]) -> None:
@@ -21,6 +25,8 @@ class ConfigRofi:
             if k in vars(self) and v is not None:
                 if isinstance(v, bool):
                     v = getattr(self, k, v) | v
+                elif k == "separator":
+                    v = Separator(v)
                 setattr(self, k, v)
 
     def __repr__(self) -> str:

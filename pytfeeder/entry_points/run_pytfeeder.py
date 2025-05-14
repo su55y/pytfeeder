@@ -29,7 +29,10 @@ def parse_args() -> argparse.Namespace:
         help="Remove entries with channel_id that unknown to channels.yaml and execute VACUUM",
     )
     parser.add_argument(
-        "-p", "--print-config", action="store_true", help="Prints config"
+        "-p",
+        "--dump-config",
+        action="store_true",
+        help="Dump the current config in yaml format",
     )
     parser.add_argument(
         "-s",
@@ -114,8 +117,8 @@ def run():
     args = parse_args()
     config = Config(config_file=args.config_file)
 
-    if args.print_config:
-        print(config)
+    if args.dump_config:
+        print(config.dump(), end="")
         sys.exit(0)
 
     if not config.data_dir.exists():

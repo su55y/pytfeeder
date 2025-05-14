@@ -1,3 +1,3 @@
-from .config import ConfigRofi
+from .config import ConfigRofi, Separator
 
-__all__ = ["ConfigRofi"]
+__all__ = ["ConfigRofi", "Separator"]
