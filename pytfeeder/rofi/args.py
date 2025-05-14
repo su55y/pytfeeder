@@ -74,6 +74,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--separator",
+        type=lambda s: eval("'%s'" % s),
         metavar="STR",
         help="Line separator (default: %(default)r)",
     )
