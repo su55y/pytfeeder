@@ -12,7 +12,7 @@ from .defaults import (
     default_lockfile_path,
 )
 from .logger import LoggerConfig, LogLevel
-from .models import Channel
+from .models import Channel, ChannelDumper
 from .utils import expand_path
 from pytfeeder.rofi import ConfigRofi, Separator
 from pytfeeder.tui import ConfigTUI
@@ -135,12 +135,21 @@ class Config:
             raise Exception(f"Error while loading channels: {e!r}")
 
     def dump_channels(self) -> None:
+        ChannelDumper.add_representer(Channel, Channel.to_yaml)
+
         fd, tmp_name = tempfile.mkstemp(prefix="channels", suffix=".yaml")
         os.close(fd)
+
         try:
             _ = shutil.copyfile(self.channels_filepath, tmp_name)
             with self.channels_filepath.open("w") as f:
-                yaml.safe_dump([c.dump() for c in self.channels], f, allow_unicode=True)
+                yaml.dump(
+                    self.channels,
+                    f,
+                    Dumper=ChannelDumper,
+                    allow_unicode=True,
+                    width=float("inf"),
+                )
         except Exception as e:
             raise Exception(
                 f"Error while dumping channels: {e!s}\nBackup copied to {tmp_name}"

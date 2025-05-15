@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 import datetime as dt
 
+import yaml
+
 
 @dataclass
 class Entry:
@@ -25,6 +27,10 @@ class InvalidChannelError(ValueError):
     pass
 
 
+class ChannelDumper(yaml.SafeDumper):
+    pass
+
+
 @dataclass
 class Channel:
     title: str = ""
@@ -42,5 +48,10 @@ class Channel:
                 f"Invalid channel_id {len(self.channel_id) = } ({self.channel_id!r}), should be 24)"
             )
 
-    def dump(self) -> dict:
-        return {"title": self.title, "channel_id": self.channel_id}
+    @staticmethod
+    def to_yaml(dumper: ChannelDumper, c: "Channel") -> yaml.MappingNode:
+        return dumper.represent_mapping(
+            "tag:yaml.org,2002:map",
+            {"channel_id": c.channel_id, "title": c.title},
+            flow_style=True,
+        )
