@@ -1,37 +1,39 @@
-# directory to store database, defaults to $XDG_DATA_HOME/pytfeeder or $HOME/.local/share/pytfeeder
-data_dir: null
+# feeds sources filepath, should be valid yaml collection of channels objects
+# with title and channel_id attributes
+channels_filepath: $XDG_CONFIG_HOME/pytfeeder/channels.yaml # or $HOME/.config/pytfeeder/channels.yaml
 
-# feeds sources filepath, defaults to $XDG_CONFIG_HOME/pytfeeder/channels.yaml
-# should be yaml and contain collection of channel objects with title and channel_id
-# - { channel_id: foo, title: bar }
-channels_filepath: null
+# directory for database
+data_dir: $XDG_DATA_HOME/pytfeeder # or $HOME/.local/share/pytfeeder
 
-# by default initializes NullHandler, if `file` given FileHandler
+# update lock filepath, used to store timestamp of the last update
+# default value uses directory returned by `tempfile.gettempdir()`
+# https://docs.python.org/3/library/tempfile.html#tempfile.gettempdir
+lock_file: /tmp/pytfeeder_update.lock
+
+# by default initializes NullHandler, FileHandler if `file` given
 # and if `file` is null and `stream` set to true then StreamHandler.
 logger:
   file: null
-  # logging format, used default if null
+  # logging format, if null and file/stream given then
+  # defaults to logging.BASIC_FORMAT = "%(levelname)s:%(name)s:%(message)s"
   # reference: https://docs.python.org/3/library/logging.html#logrecord-attributes
   fmt: null
-  # logging level name, valid options are: debug, info, warning, error
-  level: null
+  # logging level, valid options are: notset, debug, info, warning, error
+  level: notset
   stream: false
 
-#
-# rofi config
-#
 rofi:
-  # sort channels list in alphabetic order instead of config defined one
+  # sort channels list in alphabetic order instead of the order defined in channels.yaml
   alphabetic_sort: false
 
-  # entries limit for channel feed
-  # channel_feed_limit: -1
+  # limit for channel feed, no limit if -1
+  channel_feed_limit: -1
 
   # channels print format, available keys:
-  # -- id              - 24 characters long channel id
+  # -- id              - channel_id value
   # -- title           - channel title
-  # -- entries_count   - total entries count except deleted
-  # -- unwatched_count - count of new entries
+  # -- entries_count   - total number of channel entries except deleted
+  # -- unwatched_count - number of new channel entries
   channels_fmt: "{title}\0info\x1f{id}"
 
   # datetime format for the {published} key of entry format
@@ -46,34 +48,31 @@ rofi:
   entries_fmt: "{title}\0info\x1f{id}\x1fmeta\x1f{meta}"
   feed_entries_fmt: "{title}\0info\x1f{id}\x1fmeta\x1f{meta}"
 
-  # entries limit for common feed
-  feed_limit: 7
+  # limit for common feed, no limit if -1
+  feed_limit: -1
 
   # lines separator
-  separator: '\n'
+  separator: "\n"
 
-  # sorting order, prefering unwatched over newer but watched
+  # entries sorting order, prefering unwatched over newer but watched
   unwatched_first: false
 
-#
-# tui config
-#
 tui:
-  # sort channels list in alphabetic order instead of config defined one
+  # sort channels list in alphabetic order instead of the order defined in channels.yaml
   alphabetic_sort: false
 
   # always update on start
   always_update: false
 
-  # entries limit for channel feed
-  # channel_feed_limit: -1
+  # limit for channel feed, no limit if -1
+  channel_feed_limit: -1
 
   # channels print format, available keys:
   # -- index           - line index
   # -- title           - channel title
-  # -- new_mark        - mark if have updates, otherwise whitespace
-  # -- unwatched       - count of unwatched entries
-  # -- total           - total entries count except deleted
+  # -- new_mark        - `new_mark` string if channel have updates, otherwise whitespace
+  # -- unwatched       - number of new channel entries
+  # -- total           - total number of channel entries except deleted
   # -- unwatched_total - '({unwatched}/{total})' string aligned to right
   channels_fmt: '{index} {new_mark} {unwatched_total} {title}'
 
@@ -90,52 +89,54 @@ tui:
   datetime_fmt: '%b %d'
 
   # the download output template used as value for yt-dlp's option `-o`
-  download_output: '~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s'
+  download_output: ~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s
 
   # entries print format, available keys:
   # -- index         - line index
-  # -- new_mark      - mark with `new_mark` string if unwatched, otherwise whitespace
-  # -- published     - publication date (uses `--datetime-fmt`)
+  # -- new_mark      - `new_mark` string if entry is new, otherwise whitespace
+  # -- published     - publication date (uses `datetime_fmt`)
   # -- channel_title - title of the channel
   # -- title         - title of the entry
   entries_fmt: '{index} {new_mark} {published} {title}'
   feed_entries_fmt: '{index} {new_mark} {published} {channel_title} {title}'
 
-  # entries limit for common feed
-  # feed_limit: -1
+  # limit for common feed, no limit if -1
+  feed_limit: -1
 
-  # don't show feed
+  # don't show common 'Feed' channel
   hide_feed: false
 
-  # turn off statusbar
+  # don't show statusbar
   hide_statusbar: false
 
-  # {last_update} status key datetime format
+  # datetime format for {last_update} status key
   last_update_fmt: '%D %T'
 
+  # macros F1-F4, available only in entries screens
+  # passed args:
+  # -- $1 - entry id
+  # -- $2 - entry title
+  macro1: ''
+  macro2: ''
+  macro3: ''
+  macro4: ''
+
   # new mark string
-  new_mark: 'N'
+  new_mark: N
 
   # never update on startup
   no_update: false
 
-  # macros F1-F4, available only in entries screens, passed args:
-  # -- $1 - id
-  # -- $2 - title
-  macro1: null
-  macro2: null
-  macro3: null
-  macro4: null
-
   # status bar format, available keys:
   # -- index       - current line index
+  # -- last_update - time of last update (formatted with `last_update_fmt`)
+  # -- keybinds    - keybinds tip, hardcoded to '[h,j,k,l]: navigate, [q]: quit, [?]: help'
   # -- msg         - status message
   # -- title       - current feed title
-  # -- last_update - time of last update (optionally formatted with `last_update_fmt`)
   status_fmt: '{msg} {index} {title} {keybinds}'
 
-  # interval in minutes between updates on start (used if always_update=false)
-  # update_interval: 120
+  # entries sorting order, prefering unwatched over newer but watched
+  unwatched_first: false
 
-  # sorting order, prefering unwatched over newer but watched
-  # unwatched_first: false
+  # interval in minutes between updates on start (used if always_update=false)
+  update_interval: 30
