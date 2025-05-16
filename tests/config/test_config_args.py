@@ -56,3 +56,6 @@ class TestConfigArgs(unittest.TestCase):
 
         c = Config(config_file=Path(tmp_config.name))
         self.assertEqual(c.channels, channels_mock)
+
+    def test_pass_nothing(self):
+        self.assertEqual(Config().channels, [])

@@ -18,7 +18,7 @@ class TestNextPrev(unittest.TestCase):
             cls.db_file.unlink()
 
     def setUp(self):
-        c = Config(channels=list())
+        c = Config()
         c.tui.alphabetic_sort = True
         c.tui.hide_feed = True
         c.tui.no_update = True

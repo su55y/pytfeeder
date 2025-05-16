@@ -34,3 +34,16 @@ class TestDumpChannels(unittest.TestCase):
 
         c = Config(channels_filepath=self.channels_path)
         self.assertEqual(c.channels, channels)
+
+    def test_dump_channels_format(self):
+        c = Config(channels_filepath=self.channels_path)
+        c.channels = []
+        c.dump_channels()
+        with open(self.channels_path) as f:
+            self.assertEqual(f.read(), "[]\n")
+        self.assertEqual(Config(channels_filepath=self.channels_path).channels, [])
+
+        c.channels = channels_mock.copy()
+        c.dump_channels()
+        with open(self.channels_path) as f2:
+            self.assertEqual(f2.read(), raw_channels_yaml_mock)

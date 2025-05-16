@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 import os
 
-from pytfeeder.logger import init_logger, LoggerConfig
+from pytfeeder.logger import init_logger, LoggerConfig, LogLevel
 
 
 def setup_logging(
@@ -19,4 +19,5 @@ def setup_logging(
         init_logger(LoggerConfig())
         return
 
-    init_logger(LoggerConfig(file=dirpath / filename, fmt=fmt, level=level))
+    level_ = LogLevel(level) if level in LogLevel else LogLevel.DEBUG
+    init_logger(LoggerConfig(file=dirpath / filename, fmt=fmt, level=level_))
