@@ -127,6 +127,14 @@ def run():
     init_logger(config.logger)
 
     if args.add_channel:
+        if not config.channels_filepath.exists():
+            answ = input(
+                f"Channels file {config.channels_filepath} not exists,\ncreate it?: "
+            )
+            if not answ.lower().startswith("y"):
+                sys.exit(0)
+            config.channels_filepath.touch(0o644, exist_ok=False)
+
         try:
             new_channel = utils.fetch_channel_info(args.add_channel)
         except Exception as e:

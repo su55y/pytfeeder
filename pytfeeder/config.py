@@ -65,7 +65,10 @@ class Config:
             storage_path=storage_path,
         )
         if self.__is_channels_set is False:
-            self.channels = self._load_channels_from_file(self.channels_filepath)
+            if self.channels_filepath.exists():
+                self.channels = self._load_channels_from_file(self.channels_filepath)
+            else:
+                self.channels = []
 
     @property
     def channels(self) -> list[Channel]:

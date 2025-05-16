@@ -577,7 +577,7 @@ def main():
 
     feeder = Feeder(config, Storage(config.storage_path))
     if len(feeder.channels) == 0:
-        print(f"No channels found in config {config_path}")
+        print(f"No channels configured in {feeder.config.channels_filepath}")
         sys.exit(0)
 
     try:
