@@ -23,6 +23,7 @@ rofi:
   entries_fmt: "{title}\0info\x1F{id}\x1Fmeta\x1F{meta}"
   feed_entries_fmt: "{title}\0info\x1F{id}\x1Fmeta\x1F{meta}"
   feed_limit: -1
+  hide_feed: false
   separator: "\n"
   unwatched_first: false
 tui:
