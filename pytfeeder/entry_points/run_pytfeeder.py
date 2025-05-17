@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Dump the current config in yaml format",
     )
+    parser.add_argument("-f", "--stats-fmt", help="Print formatted stats")
     parser.add_argument(
         "-s",
         "--sync",
@@ -158,6 +159,17 @@ def run():
     if args.storage_stats:
         print(entries_stats(feeder))
         print("File stats:\n" + storage_file_stats(config.storage_path))
+        sys.exit(0)
+
+    if args.stats_fmt:
+        total = unwatched = deleted = 0
+        if "{total}" in args.stats_fmt:
+            total = feeder.total_entries_count()
+        if "{unwatched}" in args.stats_fmt:
+            unwatched = feeder.unwatched_count()
+        if "{deleted}" in args.stats_fmt:
+            deleted = feeder.deleted_count()
+        print(args.stats_fmt.format(total=total, unwatched=unwatched, deleted=deleted))
         sys.exit(0)
 
     if args.clean_cache:
