@@ -11,7 +11,7 @@ class RofiPrinter:
         self.feeder = feeder
         self.c = self.feeder.config.rofi
         if self.c.alphabetic_sort:
-            self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
+            self.feeder.config.channels.sort(key=lambda c: c.title.lower())
         self.__message_printed = False
 
     def print_channels(self) -> None:
@@ -23,8 +23,8 @@ class RofiPrinter:
                 self.c.channels_fmt.format(
                     id=channel.channel_id,
                     title=channel.title,
-                    entries_count=channel.entries_count,
-                    unwatched_count=channel.unwatched_count,
+                    total=channel.entries_count,
+                    unwatched=channel.unwatched_count,
                     active=["false", "true"][channel.have_updates],
                 ),
                 end=self.c.separator,
@@ -139,11 +139,11 @@ def wrapped_main():
 
         new, err = asyncio.run(feeder.sync_entries())
         if err:
-            printer.print_error(f"Error: {err}")
+            printer.print_error(f"ERR: {err}")
         elif new > 0:
             printer.print_message(f"{new} new entries")
         else:
-            printer.print_message("no updates")
+            printer.print_message("No updates")
 
     if args.channel_id:
         printer.print_channel_feed(args.channel_id)
