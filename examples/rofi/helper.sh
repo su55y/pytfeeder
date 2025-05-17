@@ -26,9 +26,8 @@ err_msg() {
 
 start_menu() {
     printf "\000markup-rows\037true\n"
-    printf "Feed\r<i><b>%s</b> new entries</i>\000info\037feed\n" "$(pytfeeder -u)"
     pytfeeder-rofi "$@" \
-        --channels-fmt '{title}\r<i><b>{unwatched_count}</b> new entries</i>\000info\037{id}\037active\037{active}'
+        --channels-fmt '{title}\r<i><b>{unwatched}</b> new entries</i>\000info\037{id}\037active\037{active}'
     printf "\000new-selection\0370\n"
 }
 

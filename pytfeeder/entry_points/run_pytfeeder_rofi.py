@@ -6,6 +6,10 @@ from pytfeeder.models import Entry
 from pytfeeder.rofi import args as rofi_args
 
 
+def html_escape(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 class RofiPrinter:
     def __init__(self, feeder: Feeder) -> None:
         self.feeder = feeder
@@ -18,11 +22,24 @@ class RofiPrinter:
         self.print_message("%d unwatched entries" % self.feeder.unwatched_count())
         print("\000data\037main", end=self.c.separator)
 
+        if not self.c.hide_feed:
+            total = self.feeder.total_entries_count()
+            unwatched = self.feeder.unwatched_count()
+            print(
+                self.c.channels_fmt.format(
+                    id="feed",
+                    title="Feed",
+                    total=total,
+                    unwatched=unwatched,
+                    active=["false", "true"][unwatched > 0],
+                )
+            )
+
         for channel in self.feeder.channels:
             print(
                 self.c.channels_fmt.format(
                     id=channel.channel_id,
-                    title=channel.title,
+                    title=html_escape(channel.title),
                     total=channel.entries_count,
                     unwatched=channel.unwatched_count,
                     active=["false", "true"][channel.have_updates],
@@ -51,7 +68,7 @@ class RofiPrinter:
             self.print_message("invalid channel_id")
             return
 
-        message = self.feeder.channel_title(channel_id)
+        message = html_escape(self.feeder.channel_title(channel_id))
         if unwatched_count := self.feeder.unwatched_count(channel_id):
             message = f"{message}, {unwatched_count} unwatched entries"
 
@@ -67,14 +84,14 @@ class RofiPrinter:
 
     def print_entries(self, entries: list[Entry], fmt: str) -> None:
         for entry in entries:
-            channel_title = self.feeder.channel_title(entry.channel_id)
+            channel_title = html_escape(self.feeder.channel_title(entry.channel_id))
             meta = channel_title
             if len(parts := meta.split()):
                 meta += "%s%s" % (",".join(parts), "".join(parts))
 
             print(
                 fmt.format(
-                    title=entry.title.replace("&", "&amp;"),
+                    title=html_escape(entry.title),
                     id=entry.id,
                     channel_title=channel_title,
                     meta=meta,
