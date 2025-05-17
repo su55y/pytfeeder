@@ -53,6 +53,7 @@ class Storage:
             except Exception as e:
                 self.log.error(f"Failed migration {migration.name}: {e}")
                 cur.execute("ROLLBACK")
+                conn.close()
                 raise StorageError(f"Migration failed ({migration.name})") from e
             else:
                 cur.execute("COMMIT")
