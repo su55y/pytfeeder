@@ -55,6 +55,9 @@ class TuiProps:
             self.initial_update()
         self.refresh_last_update()
         self.is_channels_outdated = False
+        self.__is_download_allowed = False
+        self.__is_notify_allowed = False
+        self.__is_executables_checked = False
 
     def feed(self) -> list[Entry]:
         return self.feeder.feed(
@@ -120,12 +123,9 @@ class TuiProps:
         last_update = dt.datetime.fromtimestamp(
             float(self.feeder.config.lock_file.read_text())
         )
-        if last_update < (
+        return last_update < (
             dt.datetime.now() - dt.timedelta(minutes=self.c.update_interval)
-        ):
-            return True
-
-        return False
+        )
 
     def handle_move(self, gravity: int) -> bool:
         if (
@@ -221,31 +221,6 @@ class TuiProps:
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = not unwatched  # type: ignore
 
-    def download(self) -> None:
-        if len(self.lines) == 0 or self.page_state != PageState.ENTRIES:
-            return
-        selected_data = self.lines[self.index].data
-        if not isinstance(selected_data, Entry):
-            raise Exception(f"Unexpected entry type {type(selected_data)!r}")
-
-        # FIXME: will fail if tsp or notify-send not an executable
-        utils.download_video(selected_data, self.c.download_output)
-        if not selected_data.is_viewed:
-            self.mark_as_watched()
-
-    def download_all(self) -> None:
-        if len(self.lines) == 0:
-            return
-        selected_data = self.lines[self.index].data
-        if self.page_state != PageState.ENTRIES or not isinstance(selected_data, Entry):
-            return
-
-        entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
-        if len(entries) > 0:
-            # FIXME: will fail if tsp or notify-send not an executable
-            utils.download_all(entries, self.c.download_output)  # type: ignore
-            self.mark_as_watched_all()
-
     @property
     def statusbar_height(self) -> int:
         return 1 ^ self.c.hide_statusbar
@@ -340,3 +315,58 @@ class TuiProps:
             self.status_msg = "no updates"
 
         self.refresh_last_update()
+
+    def _check_executables(self) -> None:
+        if self.__is_executables_checked:
+            return
+
+        from shutil import which
+
+        self.__is_download_allowed = bool(which("tsp") and which("yt-dlp"))
+        self.__is_notify_allowed = bool(which("notify-send"))
+        self.__is_executables_checked = True
+
+    def download(self) -> None:
+        self._check_executables()
+        if not self.__is_download_allowed:
+            self.status_msg = "Download not allowed (tsp or yt-dlp not found)"
+            return
+
+        if len(self.lines) == 0 or self.page_state != PageState.ENTRIES:
+            return
+        selected_data = self.lines[self.index].data
+        if not isinstance(selected_data, Entry):
+            raise Exception(f"Unexpected entry type {type(selected_data)!r}")
+
+        utils.download_video(
+            entry=selected_data,
+            output=self.c.download_output,
+            send_notification=self.__is_notify_allowed,
+        )
+        if not selected_data.is_viewed:
+            self.mark_as_watched()
+
+    def download_all(self) -> None:
+        self._check_executables()
+        if not self.__is_download_allowed:
+            self.status_msg = "Download not allowed (tsp or yt-dlp not found)"
+            return
+
+        if len(self.lines) == 0:
+            return
+        selected_data = self.lines[self.index].data
+        if self.page_state != PageState.ENTRIES or not isinstance(selected_data, Entry):
+            return
+
+        entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
+        if len(entries) > 0:
+            utils.download_all(
+                entries=entries,  # type: ignore
+                output=self.c.download_output,
+                send_notification=self.__is_notify_allowed,
+            )
+            self.mark_as_watched_all()
+
+    def play(self, entry: Entry) -> None:
+        self._check_executables()
+        utils.play_video(entry, self.__is_notify_allowed)

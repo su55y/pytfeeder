@@ -37,7 +37,7 @@ def human_readable_size(size: int) -> str:
     return "%s %s" % (s, size_name[i])
 
 
-def download_video(entry: Entry, output: str, send_notification=True) -> None:
+def download_video(entry: Entry, output: str, send_notification: bool = True) -> None:
     p = sp.check_output(
         [
             "tsp",
@@ -49,8 +49,10 @@ def download_video(entry: Entry, output: str, send_notification=True) -> None:
         shell=False,
     )
 
-    if send_notification:
-        _ = notify(f"⬇️Start downloading {entry.title!r}...")
+    if not send_notification:
+        return
+
+    _ = notify(f"⬇️Start downloading {entry.title!r}...")
 
     _ = sp.run(
         [
@@ -69,9 +71,21 @@ def download_video(entry: Entry, output: str, send_notification=True) -> None:
     )
 
 
-def play_video(entry: Entry) -> None:
-    notify(f"{entry.title} playing...")
-    sp.Popen(
+def download_all(
+    entries: list[Entry],
+    output: str,
+    send_notification: bool = False,
+) -> None:
+    if send_notification:
+        _ = notify(f"⬇️Start downloading {len(entries)} entries...")
+    for e in entries:
+        download_video(e, output, send_notification)
+
+
+def play_video(entry: Entry, send_notification: bool = False) -> None:
+    if send_notification:
+        _ = notify(f"{entry.title} playing...")
+    _ = sp.Popen(
         [
             "setsid",
             "-f",
@@ -92,9 +106,3 @@ def notify(msg: str) -> bool:
     if p.returncode != 0:
         return False
     return True
-
-
-def download_all(entries: list[Entry], output: str) -> None:
-    _ = notify(f"⬇️Start downloading {len(entries)} entries...")
-    for e in entries:
-        download_video(e, output, send_notification=False)

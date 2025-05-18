@@ -6,7 +6,7 @@ import subprocess as sp
 from typing import Literal
 import sys
 
-from pytfeeder import Config, Feeder, Storage, utils, __version__
+from pytfeeder import Config, Feeder, Storage, __version__
 from pytfeeder.logger import init_logger
 from pytfeeder.models import Channel, Entry
 from pytfeeder.tui import args as tui_args, ConfigTUI
@@ -440,7 +440,7 @@ class App(TuiProps):
             self.index = 0
             self.scroll_top = 0
         elif self.page_state == PageState.ENTRIES and isinstance(selected_data, Entry):
-            utils.play_video(selected_data)
+            self.play(selected_data)
             if not selected_data.is_viewed:
                 self.mark_as_watched()
 

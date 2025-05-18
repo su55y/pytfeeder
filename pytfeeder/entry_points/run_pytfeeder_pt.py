@@ -25,7 +25,7 @@ from prompt_toolkit.layout.processors import BeforeInput
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
 
-from pytfeeder import Config, Feeder, Storage, utils, __version__
+from pytfeeder import Config, Feeder, Storage, __version__
 from pytfeeder.logger import init_logger
 from pytfeeder.models import Channel, Entry
 from pytfeeder.tui import args as tui_args, ConfigTUI
@@ -295,7 +295,7 @@ class App(TuiProps):
         @kb.add("l")
         @kb.add("enter")
         @kb.add("right")
-        def _enter_line(event: KeyPressEvent) -> None:
+        def _enter_line(_) -> None:
             if len(self.lines) == 0:
                 return
             if self.index not in range(len(self.lines)):
@@ -306,7 +306,7 @@ class App(TuiProps):
                 if not isinstance(entry, Entry):
                     raise Exception(f"Unexpected entry type {type(entry) = !r}")
 
-                utils.play_video(entry)
+                self.play(entry)
                 if not entry.is_viewed:
                     self.mark_as_watched()
                 return
