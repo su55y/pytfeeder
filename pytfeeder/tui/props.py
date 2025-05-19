@@ -57,6 +57,7 @@ class TuiProps:
         self.is_channels_outdated = False
         self.__is_download_allowed = False
         self.__is_notify_allowed = False
+        self.__is_play_allowed = False
         self.__is_executables_checked = False
 
     def feed(self) -> list[Entry]:
@@ -323,6 +324,7 @@ class TuiProps:
         from shutil import which
 
         self.__is_download_allowed = bool(which("tsp") and which("yt-dlp"))
+        self.__is_play_allowed = bool(which("setsid") and which("mpv"))
         self.__is_notify_allowed = bool(which("notify-send"))
         self.__is_executables_checked = True
 
@@ -369,4 +371,7 @@ class TuiProps:
 
     def play(self, entry: Entry) -> None:
         self._check_executables()
+        if not self.__is_play_allowed:
+            self.status_msg = "Play not allowed (setsid or mpv not found)"
+            return
         utils.play_video(entry, self.__is_notify_allowed)
