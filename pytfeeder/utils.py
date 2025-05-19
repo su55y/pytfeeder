@@ -41,6 +41,8 @@ def download_video(entry: Entry, output: str, send_notification: bool = True) ->
     p = sp.check_output(
         [
             "tsp",
+            "-L",
+            "pytfeeder",
             "yt-dlp",
             f"https://youtu.be/{entry.id}",
             "-o",
@@ -90,7 +92,7 @@ def play_video(entry: Entry, send_notification: bool = False) -> None:
             "setsid",
             "-f",
             "mpv",
-            "https://youtu.be/%s" % entry.id,
+            f"https://youtu.be/{entry.id}",
             "--ytdl-raw-options=retries=infinite",
         ],
         stdout=sp.DEVNULL,
