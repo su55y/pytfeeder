@@ -1,0 +1,1 @@
+export TS_ONFINISH=tsp-fail-handler
