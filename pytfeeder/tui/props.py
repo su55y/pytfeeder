@@ -118,12 +118,9 @@ class TuiProps:
         )
 
     def is_update_interval_expired(self) -> bool:
-        if not self.feeder.config.lock_file.exists():
+        last_update = self.feeder.last_update
+        if last_update is None:
             return True
-
-        last_update = dt.datetime.fromtimestamp(
-            float(self.feeder.config.lock_file.read_text())
-        )
         return last_update < (
             dt.datetime.now() - dt.timedelta(minutes=self.c.update_interval)
         )
@@ -283,14 +280,11 @@ class TuiProps:
             self.channels = [feed_channel, *self.feeder.channels]
 
     def refresh_last_update(self) -> None:
-        try:
-            dt_str = dt.datetime.fromtimestamp(
-                float(self.feeder.config.lock_file.read_text())
-            )
-        except Exception as e:
-            self.status_msg = f"refresh_last_update error: {e!r}"
+        last_update = self.feeder.last_update
+        if last_update is None:
+            self.status_last_update = "Unknown"
         else:
-            self.status_last_update = dt_str.strftime(self.c.last_update_fmt)
+            self.status_last_update = last_update.strftime(self.c.last_update_fmt)
 
     def reload_lines(self, channel_id: str | None = None) -> None:
         if self.page_state == PageState.CHANNELS:

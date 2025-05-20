@@ -1,3 +1,4 @@
+import datetime as dt
 from functools import lru_cache, cached_property
 import logging
 import time
@@ -73,6 +74,17 @@ class Feeder:
             unwatched_first=unwatched_first,
             in_channels=None if include_unknown else self.config.channels,
         )
+
+    @property
+    def last_update(self) -> dt.datetime | None:
+        if not self.config.lock_file.exists():
+            self.log.warning(f"lock_file not found at {self.config.lock_file}")
+            return None
+        try:
+            return dt.datetime.fromtimestamp(float(self.config.lock_file.read_text()))
+        except Exception as e:
+            self.log.error(f"Can't read timestamp from lock_file: {e!r}")
+            return None
 
     def mark_as_watched(
         self,
