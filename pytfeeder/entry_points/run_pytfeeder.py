@@ -114,6 +114,39 @@ def storage_file_stats(storage_path: Path) -> str:
     )
 
 
+def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
+    total = unwatched = deleted = 0
+    last_update = ""
+    if "{total}" in fmt:
+        total = feeder.total_entries_count()
+    if "{unwatched}" in fmt:
+        unwatched = feeder.unwatched_count()
+    if "{deleted}" in fmt:
+        deleted = feeder.deleted_count()
+    if "{last_update" in fmt:
+        import re
+
+        fmts = ["%D %T"]
+
+        def replacer_(match: re.Match[str]) -> str:
+            (f_,) = match.groups()
+            if f_:
+                fmts.append(f_[1:])
+            return "{last_update}"
+
+        fmt = re.sub(r"\{last_update(#[^}]+)?\}", replacer_, fmt)
+
+        lu = feeder.last_update
+        last_update = lu.strftime(fmts.pop()) if lu else "Unknown"
+
+    return fmt.format(
+        total=total,
+        unwatched=unwatched,
+        deleted=deleted,
+        last_update=last_update,
+    )
+
+
 def run():
     args = parse_args()
     config = Config(config_file=args.config_file)
@@ -162,42 +195,7 @@ def run():
         sys.exit(0)
 
     if args.stats_fmt:
-        total = unwatched = deleted = 0
-        last_update = ""
-        if "{total}" in args.stats_fmt:
-            total = feeder.total_entries_count()
-        if "{unwatched}" in args.stats_fmt:
-            unwatched = feeder.unwatched_count()
-        if "{deleted}" in args.stats_fmt:
-            deleted = feeder.deleted_count()
-        if "{last_update" in args.stats_fmt:
-            import re
-
-            fmts = ["%D %T"]
-
-            def replacer_(match: re.Match[str]) -> str:
-                (f_,) = match.groups()
-                if f_:
-                    fmts.append(f_[1:])
-                return "{last_update}"
-
-            args.stats_fmt = re.sub(
-                r"\{last_update(#[^}]+)?\}",
-                replacer_,
-                args.stats_fmt,
-            )
-
-            lu = feeder.last_update
-            last_update = lu.strftime(fmts.pop()) if lu else "Unknown"
-
-        print(
-            args.stats_fmt.format(
-                total=total,
-                unwatched=unwatched,
-                deleted=deleted,
-                last_update=last_update,
-            )
-        )
+        print(stats_fmt_str(feeder, args.stats_fmt))
         sys.exit(0)
 
     if args.clean_cache:
