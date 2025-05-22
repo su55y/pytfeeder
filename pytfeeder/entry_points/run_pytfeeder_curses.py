@@ -124,7 +124,7 @@ class App(TuiProps):
     def start(self) -> None:
         curses.wrapper(self._start)
 
-    def _start(self, screen: "curses._CursesWindow") -> None:
+    def _start(self, screen: curses.window) -> None:
         self.config_curses()
         try:
             self.run_loop(screen)
@@ -143,7 +143,7 @@ class App(TuiProps):
         curses.init_pair(ColorPair.ACTIVE, black, accent)
         curses.init_pair(ColorPair.NEW, accent, -1)
 
-    def run_loop(self, screen: "curses._CursesWindow") -> None:
+    def run_loop(self, screen: curses.window) -> None:
         while True:
             self.draw(screen)
             ch = screen.getch()
@@ -252,7 +252,7 @@ class App(TuiProps):
             stderr=sp.DEVNULL,
         )
 
-    def draw(self, screen: "curses._CursesWindow") -> None:
+    def draw(self, screen: curses.window) -> None:
         x = 0  # y = 0
         max_y, max_x = screen.getmaxyx()
         max_rows = max_y - self.statusbar_height
@@ -343,7 +343,7 @@ class App(TuiProps):
         for i in range(len(self.lines)):
             self.lines[i].is_active = i == self.index
 
-    def open_help(self, screen: "curses._CursesWindow") -> None:
+    def open_help(self, screen: curses.window) -> None:
         screen.clear()
         max_y, max_x = screen.getmaxyx()
         pad_pos = 0
@@ -502,7 +502,7 @@ class App(TuiProps):
 
     def handle_input(
         self,
-        screen: "curses._CursesWindow",
+        screen: curses.window,
         cli_type: CLIType = CLIType.FILTER,
         n: int | None = None,
     ) -> None:
