@@ -18,6 +18,7 @@ class ConfigTUI:
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_entries_fmt: str = consts.DEFAULT_FEED_ENTRIES_FMT
     feed_limit: int = -1
+    hide_empty: bool = False
     hide_feed: bool = False
     hide_statusbar: bool = False
     last_update_fmt: str = consts.DEFAULT_LAST_UPDATE_FMT

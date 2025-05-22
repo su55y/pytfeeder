@@ -103,6 +103,9 @@ tui:
   # limit for common feed, no limit if -1
   feed_limit: -1
 
+  # don't show empty channels
+  hide_empty: false
+
   # don't show common 'Feed' channel
   hide_feed: false
 

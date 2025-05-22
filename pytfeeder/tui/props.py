@@ -3,6 +3,8 @@ import asyncio
 import datetime as dt
 from enum import Enum, auto
 import time
+from typing import Callable
+import sys
 
 from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
 from pytfeeder.models import Channel, Entry
@@ -278,6 +280,12 @@ class TuiProps:
                 unwatched_count=unwatched_count,
             )
             self.channels = [feed_channel, *self.feeder.channels]
+
+        if self.c.hide_empty and len(self.channels) > 1:
+            self.channels = [c for c in self.channels if c.entries_count > 0]
+            if len(self.channels) == 0:
+                print("All channels are empty")
+                sys.exit(0)
 
     def refresh_last_update(self) -> None:
         last_update = self.feeder.last_update
