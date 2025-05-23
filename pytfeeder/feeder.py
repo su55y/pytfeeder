@@ -106,6 +106,13 @@ class Feeder:
             self.log.error(f"Can't mark entry as deleted: {e!r}")
             return False
 
+    def mark_channel_as_deleted(self, channel_id: str) -> Exception | None:
+        try:
+            self.stor.mark_channel_entries_as_deleted(channel_id)
+        except Exception as e:
+            self.log.error(f"Can't mark channel as deleted: {e!r}")
+            return e
+
     def total_entries_count(self) -> int:
         return self.stor.select_entries_count()
 

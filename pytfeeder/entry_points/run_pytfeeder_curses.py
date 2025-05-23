@@ -105,6 +105,7 @@ def hex_to_rgb(c: str) -> tuple[int, int, int]:
 class CLIType(Enum):
     FILTER = auto()
     JUMP = auto()
+    CONFIRM = auto()
 
 
 class App(TuiProps):
@@ -221,6 +222,20 @@ class App(TuiProps):
                 case Key.CTRL_X | curses.KEY_DC:
                     if self.mark_as_deleted():
                         screen.clear()
+                case Key.CTRL_D:
+                    if (
+                        self.page_state != PageState.ENTRIES
+                        or len(self.lines) == 0
+                        or self.is_filtered
+                        or self._is_feed_opened
+                        or not self.handle_input(
+                            screen, CLIType.CONFIRM, n=len(self.lines)
+                        )
+                    ):
+                        continue
+                    if self.mark_all_as_deleted():
+                        screen.clear()
+                        self.move_back_to_channels()
                 case Key.s:
                     self.c.hide_statusbar = not self.c.hide_statusbar
                     max_y, _ = screen.getmaxyx()
@@ -505,7 +520,7 @@ class App(TuiProps):
         screen: curses.window,
         cli_type: CLIType = CLIType.FILTER,
         n: int | None = None,
-    ) -> None:
+    ) -> bool | None:
         prefix = "/"
         keyword = ""
         if cli_type is CLIType.JUMP:
@@ -516,6 +531,8 @@ class App(TuiProps):
                 return
             prefix = ":"
             keyword = f"{num}"
+        elif cli_type is CLIType.CONFIRM:
+            prefix = f"Delete all {n} entries (y/N)?"
 
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
@@ -529,14 +546,18 @@ class App(TuiProps):
             )
         screen.move(max_y - 1, 0)
         screen.clrtoeol()
-        screen.move(max_y - 1, 2)
-        screen.addch(prefix)
-        screen.addnstr(max_y - 1, 3, keyword, 1)
+        screen.addstr(max_y - 1, 1, prefix)
+        screen.addnstr(max_y - 1, len(prefix) + 1, keyword, 1)
+        screen.move(max_y - 1, len(prefix) + 1 + len(keyword))
         screen.refresh()
         try:
             while ch := screen.getch():
                 screen.refresh()
                 max_y, max_x = screen.getmaxyx()
+                if cli_type is CLIType.CONFIRM:
+                    screen.clear()
+                    curses.curs_set(0)
+                    return chr(ch).lower() == "y"
                 if ch == 10:
                     screen.clear()
                     curses.curs_set(0)
@@ -554,12 +575,13 @@ class App(TuiProps):
                     if not len(keyword):
                         continue
                     keyword = keyword[: len(keyword) - 1]
-                    screen.addnstr(max_y - 1, 3, " " * max_x, max_x - 4)
+                    screen.move(max_y - 1, len(prefix) + max(1, len(keyword)))
+                    screen.clrtoeol()
                     screen.refresh()
                 else:
                     keyword += chr(ch)
                 width = min(len(keyword), max_x - 3)
-                screen.addnstr(max_y - 1, 3, keyword, width or 1)
+                screen.addnstr(max_y - 1, len(prefix) + 1, keyword, max(1, width))
         except KeyboardInterrupt:
             return
 

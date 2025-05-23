@@ -52,6 +52,7 @@ HELP_KEYBINDINGS = [
     ("d", "Download video"),
     ("D", "Download all unwatched from current page"),
     ("C-x, Del", "Mark entry as delete"),
+    ("C-d", "Mark all entries as deleted"),
     ("/", "Open filter"),
     ("s", "Toggle statusbar visability"),
     ("h", "Cancel filter"),

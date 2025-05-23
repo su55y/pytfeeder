@@ -168,6 +168,18 @@ class TuiProps:
         self.index = max(0, self.index - 1)
         return True
 
+    def mark_all_as_deleted(self) -> bool:
+        channel_id = self.channels[self.parent_index].channel_id
+        if channel_id == "feed":
+            return False
+        err = self.feeder.mark_channel_as_deleted(channel_id)
+        if err:
+            self.status_msg = f"Err: {err}"
+            return False
+        self.update_channels()
+        self.parent_index = min(self.parent_index, len(self.channels) - 1)
+        return True
+
     def mark_as_watched(self) -> None:
         selected_data = self.lines[self.index].data
         if self.page_state == PageState.CHANNELS:

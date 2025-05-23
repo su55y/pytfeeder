@@ -1,5 +1,6 @@
 import subprocess as sp
 import sys
+from typing import Callable
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
@@ -21,7 +22,7 @@ from prompt_toolkit.layout import (
     VSplit,
     Window,
 )
-from prompt_toolkit.layout.processors import BeforeInput
+from prompt_toolkit.layout.processors import BeforeInput, Processor
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Label
 
@@ -33,7 +34,13 @@ from pytfeeder.tui.props import TuiProps, PageState, Line
 
 
 class PromptContainer(ConditionalContainer):
-    def __init__(self, pager: "App", buffer: Buffer, prompt_text: str = "/"):
+    def __init__(
+        self,
+        pager: "App",
+        buffer: Buffer,
+        prompt_text: str = "/",
+        ip: Processor | None = None,
+    ):
         kb = KeyBindings()
 
         @kb.add("escape")
@@ -49,7 +56,7 @@ class PromptContainer(ConditionalContainer):
             Window(
                 BufferControl(
                     buffer=buffer,
-                    input_processors=[BeforeInput(prompt_text)],
+                    input_processors=[ip or BeforeInput(prompt_text)],
                     key_bindings=kb,
                 ),
                 height=1,
@@ -134,6 +141,25 @@ class App(TuiProps):
 
         self.jump_buffer = Buffer(multiline=False, accept_handler=jump_handler)
 
+        def confirm_delete_all(buf: Buffer) -> None:
+            if self._app_link:
+                self._app_link.layout.focus(self.main_window)
+                self._app_link.vi_state.input_mode = InputMode.NAVIGATION
+                self._app_link = None
+
+                t = buf.text.lower()
+                buf.text = ""
+                if t != "y":
+                    return
+
+                if self.mark_all_as_deleted():
+                    self.move_back_to_channels()
+
+        self.confirm_delete_buffer = Buffer(
+            multiline=False,
+            on_text_changed=confirm_delete_all,
+        )
+
         self.help_window = Window(
             always_hide_cursor=True,
             content=FormattedTextControl(
@@ -152,9 +178,17 @@ class App(TuiProps):
                 self.help_window,
                 self.statusbar_window,
                 PromptContainer(self, self.filter_buffer),
-                PromptContainer(self, self.jump_buffer, ":"),
+                PromptContainer(self, self.jump_buffer, prompt_text=":"),
+                PromptContainer(
+                    self,
+                    self.confirm_delete_buffer,
+                    ip=BeforeInput(self.__confirm_delete_prompt_text),
+                ),
             ]
         )
+
+    def __confirm_delete_prompt_text(self) -> str:
+        return f"Delete all {len(self.lines)} entries (y/N)?"
 
     def __pt_container__(self) -> HSplit:
         return self.container
@@ -272,6 +306,13 @@ class App(TuiProps):
 
         return kb
 
+    def move_back_to_channels(self) -> None:
+        self.page_state = PageState.CHANNELS
+        self.lines = list(map(Line, self.channels))
+        self.index = self.parent_index
+        self.parent_index = -1
+        self.status_title = ""
+
     @property
     def _main_keybindings(self) -> KeyBindings:
         kb = KeyBindings()
@@ -341,16 +382,10 @@ class App(TuiProps):
             if self.is_filtered:
                 self.reset_filter()
                 return
-
-            match self.page_state:
-                case PageState.CHANNELS:
-                    event.app.exit()
-                case PageState.ENTRIES:
-                    self.page_state = PageState.CHANNELS
-                    self.lines = list(map(Line, self.channels))
-                    self.index = self.parent_index
-                    self.parent_index = -1
-                    self.status_title = ""
+            if self.page_state == PageState.CHANNELS:
+                event.app.exit()
+            else:
+                self.move_back_to_channels()
 
         @kb.add("g", "g")
         @kb.add("home")
@@ -472,6 +507,19 @@ class App(TuiProps):
         @kb.add("c-x")
         def _mark_entry_as_deleted(_) -> None:
             _ = self.mark_as_deleted()
+
+        @kb.add("c-d")
+        def _mark_all_as_deleted(event: KeyPressEvent) -> None:
+            if (
+                self.page_state != PageState.ENTRIES
+                or len(self.lines) == 0
+                or self.is_filtered
+                or self._is_feed_opened
+            ):
+                return
+            event.app.layout.focus(self.confirm_delete_buffer)
+            event.app.vi_state.input_mode = InputMode.INSERT
+            self._app_link = event.app
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
