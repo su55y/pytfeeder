@@ -55,6 +55,7 @@ HELP_KEYBINDINGS = [
     ("C-d", "Mark all entries as deleted"),
     ("/", "Open filter"),
     ("s", "Toggle statusbar visability"),
+    ("t", "Toggle empty channels visability"),
     ("h", "Cancel filter"),
     ("c", "Clear screen"),
     ("0-9", "Jump to line {index}"),

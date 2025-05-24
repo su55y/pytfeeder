@@ -3,7 +3,6 @@ import asyncio
 import datetime as dt
 from enum import Enum, auto
 import time
-from typing import Callable
 import sys
 
 from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
@@ -330,6 +329,14 @@ class TuiProps:
             self.status_msg = "no updates"
 
         self.refresh_last_update()
+
+    def toggle_empty_channels_visability(self) -> None:
+        if self.page_state != PageState.CHANNELS or self.is_filtered:
+            return
+        self.c.hide_empty = not self.c.hide_empty
+        self._set_channels()
+        self.reload_lines()
+        self.index = min(self.index, len(self.lines) - 1)
 
     def _check_executables(self) -> None:
         if self.__is_executables_checked:

@@ -1,6 +1,5 @@
 import subprocess as sp
 import sys
-from typing import Callable
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
@@ -427,6 +426,10 @@ class App(TuiProps):
         def _toggle_status_visability(_) -> None:
             self.c.hide_statusbar = not self.c.hide_statusbar
             self.statusbar_window.height = Dimension.exact(self.statusbar_height)
+
+        @kb.add("t")
+        def _toggle_empty_channels_visability(_) -> None:
+            self.toggle_empty_channels_visability()
 
         @kb.add("q")
         def _exit(event) -> None:

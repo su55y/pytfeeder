@@ -33,6 +33,7 @@ class Key(IntEnum):
     D = ord("D")
     f = ord("f")
     s = ord("s")
+    t = ord("t")
     F1 = 265
     F2 = 266
     F3 = 267
@@ -242,6 +243,12 @@ class App(TuiProps):
                     self.gravity = Gravity.UP
                     self.update_scroll_top(max_rows=max_y - self.statusbar_height)
                     screen.clear()
+                case Key.t:
+                    before = len(self.lines)
+                    self.toggle_empty_channels_visability()
+                    if len(self.lines) < before:
+                        self.scroll_top = 0
+                        screen.clear()
                 case Key.c:
                     screen.clear()
                 case Key.q:
