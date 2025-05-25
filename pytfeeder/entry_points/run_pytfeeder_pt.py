@@ -1,3 +1,4 @@
+from enum import Enum, auto
 import subprocess as sp
 import sys
 
@@ -62,6 +63,12 @@ class PromptContainer(ConditionalContainer):
             ),
             filter=has_focus(buffer),
         )
+
+
+class ConfirmType(Enum):
+    NONE = auto()
+    DELETE = auto()
+    DOWNLOAD = auto()
 
 
 class App(TuiProps):
@@ -140,23 +147,11 @@ class App(TuiProps):
 
         self.jump_buffer = Buffer(multiline=False, accept_handler=jump_handler)
 
-        def confirm_delete_all(buf: Buffer) -> None:
-            if self._app_link:
-                self._app_link.layout.focus(self.main_window)
-                self._app_link.vi_state.input_mode = InputMode.NAVIGATION
-                self._app_link = None
+        self.confirm_type_prompt = ConfirmType.NONE
 
-                t = buf.text.lower()
-                buf.text = ""
-                if t != "y":
-                    return
-
-                if self.mark_all_as_deleted():
-                    self.move_back_to_channels()
-
-        self.confirm_delete_buffer = Buffer(
+        self.confirm_buffer = Buffer(
             multiline=False,
-            on_text_changed=confirm_delete_all,
+            on_text_changed=self.confirm_handler,
         )
 
         self.help_window = Window(
@@ -180,14 +175,37 @@ class App(TuiProps):
                 PromptContainer(self, self.jump_buffer, prompt_text=":"),
                 PromptContainer(
                     self,
-                    self.confirm_delete_buffer,
-                    ip=BeforeInput(self.__confirm_delete_prompt_text),
+                    self.confirm_buffer,
+                    ip=BeforeInput(self.__confirm_prompt_text),
                 ),
             ]
         )
 
-    def __confirm_delete_prompt_text(self) -> str:
-        return f"Delete all {len(self.lines)} entries (y/N)?"
+    def __confirm_prompt_text(self) -> str:
+        if self.confirm_type_prompt == ConfirmType.DELETE:
+            return f"Delete all {len(self.lines)} entries (y/N)?"
+        elif self.confirm_type_prompt == ConfirmType.DOWNLOAD:
+            return f"Download all {len([0 for l in self.lines if isinstance(l.data, Entry) and not l.data.is_viewed])} entries (y/N)?"
+        return ""
+
+    def confirm_handler(self, buf: Buffer) -> None:
+        if not self._app_link:
+            return
+        self._app_link.layout.focus(self.main_window)
+        self._app_link.vi_state.input_mode = InputMode.NAVIGATION
+        self._app_link = None
+
+        t = buf.text.lower()
+        buf.text = ""
+        if t != "y":
+            return
+
+        if self.confirm_type_prompt == ConfirmType.DELETE:
+            if self.mark_all_as_deleted():
+                self.move_back_to_channels()
+        elif self.confirm_type_prompt == ConfirmType.DOWNLOAD:
+            self.download_all()
+        self.confirm_type_prompt = ConfirmType.NONE
 
     def __pt_container__(self) -> HSplit:
         return self.container
@@ -502,9 +520,17 @@ class App(TuiProps):
         def _download(_) -> None:
             self.download()
 
+        def setup_confirm_prompt(event: KeyPressEvent) -> None:
+            event.app.layout.focus(self.confirm_buffer)
+            event.app.vi_state.input_mode = InputMode.INSERT
+            self._app_link = event.app
+
         @kb.add("D")
-        def _download_all(_) -> None:
-            self.download_all()
+        def _download_all(event: KeyPressEvent) -> None:
+            if self.page_state != PageState.ENTRIES or len(self.lines) == 0:
+                return
+            self.confirm_type_prompt = ConfirmType.DOWNLOAD
+            setup_confirm_prompt(event)
 
         @kb.add("delete")
         @kb.add("c-x")
@@ -520,9 +546,8 @@ class App(TuiProps):
                 or self._is_feed_opened
             ):
                 return
-            event.app.layout.focus(self.confirm_delete_buffer)
-            event.app.vi_state.input_mode = InputMode.INSERT
-            self._app_link = event.app
+            self.confirm_type_prompt = ConfirmType.DELETE
+            setup_confirm_prompt(event)
 
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:

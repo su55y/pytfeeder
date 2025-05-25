@@ -4,6 +4,7 @@ import datetime as dt
 from enum import Enum, auto
 import time
 import sys
+from typing import Callable
 
 from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
 from pytfeeder.models import Channel, Entry
@@ -369,7 +370,7 @@ class TuiProps:
         if not selected_data.is_viewed:
             self.mark_as_watched()
 
-    def download_all(self) -> None:
+    def download_all(self, callback: Callable[[int], bool] | None = None) -> None:
         self._check_executables()
         if not self.__is_download_allowed:
             self.status_msg = "Download not allowed (tsp or yt-dlp not found)"
@@ -382,13 +383,18 @@ class TuiProps:
             return
 
         entries = [l.data for l in self.lines if l.data.is_viewed is False]  # type: ignore
-        if len(entries) > 0:
-            utils.download_all(
-                entries=entries,  # type: ignore
-                output=self.c.download_output,
-                send_notification=self.__is_notify_allowed,
-            )
-            self.mark_as_watched_all()
+        if len(entries) == 0:
+            return
+
+        if callback and not callback(len(entries)):
+            return
+
+        utils.download_all(
+            entries=entries,  # type: ignore
+            output=self.c.download_output,
+            send_notification=self.__is_notify_allowed,
+        )
+        self.mark_as_watched_all()
 
     def play(self, entry: Entry) -> None:
         self._check_executables()

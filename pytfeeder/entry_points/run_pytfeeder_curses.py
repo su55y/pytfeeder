@@ -219,7 +219,15 @@ class App(TuiProps):
                 case Key.d:
                     self.download()
                 case Key.D:
-                    self.download_all()
+                    self.download_all(
+                        lambda n: bool(
+                            self.handle_input(
+                                screen,
+                                CLIType.CONFIRM,
+                                prefix=f"Download all {n} entries (y/N)?",
+                            )
+                        )
+                    )
                 case Key.CTRL_X | curses.KEY_DC:
                     if self.mark_as_deleted():
                         screen.clear()
@@ -230,7 +238,9 @@ class App(TuiProps):
                         or self.is_filtered
                         or self._is_feed_opened
                         or not self.handle_input(
-                            screen, CLIType.CONFIRM, n=len(self.lines)
+                            screen,
+                            CLIType.CONFIRM,
+                            prefix=f"Delete all {len(self.lines)} entries (y/N)?",
                         )
                     ):
                         continue
@@ -526,9 +536,9 @@ class App(TuiProps):
         self,
         screen: curses.window,
         cli_type: CLIType = CLIType.FILTER,
+        prefix: str = "/",
         n: int | None = None,
     ) -> bool | None:
-        prefix = "/"
         keyword = ""
         if cli_type is CLIType.JUMP:
             if n is None:
@@ -538,8 +548,6 @@ class App(TuiProps):
                 return
             prefix = ":"
             keyword = f"{num}"
-        elif cli_type is CLIType.CONFIRM:
-            prefix = f"Delete all {n} entries (y/N)?"
 
         curses.curs_set(1)
         max_y, max_x = screen.getmaxyx()
