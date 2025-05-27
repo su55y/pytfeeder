@@ -90,11 +90,10 @@ case $ROFI_RETV in
         esac
         ;;
     *)
-        if echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{24}$'; then
-            notify-send execute print_channel_feed
+        if echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{24}$' >/dev/null 2>&1; then
             print_channel_feed "$ROFI_INFO"
             printf "\000new-selection\0370\n"
-        elif echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{11}$'; then
+        elif echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{11}$' >/dev/null 2>&1; then
             mark_as_watched "$ROFI_INFO"
             play "https://youtu.be/$ROFI_INFO" "$@"
         else
