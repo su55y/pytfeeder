@@ -106,7 +106,7 @@ func main() {
 	channels := config.LoadChannels(c.ChannelsPath)
 	if c.AlphabeticSort {
 		sort.Slice(channels, func(i, j int) bool {
-			return channels[i].Title < channels[j].Title
+			return strings.ToLower(channels[i].Title) < strings.ToLower(channels[j].Title)
 		})
 	}
 
