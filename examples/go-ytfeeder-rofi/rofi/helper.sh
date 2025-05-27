@@ -44,6 +44,19 @@ mark_as_watched() {
     [ -n "$err" ] && err_msg "$err"
 }
 
+# shellcheck disable=SC2059
+mark_channel_as_watched() {
+    [ -f "$PYTFEEDER_STORAGE" ] || err_msg "$PYTFEEDER_STORAGE not found"
+    [ "${#1}" -eq 24 ] || err_msg "invalid channel_id '$1' (${#1})"
+    q="UPDATE tb_entries SET is_viewed = CASE WHEN EXISTS ( \
+        SELECT 1 FROM tb_entries \
+        WHERE channel_id = '$1' AND is_deleted = 0 AND is_viewed = 0 \
+    ) THEN 1 ELSE 0 END \
+    WHERE channel_id = '$1' and is_deleted = 0"
+    err="$(sqlite3 "$PYTFEEDER_STORAGE" "$q")"
+    [ -n "$err" ] && err_msg "$err"
+}
+
 print_feed() {
     printf '\000keep-filter\037true\n'
     printf '\000keep-selection\037true\n'
@@ -129,8 +142,7 @@ case $ROFI_RETV in
     ;;
 # kb-custom-3 (Ctrl-X) -- mark current feed entries as viewed
 12)
-    exit 0 # FIXME
-    # mark_channel_as_viewed "$ROFI_DATA" toggle
+    mark_channel_as_watched "$ROFI_DATA"
     case $ROFI_DATA in
     feed) print_feed ;;
     main) start_menu ;;
