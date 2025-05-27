@@ -17,7 +17,7 @@ err_msg() {
 [ -f "$PYTFEEDER_GO_ROFI" ] || err_msg "go executable not found at $PYTFEEDER_GO_ROFI"
 
 clean_title() {
-    echo "${1%%\\r*}" | sed -E 's/<[^>]+>[^<]*<\/[^>]*>//g' | sed 's/^[ \t]*//;s/[ \t]*$//'
+    echo "$1" | sed -E 's/<[^>]+>[^<]*<\/[^>]*>//g' | sed 's/\r.*//;s/^[ \t]*//;s/[ \t]*$//'
 }
 
 download_vid() {
