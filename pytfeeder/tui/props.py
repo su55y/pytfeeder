@@ -164,7 +164,7 @@ class TuiProps:
             self.status_msg = "Something went wrong"
             return False
         self.is_channels_outdated = True
-        del self.lines[self.index]
+        self.lines = self.get_lines_by_id(self.channels[self.parent_index].channel_id)
         self.index = max(0, self.index - 1)
         return True
 
