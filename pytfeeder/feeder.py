@@ -114,7 +114,7 @@ class Feeder:
             return e
 
     def total_entries_count(self) -> int:
-        return self.stor.select_entries_count()
+        return self.stor.select_entries_count(is_deleted=False)
 
     def deleted_count(self) -> int:
         return self.stor.select_entries_count(is_deleted=True)
