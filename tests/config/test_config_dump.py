@@ -39,6 +39,7 @@ tui:
   entries_fmt: '{index} {new_mark} {published} {title}'
   feed_entries_fmt: '{index} {new_mark} {published} {channel_title} {title}'
   feed_limit: -1
+  hide_empty: false
   hide_feed: false
   hide_statusbar: false
   last_update_fmt: '%D %T'
