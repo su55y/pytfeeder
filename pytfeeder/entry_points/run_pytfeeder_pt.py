@@ -529,6 +529,8 @@ class App(TuiProps):
         def _download_all(event: KeyPressEvent) -> None:
             if self.page_state != PageState.ENTRIES or len(self.lines) == 0:
                 return
+            if not any(not l.data.is_viewed for l in self.lines): # type: ignore
+                return
             self.confirm_type_prompt = ConfirmType.DOWNLOAD
             setup_confirm_prompt(event)
 
