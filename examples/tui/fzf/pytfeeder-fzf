@@ -14,18 +14,25 @@ if [ ! -f "$PYTFEEDER_DB_PATH" ]; then
     exit 1
 fi
 
-SELECT_QUERY="SELECT id, title FROM tb_entries WHERE channel_id = '%s' ORDER BY published DESC"
+SELECT_QUERY="\
+    SELECT id, title FROM tb_entries \
+    WHERE is_deleted = 0 AND channel_id = '%s' \
+    ORDER BY published DESC"
 
 channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" | jq -r '.[]|.channel_id+" "+.title' | fzf --with-nth 2.. --preview='')"
 [ -n "$channel_line" ] || exit 0
 channel_id="${channel_line%% *}"
 
-entry_line="$(sqlite3 -column "$PYTFEEDER_DB_PATH" "$(printf "$SELECT_QUERY" "$channel_id")" |
-    fzf --bind='ctrl-space:execute-silent(setsid -f mpv "https://youtu.be/$(echo {} | cut -d " " -f 1) >/dev/null 2>&1")' --with-nth 2.. --preview='')"
-[ -n "$entry_line" ] || exit 0
+# shellcheck disable=SC2016,SC2059
+selected_line="$(sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" "$(printf "$SELECT_QUERY" "$channel_id")" |
+    fzf --bind='ctrl-space:execute-silent(\
+    notify-send -a pytfeeder "Playing \"$(echo {} | sed "s/^[-_0-9a-zA-Z]\{11\}[ \t]*//;s/[[ \t]*$//")\"..." &&\
+    setsid -f mpv "https://youtu.be/$(echo {} | cut -d" " -f1)" >/dev/null 2>&1)' \
+        --with-nth 2.. --preview='')"
+[ -n "$selected_line" ] || exit 0
 
-vid_id="${entry_line%% *}"
-vid_title="$(echo "${entry_line#* }" | xargs)"
+vid_id="${selected_line%% *}"
+vid_title="$(echo "${selected_line#* }" | xargs)"
 
 notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
 qid="$(tsp yt-dlp "https://youtu.be/$vid_id" -R infinite -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
