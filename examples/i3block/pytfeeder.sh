@@ -36,7 +36,10 @@ case $BLOCK_BUTTON in
     ;;
 esac
 
-VALUE="$(pytfeeder -u)"
+VALUE="$(pytfeeder -f '{unwatched} ({last_update#%H:%M})')"
+case $VALUE in
+*Unknown*) VALUE="${VALUE%% *}" ;;
+esac
 [ -n "$ICON" ] && OUTPUT=" $ICON $VALUE " || OUTPUT=" $VALUE "
 
 # underline="underline='single' underline_color='${COLOR3:-#cc241d}'"
