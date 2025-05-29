@@ -30,8 +30,8 @@ func defaultSeparator() yaml.Node {
 
 type RofiConfig struct {
 	AlphabeticSort   bool      `yaml:"alphabetic_sort"`
-	ChannelsFmt      string    `yaml:"channels_fmt"`
 	ChannelFeedLimit int       `yaml:"channel_feed_limit"`
+	ChannelsFmt      string    `yaml:"channels_fmt"`
 	DatetimeFmt      string    `yaml:"datetime_fmt"`
 	EntriesFmt       string    `yaml:"entries_fmt"`
 	FeedEntriesFmt   string    `yaml:"feed_entries_fmt"`
