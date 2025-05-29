@@ -171,30 +171,21 @@ func main() {
 		os.Exit(0)
 	}
 
-	timeFormatter, strftimeErr := strftime.New(c.DatetimeFmt)
-	if strftimeErr != nil {
-		fmt.Printf("ERR: %v (%#+v)\n", strftimeErr, c.DatetimeFmt)
-		os.Exit(1)
-	}
-
-	var entries []models.Entry
-	var err error
-
-	f := c.FeedEntriesFmt + c.Separator.Value
-	if channelId == "feed" {
-		// print feed entries
-		entries, err = stor.SelectFeedEntries(c.FeedLimit)
-	} else if len(channelId) == 24 {
-		// print channel entries
-		entries, err = stor.SelectChannelEntries(channelId, c.UnwatchedFirst, c.ChannelFeedLimit)
-		f = c.EntriesFmt + c.Separator.Value
-	} else {
+	if channelId != "feed" && len(channelId) != 24 {
 		fmt.Printf("Invalid channel_id %#+v%s", channelId, c.Separator.Value)
 		os.Exit(1)
 	}
 
-	if err != nil {
-		fmt.Printf("ERR: %v%s", channelId, c.Separator.Value)
+	limit := c.ChannelFeedLimit
+	f := c.EntriesFmt + c.Separator.Value
+	if channelId == "feed" {
+		limit = c.FeedLimit
+		f = c.FeedEntriesFmt + c.Separator.Value
+	}
+
+	timeFormatter, strftimeErr := strftime.New(c.DatetimeFmt)
+	if strftimeErr != nil {
+		fmt.Printf("ERR: %v (%#+v)\n", strftimeErr, c.DatetimeFmt)
 		os.Exit(1)
 	}
 
@@ -202,6 +193,12 @@ func main() {
 	tmpl, err := template.New("entries_fmt").Parse(tmplStr)
 	if err != nil {
 		panic(err)
+	}
+
+	entries, err := stor.SelectEntries(channelId, c.UnwatchedFirst, limit)
+	if err != nil {
+		fmt.Printf("ERR: %v%s", channelId, c.Separator.Value)
+		os.Exit(1)
 	}
 
 	fmt.Printf("\000data\037%s%s", channelId, c.Separator.Value)

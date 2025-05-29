@@ -13,47 +13,36 @@ type Storage struct {
 }
 
 func NewStorage(path string) *Storage {
-	return &Storage{db: GetDB(path)}
+	return &Storage{db: getDB(path)}
 }
 
-func (s *Storage) SelectFeedEntries(limit int) ([]models.Entry, error) {
-	stmt := `
-	SELECT id, title, published, channel_id, is_viewed, is_deleted
-	FROM tb_entries WHERE is_deleted = 0
-	ORDER BY published DESC LIMIT ?`
-	rows, err := s.db.Query(stmt, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var entries []models.Entry
-	for rows.Next() {
-		var e models.Entry
-		if err := rows.Scan(&e.Id, &e.Title, &e.Published, &e.ChannelId, &e.IsViewed, &e.IsDeleted); err != nil {
-			return nil, err
-		}
-		entries = append(entries, e)
-	}
-
-	return entries, nil
-}
-
-func (s *Storage) SelectChannelEntries(
+func (s *Storage) SelectEntries(
 	channelId string,
 	unwatchedFirst bool,
 	limit int,
 ) ([]models.Entry, error) {
+	var args []any
+
+	andChannelId := "AND channel_id = ?"
+	if channelId == "feed" {
+		andChannelId = ""
+	} else {
+		args = append(args, channelId)
+	}
+
 	order := "published"
 	if unwatchedFirst {
 		order = "is_viewed, published"
 	}
+
+	args = append(args, limit)
+
 	stmt := fmt.Sprintf(`
 	SELECT id, title, published, channel_id, is_viewed, is_deleted
-	FROM tb_entries WHERE is_deleted = 0 AND channel_id = ?
-	ORDER BY %s DESC LIMIT ?`, order)
+	FROM tb_entries WHERE is_deleted = 0 %s
+	ORDER BY %s DESC LIMIT ?`, andChannelId, order)
 
-	rows, err := s.db.Query(stmt, channelId, limit)
+	rows, err := s.db.Query(stmt, args...)
 	if err != nil {
 		return nil, err
 	}
