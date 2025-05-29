@@ -166,7 +166,7 @@ class App(TuiProps):
             z_index=0,
         )
 
-        self.container = HSplit(
+        self.layout = HSplit(
             [
                 self.main_window,
                 self.help_window,
@@ -180,6 +180,33 @@ class App(TuiProps):
                 ),
             ]
         )
+
+        _kb = KeyBindings()
+
+        @_kb.add("c-c")
+        def _(event):
+            event.app.exit()
+
+        black, white, accent = parse_colors(self.c)
+        self._app = Application(
+            layout=Layout(self.layout),
+            full_screen=True,
+            style=Style.from_dict(
+                {
+                    "select-box cursor-line": f"nounderline bg:{accent} fg:{black}",
+                    "select-box cursor-line new_entry": f"bold nounderline bg:{accent} fg:{black}",
+                    "entry": f"fg:{white}",
+                    "new_entry": f"fg:{accent}",
+                    "empty": f"italic fg:{white}",
+                    "statusbar": f"bg:{accent} fg:{black}",
+                    "statusbar.text": "",
+                },
+            ),
+            key_bindings=_kb,
+        )
+
+    def start(self) -> None:
+        self._app.run(set_exception_handler=False)
 
     def __confirm_prompt_text(self) -> str:
         if self.confirm_type_prompt == ConfirmType.DELETE:
@@ -206,9 +233,6 @@ class App(TuiProps):
         elif self.confirm_type_prompt == ConfirmType.DOWNLOAD:
             self.download_all()
         self.confirm_type_prompt = ConfirmType.NONE
-
-    def __pt_container__(self) -> HSplit:
-        return self.container
 
     def format_channel(self, i: int, channel: Channel) -> list[OneStyleAndTextTuple]:
         line = self.c.channels_fmt.format(
@@ -316,7 +340,7 @@ class App(TuiProps):
         def _go_back(event: KeyPressEvent) -> None:
             self.is_help_opened = False
             self.help_window.height = 0
-            self.main_window.height = self.container.height
+            self.main_window.height = self.layout.height
             event.app.layout.reset()
             event.app.layout.focus(self.main_window)
             self.status_title = ""
@@ -529,7 +553,7 @@ class App(TuiProps):
         def _download_all(event: KeyPressEvent) -> None:
             if self.page_state != PageState.ENTRIES or len(self.lines) == 0:
                 return
-            if not any(not l.data.is_viewed for l in self.lines): # type: ignore
+            if not any(not l.data.is_viewed for l in self.lines):  # type: ignore
                 return
             self.confirm_type_prompt = ConfirmType.DOWNLOAD
             setup_confirm_prompt(event)
@@ -558,7 +582,7 @@ class App(TuiProps):
                 event.app.layout.reset()
                 self.main_window.height = 0
                 self.help_window.reset()
-                self.help_window.height = self.container.height
+                self.help_window.height = self.layout.height
                 event.app.layout.focus(self.help_window)
             else:
                 self.is_help_opened = False
@@ -628,32 +652,8 @@ def main():
         print(f"No channels configured in {feeder.config.channels_filepath}")
         sys.exit(0)
 
-    pager = App(feeder)
-
-    kb = KeyBindings()
-
-    @kb.add("c-c")
-    def _(event):
-        event.app.exit()
-
     try:
-        black, white, accent = parse_colors(config.tui)
-        Application(
-            layout=Layout(VSplit([Label("", width=1), pager])),
-            full_screen=True,
-            style=Style.from_dict(
-                {
-                    "select-box cursor-line": f"nounderline bg:{accent} fg:{black}",
-                    "select-box cursor-line new_entry": f"bold nounderline bg:{accent} fg:{black}",
-                    "entry": f"fg:{white}",
-                    "new_entry": f"fg:{accent}",
-                    "empty": f"italic fg:{white}",
-                    "statusbar": f"bg:{accent} fg:{black}",
-                    "statusbar.text": "",
-                },
-            ),
-            key_bindings=kb,
-        ).run(set_exception_handler=False)
+        _ = App(feeder).start()
     except Exception as e:
         print(e)
         sys.exit(1)
