@@ -184,7 +184,8 @@ class App(TuiProps):
                 case Key.G | curses.KEY_END:
                     self.move_bottom()
                 case Key.SLASH:
-                    self.handle_input(screen)
+                    if not self.is_filtered:
+                        self.handle_input(screen)
                 case Key.F1 | Key.F2 | Key.F3 | Key.F4:
                     self.handle_macro(ch)
                 case (
