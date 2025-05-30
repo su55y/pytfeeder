@@ -618,7 +618,7 @@ def main():
         sys.exit(0)
 
     try:
-        _ = App(feeder).start()
+        App(feeder).start()
     except Exception as e:
         print(e)
         sys.exit(1)

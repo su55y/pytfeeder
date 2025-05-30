@@ -2,9 +2,9 @@ from enum import Enum, auto
 import subprocess as sp
 import sys
 
-from prompt_toolkit.application import Application
+from prompt_toolkit.application import Application, get_app
 from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.filters import has_focus
+from prompt_toolkit.filters import Condition, has_focus
 from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     OneStyleAndTextTuple,
@@ -19,12 +19,10 @@ from prompt_toolkit.layout import (
     FormattedTextControl,
     HSplit,
     Layout,
-    VSplit,
     Window,
 )
 from prompt_toolkit.layout.processors import BeforeInput, Processor
 from prompt_toolkit.styles import Style
-from prompt_toolkit.widgets import Label
 
 from pytfeeder import Config, Feeder, Storage, __version__
 from pytfeeder.logger import init_logger
@@ -36,7 +34,7 @@ from pytfeeder.tui.props import TuiProps, PageState, Line
 class PromptContainer(ConditionalContainer):
     def __init__(
         self,
-        pager: "App",
+        app: "App",
         buffer: Buffer,
         prompt_text: str = "/",
         ip: Processor | None = None,
@@ -45,12 +43,9 @@ class PromptContainer(ConditionalContainer):
 
         @kb.add("escape")
         @kb.add("c-c")
-        def _escape(_) -> None:
-            pager.jump_buffer.reset()
-            if pager._app_link:
-                pager._app_link.layout.focus(pager.main_window)
-                pager._app_link.vi_state.input_mode = InputMode.NAVIGATION
-                pager._app_link = None
+        def _cancel(_) -> None:
+            buffer.text = ""
+            app._focus_main_window()
 
         super(PromptContainer, self).__init__(
             Window(
@@ -75,8 +70,7 @@ class App(TuiProps):
     def __init__(self, feeder: Feeder) -> None:
         super().__init__(feeder)
 
-        self._app_link: Application | None = None
-        self.classnames = {0: "entry", 1: "new_entry"}
+        self.classnames = {0: "entry", 1: "new-entry"}
         self.filter_text = ""
         self.help_index = 0
         self.is_help_opened = False
@@ -89,14 +83,13 @@ class App(TuiProps):
         }
         self.status_title = ""
 
-        self.bottom_statusbar = FormattedTextControl(
-            text=self._get_statusbar_text,
-            focusable=False,
-        )
         self.statusbar_window = Window(
             always_hide_cursor=True,
             height=Dimension.exact(self.statusbar_height),
-            content=self.bottom_statusbar,
+            content=FormattedTextControl(
+                text=self._get_statusbar_text,
+                focusable=False,
+            ),
             style="class:statusbar",
         )
 
@@ -113,34 +106,29 @@ class App(TuiProps):
         )
 
         def filter_handler(buf: Buffer) -> bool:
-            if self._app_link:
-                self._app_link.layout.focus(self.main_window)
-                self._app_link.vi_state.input_mode = InputMode.NAVIGATION
-                self._app_link = None
-                condition = lambda v: buf.text.lower() in v.data.title.lower()
-                self.lines = list(filter(condition, self.__lines_backup))
-                self.is_filtered = True
-                self.index = 0
+            self._focus_main_window()
+            if buf.text == "":
+                return False
+            condition = lambda v: buf.text.lower() in v.data.title.lower()
+            self.lines = list(filter(condition, self.__lines_backup))
+            self.is_filtered = True
+            self.index = 0
             buf.text = ""
             return True
 
         self.filter_buffer = Buffer(multiline=False, accept_handler=filter_handler)
 
         def jump_handler(buf: Buffer) -> bool:
-            if self._app_link:
-                self._app_link.layout.focus(self.main_window)
-                self._app_link.vi_state.input_mode = InputMode.NAVIGATION
-                self._app_link = None
+            self._focus_main_window()
+            try:
+                number = int(buf.text)
+            except:
+                return False
 
-                try:
-                    number = int(buf.text)
-                except:
-                    return False
+            if number > len(self.lines) or number < 1:
+                return False
 
-                if number > len(self.lines) or number < 1:
-                    return False
-
-                self.index = number - 1
+            self.index = number - 1
 
             buf.text = ""
             return True
@@ -187,22 +175,26 @@ class App(TuiProps):
         def _(event):
             event.app.exit()
 
-        black, white, accent = parse_colors(self.c)
         self._app = Application(
             layout=Layout(self.layout),
             full_screen=True,
-            style=Style.from_dict(
-                {
-                    "select-box cursor-line": f"nounderline bg:{accent} fg:{black}",
-                    "select-box cursor-line new_entry": f"bold nounderline bg:{accent} fg:{black}",
-                    "entry": f"fg:{white}",
-                    "new_entry": f"fg:{accent}",
-                    "empty": f"italic fg:{white}",
-                    "statusbar": f"bg:{accent} fg:{black}",
-                    "statusbar.text": "",
-                },
-            ),
+            style=self.style,
             key_bindings=_kb,
+        )
+
+    @property
+    def style(self) -> Style:
+        black, white, accent = parse_colors(self.c)
+        return Style.from_dict(
+            {
+                "select-box cursor-line": f"nounderline bg:{accent} fg:{black}",
+                "select-box cursor-line new-entry": f"bold nounderline bg:{accent} fg:{black}",
+                "entry": f"fg:{white}",
+                "new-entry": f"fg:{accent}",
+                "empty": f"italic fg:{white}",
+                "statusbar": f"bg:{accent} fg:{black}",
+                "statusbar.text": "",
+            },
         )
 
     def start(self) -> None:
@@ -216,11 +208,7 @@ class App(TuiProps):
         return ""
 
     def confirm_handler(self, buf: Buffer) -> None:
-        if not self._app_link:
-            return
-        self._app_link.layout.focus(self.main_window)
-        self._app_link.vi_state.input_mode = InputMode.NAVIGATION
-        self._app_link = None
+        self._focus_main_window()
 
         t = buf.text.lower()
         buf.text = ""
@@ -233,6 +221,11 @@ class App(TuiProps):
         elif self.confirm_type_prompt == ConfirmType.DOWNLOAD:
             self.download_all()
         self.confirm_type_prompt = ConfirmType.NONE
+
+    def _focus_main_window(self) -> None:
+        app = get_app()
+        app.layout.focus(self.main_window)
+        app.vi_state.input_mode = InputMode.NAVIGATION
 
     def format_channel(self, i: int, channel: Channel) -> list[OneStyleAndTextTuple]:
         line = self.c.channels_fmt.format(
@@ -358,28 +351,29 @@ class App(TuiProps):
     def _main_keybindings(self) -> KeyBindings:
         kb = KeyBindings()
 
-        @kb.add("k")
-        @kb.add("up")
-        @kb.add("p")
-        @kb.add("s-tab")
-        def _go_up(_) -> None:
-            if len(self.lines) > 1:
-                self.index = (self.index - 1) % len(self.lines)
+        @Condition
+        def have_lines() -> bool:
+            return len(self.lines) > 0
 
-        @kb.add("j")
-        @kb.add("down")
-        @kb.add("n")
-        @kb.add("tab")
-        def _go_down(_) -> None:
+        @kb.add("k", filter=have_lines)
+        @kb.add("up", filter=have_lines)
+        @kb.add("p", filter=have_lines)
+        @kb.add("s-tab", filter=have_lines)
+        def _up(_) -> None:
+            self.index = (self.index - 1) % len(self.lines)
+
+        @kb.add("j", filter=have_lines)
+        @kb.add("down", filter=have_lines)
+        @kb.add("n", filter=have_lines)
+        @kb.add("tab", filter=have_lines)
+        def _down(_) -> None:
             if len(self.lines) > 1:
                 self.index = (self.index + 1) % len(self.lines)
 
-        @kb.add("l")
-        @kb.add("enter")
-        @kb.add("right")
+        @kb.add("l", filter=have_lines)
+        @kb.add("enter", filter=have_lines)
+        @kb.add("right", filter=have_lines)
         def _enter_line(_) -> None:
-            if len(self.lines) == 0:
-                return
             if self.index not in range(len(self.lines)):
                 raise Exception(f"{self.index=} out of range 0-{len(self.lines)}")
 
@@ -412,7 +406,7 @@ class App(TuiProps):
 
         @kb.add("h")
         @kb.add("left")
-        def _go_back(event) -> None:
+        def _back(event) -> None:
             if self.is_help_opened:
                 self.is_help_opened = False
                 return
@@ -430,7 +424,7 @@ class App(TuiProps):
 
         @kb.add("g", "g")
         @kb.add("home")
-        def _go_top(_) -> None:
+        def _top(_) -> None:
             self.index = 0
 
         @kb.add("G")
@@ -484,23 +478,15 @@ class App(TuiProps):
             self.__lines_backup = self.lines.copy()
             event.app.layout.focus(self.filter_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
-            self._app_link = event.app
 
-        @kb.add("1")
-        @kb.add("2")
-        @kb.add("3")
-        @kb.add("4")
-        @kb.add("5")
-        @kb.add("6")
-        @kb.add("7")
-        @kb.add("8")
-        @kb.add("9")
-        def _prompt_jump(event: KeyPressEvent) -> None:
-            event.app.layout.focus(self.jump_buffer)
-            event.app.vi_state.input_mode = InputMode.INSERT
-            self.jump_buffer.text = str(event.key_sequence.pop().key)
-            self.jump_buffer.cursor_position = 1
-            self._app_link = event.app
+        for n in "123456789":
+
+            @kb.add(n)
+            def _prompt_jump(event: KeyPressEvent) -> None:
+                event.app.layout.focus(self.jump_buffer)
+                event.app.vi_state.input_mode = InputMode.INSERT
+                self.jump_buffer.text = str(event.key_sequence.pop().key)
+                self.jump_buffer.cursor_position = 1
 
         @kb.add("f1")
         @kb.add("f2")
@@ -547,7 +533,6 @@ class App(TuiProps):
         def setup_confirm_prompt(event: KeyPressEvent) -> None:
             event.app.layout.focus(self.confirm_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
-            self._app_link = event.app
 
         @kb.add("D")
         def _download_all(event: KeyPressEvent) -> None:
@@ -593,6 +578,10 @@ class App(TuiProps):
             self.status_msg = "updating..."
             event.app.invalidate()
             await self.sync_and_reload()
+
+        @kb.add("c")
+        def _clear(event: KeyPressEvent) -> None:
+            event.app.renderer.clear()
 
         return kb
 
@@ -653,7 +642,7 @@ def main():
         sys.exit(0)
 
     try:
-        _ = App(feeder).start()
+        App(feeder).start()
     except Exception as e:
         print(e)
         sys.exit(1)
