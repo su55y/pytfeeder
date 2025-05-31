@@ -33,9 +33,7 @@ class TuiProps:
         self.__max_unwatched_num_len = 0
         self.__max_total_num_len = 0
         self._set_channels()
-        self.channel_indexes_map = {
-            c.channel_id: i for i, c in enumerate(self.channels)
-        }
+        self._channels_indexes_map = self._make_channels_indexes_map()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
         self.help_status = " version {version} [h,q,Left]: close help".format(
             version=__version__
@@ -82,10 +80,10 @@ class TuiProps:
         return self.entry_formats[self._is_feed_opened]
 
     def find_channel_index_by_id(self, channel_id: str) -> int:
-        i = self.channel_indexes_map.get(channel_id)
+        i = self._channels_indexes_map.get(channel_id)
         if i is None:
             raise Exception(
-                f"Unknown {channel_id = !r}\nin {self.channel_indexes_map.keys() = !r}"
+                f"Unknown {channel_id = !r}\nin {self._channels_indexes_map.keys() = !r}"
             )
         return i
 
@@ -165,7 +163,7 @@ class TuiProps:
             return False
         self.is_channels_outdated = True
         self.lines = self.get_lines_by_id(self.channels[self.parent_index].channel_id)
-        self.index = max(0, self.index - 1)
+        self.index = max(0, min(self.index, len(self.lines) - 1))
         return True
 
     def mark_all_as_deleted(self) -> bool:
@@ -265,10 +263,14 @@ class TuiProps:
         self._status_msg_text = text
         self._status_msg_creation_time = time.perf_counter()
 
+    def _make_channels_indexes_map(self) -> dict[str, int]:
+        return {c.channel_id: i for i, c in enumerate(self.channels)}
+
     def update_channels(self) -> None:
         self.feeder.refresh_channels()
         self.is_channels_outdated = False
         self._set_channels()
+        self._channels_indexes_map = self._make_channels_indexes_map()
 
     def _set_channels(self) -> None:
         if self.c.hide_feed:
