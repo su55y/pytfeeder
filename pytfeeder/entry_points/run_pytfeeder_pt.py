@@ -546,7 +546,9 @@ class App(TuiProps):
         @kb.add("delete")
         @kb.add("c-x")
         def _mark_entry_as_deleted(_) -> None:
-            _ = self.mark_as_deleted()
+            if self.mark_as_deleted() and len(self.lines) == 0:
+                self.update_channels()
+                self.move_back_to_channels()
 
         @kb.add("c-d")
         def _mark_all_as_deleted(event: KeyPressEvent) -> None:

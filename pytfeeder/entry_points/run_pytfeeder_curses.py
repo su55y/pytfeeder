@@ -232,6 +232,8 @@ class App(TuiProps):
                 case Key.CTRL_X | curses.KEY_DC:
                     if self.mark_as_deleted():
                         screen.clear()
+                        if len(self.lines) == 0:
+                            self.move_back_to_channels()
                 case Key.CTRL_D:
                     if (
                         self.page_state != PageState.ENTRIES
