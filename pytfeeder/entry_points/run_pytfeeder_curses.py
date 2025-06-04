@@ -31,6 +31,7 @@ class Key(IntEnum):
     r = ord("r")
     d = ord("d")
     D = ord("D")
+    F = ord("F")
     f = ord("f")
     s = ord("s")
     t = ord("t")
@@ -213,7 +214,7 @@ class App(TuiProps):
                     if self.handle_move(Gravity.UP):
                         self.scroll_top = 0
                         screen.clear()
-                case Key.f:
+                case Key.F:
                     if self.handle_follow():
                         screen.clear()
                 case Key.QUESTION_MARK:

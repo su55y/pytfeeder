@@ -442,7 +442,7 @@ class App(TuiProps):
             if self.handle_move(gravity=-1):
                 self.status_title = self.channels[self.parent_index].title
 
-        @kb.add("f")
+        @kb.add("F")
         def _follow(_) -> None:
             if (
                 self.page_state != PageState.ENTRIES
