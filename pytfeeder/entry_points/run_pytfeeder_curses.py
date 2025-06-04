@@ -34,6 +34,7 @@ class Key(IntEnum):
     f = ord("f")
     s = ord("s")
     t = ord("t")
+    u = ord("u")
     F1 = 265
     F2 = 266
     F3 = 267
@@ -262,6 +263,8 @@ class App(TuiProps):
                     if len(self.lines) < before:
                         self.scroll_top = 0
                         screen.clear()
+                case Key.u:
+                    self.toggle_unwathced_first()
                 case Key.c:
                     screen.clear()
                 case Key.q:

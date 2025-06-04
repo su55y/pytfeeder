@@ -315,6 +315,13 @@ class TuiProps:
             self.index = 0
             self.lines = self.get_lines_by_id(channel_id)
 
+    def toggle_unwathced_first(self) -> None:
+        self.c.unwatched_first = not self.c.unwatched_first
+        if not self.is_filtered and self.page_state == PageState.ENTRIES:
+            self.reload_lines(self.channels[self.parent_index].channel_id)
+        else:
+            self.status_msg = f"unwatched_first: {self.c.unwatched_first}"
+
     async def sync_and_reload(self) -> None:
         channel_id = None
         if self.page_state == PageState.ENTRIES:

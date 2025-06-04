@@ -56,6 +56,7 @@ HELP_KEYBINDINGS = [
     ("/", "Open filter"),
     ("s", "Toggle statusbar visability"),
     ("t", "Toggle empty channels visability"),
+    ("u", "Toggle unwatched_first setting"),
     ("h", "Cancel filter"),
     ("c", "Clear screen"),
     ("0-9", "Jump to line {index}"),

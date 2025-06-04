@@ -562,6 +562,10 @@ class App(TuiProps):
             self.confirm_type_prompt = ConfirmType.DELETE
             setup_confirm_prompt(event)
 
+        @kb.add("u")
+        def _toggle_unwatched_first(_) -> None:
+            self.toggle_unwathced_first()
+
         @kb.add("?")
         def _open_help(event: KeyPressEvent) -> None:
             if not self.is_help_opened:
