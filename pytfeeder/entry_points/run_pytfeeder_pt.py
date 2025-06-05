@@ -367,8 +367,33 @@ class App(TuiProps):
         @kb.add("n", filter=have_lines)
         @kb.add("tab", filter=have_lines)
         def _down(_) -> None:
-            if len(self.lines) > 1:
-                self.index = (self.index + 1) % len(self.lines)
+            self.index = (self.index + 1) % len(self.lines)
+
+        @kb.add("b", filter=have_lines)
+        @kb.add("pageup", filter=have_lines)
+        def _backward(_) -> None:
+            if not self.main_window.render_info:
+                return
+            h = self.main_window.render_info.window_height
+            if self.index == 0:
+                self.index = len(self.lines) - 1
+            elif (self.index - h) < 0:
+                self.index = 0
+            else:
+                self.index = (self.index - h) % len(self.lines)
+
+        @kb.add("f", filter=have_lines)
+        @kb.add("pagedown", filter=have_lines)
+        def _forward(_) -> None:
+            if not self.main_window.render_info:
+                return
+            h = self.main_window.render_info.window_height
+            if self.index == len(self.lines) - 1:
+                self.index = 0
+            elif (self.index + h) >= len(self.lines):
+                self.index = len(self.lines) - 1
+            else:
+                self.index = (self.index + h) % len(self.lines)
 
         @kb.add("l", filter=have_lines)
         @kb.add("enter", filter=have_lines)

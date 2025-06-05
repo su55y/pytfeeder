@@ -18,6 +18,8 @@ class Key(IntEnum):
     J = ord("J")
     k = ord("k")
     K = ord("K")
+    f = ord("f")
+    b = ord("b")
     g = ord("g")
     G = ord("G")
     q = ord("q")
@@ -32,7 +34,6 @@ class Key(IntEnum):
     d = ord("d")
     D = ord("D")
     F = ord("F")
-    f = ord("f")
     s = ord("s")
     t = ord("t")
     u = ord("u")
@@ -158,6 +159,14 @@ class App(TuiProps):
                 case Key.k | curses.KEY_UP | curses.KEY_BTAB | Key.p:
                     if len(self.lines) > 0:
                         self.move_up()
+                case Key.b | curses.KEY_PPAGE:
+                    if len(self.lines) > 0:
+                        max_y, _ = screen.getmaxyx()
+                        self.move_backward(max_y - self.statusbar_height)
+                case Key.f | curses.KEY_NPAGE:
+                    if len(self.lines) > 0:
+                        max_y, _ = screen.getmaxyx()
+                        self.move_forward(max_y - self.statusbar_height)
                 case Key.l | curses.KEY_RIGHT | Key.RETURN:
                     if len(self.lines) > 0:
                         screen.clear()
@@ -271,26 +280,6 @@ class App(TuiProps):
                 case Key.q:
                     sys.exit(0)
 
-    def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
-        if self.page_state != PageState.ENTRIES:
-            return
-        if len(self.lines) == 0:
-            return
-        macro = self.macros.get(key)
-        if not macro or len(macro) == 0:
-            return
-
-        selected_data = self.lines[self.index].data
-        if not isinstance(selected_data, Entry):
-            return
-
-        self.status_msg = f"executing {macro!r}..."
-        sp.Popen(
-            [macro, selected_data.id, selected_data.title],
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
-        )
-
     def draw(self, screen: curses.window) -> None:
         x = 0  # y = 0
         max_y, max_x = screen.getmaxyx()
@@ -382,6 +371,26 @@ class App(TuiProps):
         for i in range(len(self.lines)):
             self.lines[i].is_active = i == self.index
 
+    def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
+        if self.page_state != PageState.ENTRIES:
+            return
+        if len(self.lines) == 0:
+            return
+        macro = self.macros.get(key)
+        if not macro or len(macro) == 0:
+            return
+
+        selected_data = self.lines[self.index].data
+        if not isinstance(selected_data, Entry):
+            return
+
+        self.status_msg = f"executing {macro!r}..."
+        sp.Popen(
+            [macro, selected_data.id, selected_data.title],
+            stdout=sp.DEVNULL,
+            stderr=sp.DEVNULL,
+        )
+
     def open_help(self, screen: curses.window) -> None:
         screen.clear()
         max_y, max_x = screen.getmaxyx()
@@ -438,6 +447,29 @@ class App(TuiProps):
     def move_down(self) -> None:
         self.gravity = Gravity.DOWN
         self.index = (self.index + 1) % len(self.lines)
+
+    def move_backward(self, h: int) -> None:
+        if h == 0:
+            return
+        if self.index == 0:
+            self.index = len(self.lines) - 1
+        elif (self.index - h) < 0:
+            self.index = 0
+        else:
+            self.index = (self.index - h) % len(self.lines)
+            self.scroll_top = self.index
+        self.gravity = Gravity.DOWN
+
+    def move_forward(self, h: int) -> None:
+        if h == 0:
+            return
+        if self.index == len(self.lines) - 1:
+            self.index = 0
+        elif (self.index + h) >= len(self.lines):
+            self.index = len(self.lines) - 1
+        else:
+            self.index = (self.index + h) % len(self.lines)
+        self.gravity = Gravity.DOWN
 
     def move_bottom(self) -> None:
         self.gravity = Gravity.DOWN
