@@ -275,6 +275,8 @@ class App(TuiProps):
                         screen.clear()
                 case Key.u:
                     self.toggle_unwathced_first()
+                    if self.page_state == PageState.ENTRIES:
+                        self.scroll_top = 0
                 case Key.c:
                     screen.clear()
                 case Key.q:

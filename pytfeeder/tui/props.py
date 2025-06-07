@@ -267,7 +267,7 @@ class TuiProps:
         return {c.channel_id: i for i, c in enumerate(self.channels)}
 
     def update_channels(self) -> None:
-        self.feeder.refresh_channels()
+        self.feeder.refresh_channels_stats()
         self.is_channels_outdated = False
         self._set_channels()
         self._channels_indexes_map = self._make_channels_indexes_map()
@@ -300,6 +300,8 @@ class TuiProps:
             if len(self.channels) == 0:
                 print("All channels are empty")
                 sys.exit(0)
+        if self.c.unwatched_first:
+            self.channels.sort(key=lambda c: not c.have_updates)
 
     def refresh_last_update(self) -> None:
         last_update = self.feeder.last_update
@@ -316,11 +318,22 @@ class TuiProps:
             self.lines = self.get_lines_by_id(channel_id)
 
     def toggle_unwathced_first(self) -> None:
+        if self.is_filtered:
+            return
         self.c.unwatched_first = not self.c.unwatched_first
-        if not self.is_filtered and self.page_state == PageState.ENTRIES:
-            self.reload_lines(self.channels[self.parent_index].channel_id)
-        else:
-            self.status_msg = f"unwatched_first: {self.c.unwatched_first}"
+        index = self.index
+        if self.page_state == PageState.ENTRIES:
+            index = self.parent_index
+        current_channel_id = self.channels[index].channel_id
+
+        self.update_channels()
+
+        if self.page_state == PageState.ENTRIES:
+            self.parent_index = self.find_channel_index_by_id(current_channel_id)
+            self.reload_lines(current_channel_id)
+        elif self.page_state == PageState.CHANNELS:
+            self.index = self.find_channel_index_by_id(current_channel_id)
+            self.reload_lines()
 
     async def sync_and_reload(self) -> None:
         channel_id = None
