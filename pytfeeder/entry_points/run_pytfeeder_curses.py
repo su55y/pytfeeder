@@ -622,7 +622,7 @@ class App(TuiProps):
                     else:
                         self.filter_lines(keyword)
                     return
-                if ch in (Key.SLASH, Key.ESC):
+                if ch == Key.ESC:
                     screen.clear()
                     return
                 if ch == curses.KEY_BACKSPACE:
