@@ -28,10 +28,10 @@ class Feeder:
 
     @cached_property
     def channels(self) -> list[Channel]:
-        self.refresh_channels()
+        self.refresh_channels_stats()
         return self.config.channels
 
-    def refresh_channels(self) -> None:
+    def refresh_channels_stats(self) -> None:
         stats = self.stor.select_channels_stats()
         for c in self.config.channels:
             stat = stats.get(c.channel_id)
