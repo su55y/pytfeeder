@@ -9,10 +9,7 @@ class TestStats(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         utils.setup_logging(filename=f"{Path(__file__).name}.log")
-        cls.db_file = Path("/tmp/test_storage.db")
-        if cls.db_file.exists():
-            cls.db_file.unlink()
-
+        cls.db_file = utils.temp_storage_path()
         cls.stor = Storage(cls.db_file)
 
         cls.sample_entries = mocks.sample_entries

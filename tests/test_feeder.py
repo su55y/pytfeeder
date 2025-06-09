@@ -5,14 +5,13 @@ from pytfeeder.config import Config
 from pytfeeder.feeder import Feeder
 from pytfeeder.storage import Storage
 from . import mocks
+from .utils import temp_storage_path
 
 
 class FeederTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.db_file = Path("/tmp/test_storage.db")
-        if cls.db_file.exists():
-            cls.db_file.unlink()
+        cls.db_file = temp_storage_path()
         cls.stor = Storage(cls.db_file)
         cls.config = Config(channels=[mocks.sample_channel], storage_path=cls.db_file)
         cls.feeder = Feeder(config=cls.config, storage=cls.stor)
