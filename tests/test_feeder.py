@@ -26,6 +26,6 @@ class FeederTest(unittest.TestCase):
         _ = self.stor.add_entries(mocks.sample_entries)
         before = self.feeder.channels[0].have_updates
         self.feeder.mark_as_watched(channel_id=mocks.sample_channel.channel_id)
-        self.feeder.refresh_channels()
+        self.feeder.refresh_channels_stats()
         after = self.feeder.channels[0].have_updates
         self.assertNotEqual(before, after)
