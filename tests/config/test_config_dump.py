@@ -66,10 +66,12 @@ class TestDumpConfig(unittest.TestCase):
             import os
 
             XDG_CONFIG_HOME = os.environ.get(
-                "XDG_CONFIG_HOME", os.path.expanduser("~") + ".config"
+                "XDG_CONFIG_HOME",
+                os.path.join(os.path.expanduser("~"), ".config"),
             )
             XDG_DATA_HOME = os.environ.get(
-                "XDG_DATA_HOME", os.path.expanduser("~") + ".local/share"
+                "XDG_DATA_HOME",
+                os.path.join(os.path.expanduser("~"), ".local/share"),
             )
 
             dump_only_paths = "\n".join(dump_lines[:3])
