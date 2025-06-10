@@ -170,10 +170,11 @@ class TuiProps:
         channel_id = self.channels[self.parent_index].channel_id
         if channel_id == "feed":
             return False
-        err = self.feeder.mark_channel_as_deleted(channel_id)
-        if err:
-            self.status_msg = f"Err: {err}"
+        c = self.feeder.mark_channel_as_deleted(channel_id)
+        if c <= 0:
+            self.status_msg = "Something went wrong"
             return False
+        self.status_msg = f"{c} entries were deleted"
         self.update_channels()
         self.parent_index = min(self.parent_index, len(self.channels) - 1)
         return True

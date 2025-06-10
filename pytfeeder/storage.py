@@ -235,9 +235,9 @@ class Storage:
             self.log.warning(f"{rowcount = } for mark_entry_as_deleted({id = !r})")
         return rowcount == 1
 
-    def mark_channel_entries_as_deleted(self, channel_id: str) -> None:
-        query = f"UPDATE {TB_ENTRIES} SET is_deleted = 1 WHERE channel_id = ?"
-        _ = self.update_rows(query, params=(channel_id,))
+    def mark_channel_entries_as_deleted(self, channel_id: str) -> int:
+        query = f"UPDATE {TB_ENTRIES} SET is_deleted = 1 WHERE channel_id = ? AND is_deleted != 1"
+        return self.update_rows(query, params=(channel_id,))
 
     def mark_channel_entries_as_watched(
         self, channel_id: str, unwatched: bool = False
