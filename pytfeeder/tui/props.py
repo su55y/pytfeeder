@@ -87,6 +87,26 @@ class TuiProps:
             )
         return i
 
+    def move_prev_unwatched(self) -> None:
+        if self.page_state != PageState.ENTRIES or len(self.lines) < 2:
+            return
+
+        for i in range(self.index - 1, self.index - len(self.lines), -1):
+            i = i % len(self.lines)
+            if not self.lines[i].data.is_viewed:  # type: ignore
+                self.index = i
+                return
+
+    def move_next_unwatched(self) -> None:
+        if self.page_state != PageState.ENTRIES or len(self.lines) < 2:
+            return
+
+        for i in range(self.index + 1, self.index + len(self.lines)):
+            i = i % len(self.lines)
+            if not self.lines[i].data.is_viewed:  # type: ignore
+                self.index = i
+                return
+
     def format_unwatched_total_key(self, c: Channel) -> str:
         w = self.__max_unwatched_num_len + self.__max_total_num_len + 3
         s = f"({c.unwatched_count}/{c.entries_count})"

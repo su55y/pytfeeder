@@ -153,10 +153,10 @@ class App(TuiProps):
             self.draw(screen)
             ch = screen.getch()
             match ch:
-                case Key.j | curses.KEY_DOWN | Key.TAB | Key.n:
+                case Key.j | curses.KEY_DOWN | Key.TAB:
                     if len(self.lines) > 0:
                         self.move_down()
-                case Key.k | curses.KEY_UP | curses.KEY_BTAB | Key.p:
+                case Key.k | curses.KEY_UP | curses.KEY_BTAB:
                     if len(self.lines) > 0:
                         self.move_up()
                 case Key.b | curses.KEY_PPAGE:
@@ -182,6 +182,18 @@ class App(TuiProps):
                     elif self.page_state == PageState.ENTRIES:
                         self.move_back_to_channels()
                     screen.refresh()
+                case Key.p:
+                    before = self.index
+                    self.move_prev_unwatched()
+                    if before != self.index:
+                        self.gravity = Gravity.DOWN
+                        if before - self.index == 1:
+                            self.gravity = Gravity.UP
+                case Key.n:
+                    before = self.index
+                    self.move_next_unwatched()
+                    if before != self.index:
+                        self.gravity = Gravity.DOWN
                 case Key.r:
                     self.status_msg = "updating..."
                     self.draw(screen)

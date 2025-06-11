@@ -311,7 +311,6 @@ class App(TuiProps):
 
         @kb.add("k")
         @kb.add("up")
-        @kb.add("p")
         @kb.add("s-tab")
         def _go_up(_) -> None:
             if len(self.help_lines) > 1:
@@ -319,7 +318,6 @@ class App(TuiProps):
 
         @kb.add("j")
         @kb.add("down")
-        @kb.add("n")
         @kb.add("tab")
         def _go_down(_) -> None:
             if len(self.help_lines) > 1:
@@ -357,14 +355,12 @@ class App(TuiProps):
 
         @kb.add("k", filter=have_lines)
         @kb.add("up", filter=have_lines)
-        @kb.add("p", filter=have_lines)
         @kb.add("s-tab", filter=have_lines)
         def _up(_) -> None:
             self.index = (self.index - 1) % len(self.lines)
 
         @kb.add("j", filter=have_lines)
         @kb.add("down", filter=have_lines)
-        @kb.add("n", filter=have_lines)
         @kb.add("tab", filter=have_lines)
         def _down(_) -> None:
             self.index = (self.index + 1) % len(self.lines)
@@ -446,6 +442,14 @@ class App(TuiProps):
                 event.app.exit()
             else:
                 self.move_back_to_channels()
+
+        @kb.add("p", filter=have_lines)
+        def _prev_unwatched(_) -> None:
+            self.move_prev_unwatched()
+
+        @kb.add("n", filter=have_lines)
+        def _next_unwatched(_) -> None:
+            self.move_next_unwatched()
 
         @kb.add("g", "g")
         @kb.add("home")
