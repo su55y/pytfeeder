@@ -274,7 +274,8 @@ class App(TuiProps):
             if i == self.help_index:
                 result.append([("[SetCursorPosition]", "")])
             result.append([(f"class:{self.classnames[0]}", line)])
-            result.append("\n")
+            if i < len(self.help_lines) - 1:
+                result.append("\n")
 
         return merge_formatted_text(result)
 
@@ -309,19 +310,38 @@ class App(TuiProps):
     def _help_keybindings(self) -> KeyBindings:
         kb = KeyBindings()
 
+        @kb.add("g", "g")
+        def _go_top(_):
+            self.help_index = 0
+
+        @kb.add("G")
+        def _go_bottom(_):
+            self.help_index = max(0, len(self.help_lines) - 1)
+
         @kb.add("k")
         @kb.add("up")
         @kb.add("s-tab")
-        def _go_up(_) -> None:
-            if len(self.help_lines) > 1:
-                self.help_index = (self.help_index - 1) % len(self.help_lines)
+        def _go_up(e: KeyPressEvent) -> None:
+            w = e.app.layout.current_window
+            if not w or not w.render_info:
+                return
+
+            self.help_index = max(0, w.vertical_scroll - 1)
 
         @kb.add("j")
         @kb.add("down")
         @kb.add("tab")
-        def _go_down(_) -> None:
-            if len(self.help_lines) > 1:
-                self.help_index = (self.help_index + 1) % len(self.help_lines)
+        def _go_down(e: KeyPressEvent) -> None:
+            w = e.app.layout.current_window
+            if not w or not w.render_info:
+                return
+
+            h = w.render_info.window_height
+            w.vertical_scroll += 1
+            if self.help_index < h:
+                self.help_index = min(h, len(self.help_lines) - 1)
+            else:
+                self.help_index = min(self.help_index + 1, len(self.help_lines) - 1)
 
         @kb.add("b")
         @kb.add("h")
