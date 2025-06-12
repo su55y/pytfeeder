@@ -16,6 +16,10 @@ class RofiPrinter:
         self.c = self.feeder.config.rofi
         if self.c.alphabetic_sort:
             self.feeder.config.channels.sort(key=lambda c: c.title.lower())
+        if self.c.unwatched_first:
+            _ = self.feeder.channels  # trigger Feeder.refresh_channels_stats call
+            self.feeder.config.channels.sort(key=lambda c: not c.have_updates)
+
         self.__message_printed = False
 
     def print_channels(self) -> None:
