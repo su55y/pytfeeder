@@ -26,6 +26,7 @@ rofi:
   hide_feed: false
   separator: "\n"
   unwatched_first: false
+skip_shorts: false
 tui:
   alphabetic_sort: false
   always_update: false
