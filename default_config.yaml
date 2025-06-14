@@ -62,6 +62,9 @@ rofi:
   # entries sorting order, prefering unwatched over newer but watched
   unwatched_first: false
 
+# If true entries with `/shorts/` in url will not be stored
+skip_shorts: false
+
 tui:
   # sort channels list in alphabetic order instead of the order defined in channels.yaml
   alphabetic_sort: false

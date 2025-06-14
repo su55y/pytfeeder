@@ -25,6 +25,7 @@ STORAGE_FILENAME = "pytfeeder.db"
 class Config:
     channels_filepath: Path
     logger: LoggerConfig
+    skip_shorts: bool
     storage_path: Path
     rofi: ConfigRofi
     tui: ConfigTUI
@@ -38,6 +39,7 @@ class Config:
         data_dir: Path | None = None,
         channels: list[Channel] | None = None,
         logger_config: LoggerConfig | None = None,
+        skip_shorts: bool = False,
         storage_path: Path | None = None,
         rofi: ConfigRofi | None = None,
         tui: ConfigTUI | None = None,
@@ -55,6 +57,7 @@ class Config:
         self.logger = logger_config or LoggerConfig()
         self.rofi = rofi or ConfigRofi()
         self.tui = tui or ConfigTUI()
+        self.skip_shorts = skip_shorts
 
         self.__is_data_dir_set = False
         if config_file and (config_file := expand_path(config_file)).exists():
@@ -106,6 +109,8 @@ class Config:
             self.rofi.update(rofi_object)
         if tui_object := config_dict.get("tui"):
             self.tui.update(tui_object)
+        if (skip_shorts := config_dict.get("skip_shorts")) is not None:
+            self.skip_shorts = bool(skip_shorts)
 
     def _set_data_paths(
         self,
@@ -198,4 +203,5 @@ class Config:
         repr_str += f"{repr(self.logger).strip()}\n"
         repr_str += f"{repr(self.rofi).strip()}\n"
         repr_str += f"{repr(self.tui).strip()}\n"
+        repr_str += f"skip_shorts: {self.skip_shorts}\n"
         return repr_str.strip()

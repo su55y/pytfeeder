@@ -14,9 +14,15 @@ NAMESPACE = {"yt": "http://www.youtube.com/xml/schemas/2015"}
 
 
 class YTFeedParser:
-    def __init__(self, raw: str, log: logging.Logger | None = None) -> None:
+    def __init__(
+        self,
+        raw: str,
+        skip_shorts: bool = False,
+        log: logging.Logger | None = None,
+    ) -> None:
         self.log = log or logging.getLogger()
         self.default_published = dt.datetime.now(dt.timezone.utc)
+        self.skip_shorts = skip_shorts
         self.__tree = XML(text=raw)
         self.__entries: list[Entry] = list()
 
@@ -28,6 +34,11 @@ class YTFeedParser:
 
     def __parse_entries(self):
         for entry in self.__tree.findall(SCHEMA % "entry"):
+            link = entry.find(SCHEMA % "link")
+            if link is not None and link.attrib.get("rel") == "alternate":
+                is_shorts = link.attrib.get("href", "").find("/shorts/") != -1
+                if self.skip_shorts and is_shorts:
+                    continue
             id_ = entry.findtext("yt:videoId", namespaces=NAMESPACE)
             if id_ is None or not rx_id.match(id_):
                 self.log.error(f"invalid id {id_!r} in entry: {entry!r}")

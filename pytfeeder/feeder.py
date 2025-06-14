@@ -173,7 +173,9 @@ class Feeder:
         self, session: ClientSession, channel_id: str
     ) -> int:
         raw_feed = await self._fetch_feed(session, channel_id)
-        parser = YTFeedParser(raw_feed, log=self.log)
+        parser = YTFeedParser(
+            raw_feed, skip_shorts=self.config.skip_shorts, log=self.log
+        )
         if not len(parser.entries):
             self.log.error(f"can't parse feed for {channel_id}\n{raw_feed[:80] = !r}")
             return 0
