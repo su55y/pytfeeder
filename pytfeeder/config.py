@@ -31,6 +31,9 @@ class Config:
     tui: ConfigTUI
     lock_file: Path
     __channels: list[Channel] = dc.field(default_factory=list, repr=False, kw_only=True)
+    __visible_channels: list[Channel] = dc.field(
+        default_factory=list, repr=False, kw_only=True
+    )
 
     def __init__(
         self,
@@ -75,12 +78,17 @@ class Config:
 
     @property
     def channels(self) -> list[Channel]:
+        return self.__visible_channels
+
+    @property
+    def all_channels(self) -> list[Channel]:
         return self.__channels
 
     @channels.setter
     def channels(self, channels_: list[Channel]) -> None:
         assert isinstance(channels_, list), "Unexpected channels value type"
         self.__channels = channels_
+        self.__visible_channels = [c for c in self.__channels if not c.hidden]
         self.__is_channels_set = True
 
     def _parse_config_file(self, config_path: Path) -> None:
@@ -180,7 +188,7 @@ class Config:
         obj = dc.asdict(self)
         obj["data_dir"] = self.data_dir
 
-        for hidden_key in {"_Config__channels", "storage_path"}:
+        for hidden_key in {"_Config__channels", "_Config__visible_channels", "storage_path"}:
             if hidden_key in obj:
                 del obj[hidden_key]
 

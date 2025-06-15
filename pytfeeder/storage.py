@@ -184,6 +184,7 @@ class Storage:
         channel_id: str | None = None,
         is_deleted: bool | None = None,
         is_watched: bool | None = None,
+        in_channels: list[Channel] | None = None,
     ) -> int:
         params_list: list[Any] = []
 
@@ -202,7 +203,14 @@ class Storage:
             and_for_channel = "AND channel_id = ?"
             params_list.append(channel_id)
 
-        query = f"SELECT COUNT(*) FROM {TB_ENTRIES} WHERE {where_is_deleted} {and_is_viewed} {and_for_channel}"
+        and_in_channels = ""
+        if in_channels is not None and len(in_channels):
+            params_list += [c.channel_id for c in in_channels]
+            and_in_channels = f"AND channel_id IN ({','.join('?'*len(in_channels))})"
+
+        query = f"""
+        SELECT COUNT(*) FROM {TB_ENTRIES} 
+        WHERE {where_is_deleted} {and_is_viewed} {and_for_channel} {and_in_channels}"""
         params = tuple(params_list)
 
         with self.get_cursor() as cursor:

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import datetime as dt
+from typing import Any
 
 import yaml
 
@@ -38,6 +39,7 @@ class Channel:
     entries: list[Entry] = field(default_factory=list)
     entries_count: int = 0
     have_updates: bool = False
+    hidden: bool = False
     unwatched_count: int = 0
 
     def __post_init__(self) -> None:
@@ -50,8 +52,7 @@ class Channel:
 
     @staticmethod
     def to_yaml(dumper: ChannelDumper, c: "Channel") -> yaml.MappingNode:
-        return dumper.represent_mapping(
-            "tag:yaml.org,2002:map",
-            {"channel_id": c.channel_id, "title": c.title},
-            flow_style=True,
-        )
+        d: dict[str, Any] = {"channel_id": c.channel_id, "title": c.title}
+        if c.hidden == True:
+            d["hidden"] = c.hidden
+        return dumper.represent_mapping("tag:yaml.org,2002:map", d, flow_style=True)

@@ -28,7 +28,7 @@ class TuiProps:
         self.feeder = feeder
         self.c = self.feeder.config.tui
         if self.c.alphabetic_sort:
-            self.feeder.config.channels.sort(key=lambda c_: c_.title.lower())
+            self.feeder.channels_aplhabetic_sort()
         self.channels: list[Channel] = list()
         self.__max_unwatched_num_len = 0
         self.__max_total_num_len = 0
@@ -304,7 +304,7 @@ class TuiProps:
             )
         else:
             unwatched_count = self.feeder.unwatched_count()
-            total_entries_count = self.feeder.total_entries_count()
+            total_entries_count = self.feeder.total_entries_count(exclude_hidden=True)
             self.__max_unwatched_num_len = len(str(unwatched_count))
             self.__max_total_num_len = len(str(total_entries_count))
             feed_channel = Channel(

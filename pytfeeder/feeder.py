@@ -43,6 +43,23 @@ class Feeder:
             c.have_updates = bool(unwatched)
             c.unwatched_count = unwatched
 
+    def _reset_channels(self) -> None:
+        try:
+            del self.channels
+        except AttributeError:
+            pass
+        except Exception:
+            raise
+
+    def channels_aplhabetic_sort(self) -> None:
+        self._reset_channels()
+        self.config.channels.sort(key=lambda c_: c_.title.lower())
+
+    def channels_unwatched_first_sort(self) -> None:
+        self._reset_channels()
+        self.refresh_channels_stats()
+        self.config.channels.sort(key=lambda c: not c.have_updates)
+
     @lru_cache
     def channel(self, channel_id: str) -> Channel | None:
         return self.__channels_map.get(channel_id)
@@ -105,8 +122,11 @@ class Feeder:
     def mark_channel_as_deleted(self, channel_id: str) -> int:
         return self.stor.mark_channel_entries_as_deleted(channel_id)
 
-    def total_entries_count(self) -> int:
-        return self.stor.select_entries_count(is_deleted=False)
+    def total_entries_count(self, exclude_hidden: bool = False) -> int:
+        return self.stor.select_entries_count(
+            is_deleted=False,
+            in_channels=self.config.channels if exclude_hidden else None,
+        )
 
     def deleted_count(self) -> int:
         return self.stor.select_entries_count(is_deleted=True)
@@ -116,6 +136,7 @@ class Feeder:
             channel_id=channel_id,
             is_watched=False,
             is_deleted=False,
+            in_channels=None if channel_id else self.config.channels,
         )
 
     def clean_cache(self) -> int:
@@ -124,7 +145,7 @@ class Feeder:
         return count
 
     def delete_inactive(self) -> int:
-        count = self.stor.delete_inactive_channels(self.config.channels)
+        count = self.stor.delete_inactive_channels(self.config.all_channels)
         self.stor.execute_vacuum()
         return count
 
@@ -142,7 +163,7 @@ class Feeder:
         async with ClientSession() as s:
             tasks = [
                 asyncio.create_task(self._sync_channel(s, c))
-                for c in self.config.channels
+                for c in self.config.all_channels
             ]
             results = await asyncio.gather(*tasks)
             sum_of_new = 0
