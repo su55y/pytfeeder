@@ -15,6 +15,7 @@ type Channel struct {
 	Id          string `yaml:"channel_id"`
 	Title       string `yaml:"title"`
 	HaveUpdates bool
+	Hidden      bool `yaml:"hidden"`
 	Total       int
 	Unwatched   int
 }

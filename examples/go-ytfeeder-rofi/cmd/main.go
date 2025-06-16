@@ -149,6 +149,9 @@ func main() {
 		}).Total))
 
 		for _, ch := range channels {
+			if ch.Hidden || (ch.Total == 0 && c.HideEmpty) {
+				continue
+			}
 			d := map[string]any{
 				"id":        ch.Id,
 				"title":     html.EscapeString(ch.Title),
@@ -195,7 +198,7 @@ func main() {
 		panic(err)
 	}
 
-	entries, err := stor.SelectEntries(channelId, c.UnwatchedFirst, limit)
+	entries, err := stor.SelectEntries(channelId, c.UnwatchedFirst, limit, channels)
 	if err != nil {
 		fmt.Printf("ERR: %v%s", channelId, c.Separator.Value)
 		os.Exit(1)

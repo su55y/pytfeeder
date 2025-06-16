@@ -36,6 +36,7 @@ type RofiConfig struct {
 	EntriesFmt       string    `yaml:"entries_fmt"`
 	FeedEntriesFmt   string    `yaml:"feed_entries_fmt"`
 	FeedLimit        int       `yaml:"feed_limit"`
+	HideEmpty        bool      `yaml:"hide_empty"`
 	HideFeed         bool      `yaml:"hide_feed"`
 	Separator        yaml.Node `yaml:"separator"`
 	UnwatchedFirst   bool      `yaml:"unwatched_first"`
@@ -135,7 +136,14 @@ func LoadChannels(path string) []models.Channel {
 		fmt.Printf("ERR: Decoding channels file: %s (%s)\n", err.Error(), path)
 		os.Exit(1)
 	}
-	return channels
+	i := 0
+	for _, c := range channels {
+		if !c.Hidden {
+			channels[i] = c
+			i++
+		}
+	}
+	return channels[:i]
 }
 
 func (c *Config) Print() {

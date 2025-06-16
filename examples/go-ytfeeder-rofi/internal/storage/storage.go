@@ -20,6 +20,7 @@ func (s *Storage) SelectEntries(
 	channelId string,
 	unwatchedFirst bool,
 	limit int,
+	inChannels []models.Channel,
 ) ([]models.Entry, error) {
 	var args []any
 
@@ -28,6 +29,16 @@ func (s *Storage) SelectEntries(
 		andChannelId = ""
 	} else {
 		args = append(args, channelId)
+	}
+
+	andInChannels := ""
+	if len(inChannels) > 0 {
+		placeholders := make([]string, len(inChannels))
+		for i, c := range inChannels {
+			placeholders[i] = "?"
+			args = append(args, c.Id)
+		}
+		andInChannels = fmt.Sprintf("AND channel_id IN (%s)", strings.Join(placeholders, ","))
 	}
 
 	order := "published"
@@ -39,8 +50,8 @@ func (s *Storage) SelectEntries(
 
 	stmt := fmt.Sprintf(`
 	SELECT id, title, published, channel_id, is_viewed, is_deleted
-	FROM tb_entries WHERE is_deleted = 0 %s
-	ORDER BY %s DESC LIMIT ?`, andChannelId, order)
+	FROM tb_entries WHERE is_deleted = 0 %s %s
+	ORDER BY %s DESC LIMIT ?`, andChannelId, andInChannels, order)
 
 	rows, err := s.db.Query(stmt, args...)
 	if err != nil {
