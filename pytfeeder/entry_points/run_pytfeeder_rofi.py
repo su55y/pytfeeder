@@ -26,7 +26,7 @@ class RofiPrinter:
         print("\000data\037main", end=self.c.separator)
 
         if not self.c.hide_feed:
-            total = self.feeder.total_entries_count()
+            total = self.feeder.total_entries_count(exclude_hidden=True)
             unwatched = self.feeder.unwatched_count()
             print(
                 self.c.channels_fmt.format(
@@ -39,6 +39,8 @@ class RofiPrinter:
             )
 
         for channel in self.feeder.channels:
+            if channel.entries_count == 0 and self.c.hide_empty:
+                continue
             print(
                 self.c.channels_fmt.format(
                     id=channel.channel_id,

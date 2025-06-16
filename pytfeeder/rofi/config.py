@@ -17,6 +17,7 @@ class ConfigRofi:
     datetime_fmt: str = consts.DEFAULT_DATETIME_FMT
     entries_fmt: str = consts.DEFAULT_ENTRIES_FMT
     feed_limit: int = -1
+    hide_empty: bool = False
     hide_feed: bool = False
     separator: Separator = Separator(consts.DEFAULT_SEPARATOR)
     unwatched_first: bool = False
