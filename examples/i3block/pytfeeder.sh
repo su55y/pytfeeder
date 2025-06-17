@@ -7,7 +7,7 @@ LAST_UPDATE_TIMESTAMP=0
 
 notify() {
     [ -n "$1" ] || return
-    notify-send -i youtube -a pytfeeder "$1"
+    notify-send -i youtube -a pytfeeder "$@"
 }
 
 update() {
@@ -22,16 +22,24 @@ update() {
 }
 
 case $BLOCK_BUTTON in
-1) update ;;
-*)
+1)
+    NOW=$(date +%s)
     if [ -f "$UPDATE_LOCK_PATH" ]; then
-        NOW=$(date +%s)
         LAST_UPDATE_TIMESTAMP=$(cat "$UPDATE_LOCK_PATH")
         [ $((NOW - LAST_UPDATE_TIMESTAMP)) -gt $UPDATE_INTERVAL_SEC ] &&
             update
     else
         UPTIME_SEC=$(uptime -r | cut -d' ' -f2 | cut -d. -f1)
         [ $UPTIME_SEC -gt $UPDATE_INTERVAL_SEC ] && update
+    fi
+    ;;
+2) update ;;
+3)
+    channels_with_updates="$(pytfeeder -f '{channels_with_updates}')"
+    if [ -n "$channels_with_updates" ]; then
+        notify 'Channels with updates:' "$channels_with_updates"
+    else
+        notify 'No updates'
     fi
     ;;
 esac
