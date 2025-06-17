@@ -117,6 +117,8 @@ def storage_file_stats(storage_path: Path) -> str:
 def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
     total = unwatched = deleted = 0
     last_update = ""
+    channels_with_updates = ""
+
     if "{total}" in fmt:
         total = feeder.total_entries_count()
     if "{unwatched}" in fmt:
@@ -138,12 +140,17 @@ def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
 
         lu = feeder.last_update
         last_update = lu.strftime(fmts.pop()) if lu else "Unknown"
+    if "{channels_with_updates}" in fmt:
+        channels_with_updates = "\n".join(
+            c.title for c in feeder.channels if c.have_updates
+        )
 
     return fmt.format(
         total=total,
         unwatched=unwatched,
         deleted=deleted,
         last_update=last_update,
+        channels_with_updates=channels_with_updates,
     )
 
 
