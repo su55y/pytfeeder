@@ -656,8 +656,7 @@ class App(TuiProps):
 
 def main():
     args = tui_args.parse_args()
-    config_path = args.config
-    config = Config(config_file=config_path)
+    config = Config(config_file=args.config, channels_filepath=args.channels_file)
     config.tui.update(vars(args))
 
     if not config.storage_path.parent.exists():

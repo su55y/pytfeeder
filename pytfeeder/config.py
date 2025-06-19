@@ -38,6 +38,7 @@ class Config:
     def __init__(
         self,
         config_file: Path | None = None,
+        *,
         channels_filepath: Path | None = None,
         data_dir: Path | None = None,
         channels: list[Channel] | None = None,
@@ -51,10 +52,10 @@ class Config:
         self.__is_channels_set = False
         if channels is not None:
             self.channels = channels
+        elif channels_filepath:
+            self.channels = self._load_channels_from_file(channels_filepath)
 
         self.channels_filepath = channels_filepath or default_channels_filepath()
-        if channels_filepath and channels is None:
-            self.channels = self._load_channels_from_file(channels_filepath)
 
         self.lock_file = lock_file or default_lockfile_path()
         self.logger = logger_config or LoggerConfig()
@@ -188,7 +189,11 @@ class Config:
         obj = dc.asdict(self)
         obj["data_dir"] = self.data_dir
 
-        for hidden_key in {"_Config__channels", "_Config__visible_channels", "storage_path"}:
+        for hidden_key in {
+            "_Config__channels",
+            "_Config__visible_channels",
+            "storage_path",
+        }:
             if hidden_key in obj:
                 del obj[hidden_key]
 

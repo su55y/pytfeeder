@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from pytfeeder.defaults import default_config_path
+from pytfeeder.defaults import default_config_path, default_channels_filepath
 from . import consts
 
 
@@ -45,6 +45,13 @@ def create_parser() -> argparse.ArgumentParser:
         default=default_config_path(),
         type=Path,
         help="Config path (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-C",
+        "--channels-file",
+        metavar="PATH",
+        type=Path,
+        help=f"Channels path (default: {default_channels_filepath()})",
     )
     parser.add_argument(
         "--datetime-fmt",
