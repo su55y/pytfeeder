@@ -24,7 +24,7 @@ class Feeder:
         self.stor = storage
         self.config = config
         self.log = log or logging.getLogger()
-        self.__channels_map = {c.channel_id: c for c in self.config.channels}
+        self.__channels_map = {c.channel_id: c for c in self.config.all_channels}
 
     @cached_property
     def channels(self) -> list[Channel]:
@@ -138,6 +138,24 @@ class Feeder:
             is_deleted=False,
             in_channels=None if channel_id else self.config.channels,
         )
+
+    def restore_channel(self, c: Channel) -> int:
+        return self.stor.restore_channel(c)
+
+    def channels_with_deleted(self) -> list[Channel]:
+        channels = []
+        for c_id, count in self.stor.select_channels_with_deleted():
+            c = self.__channels_map.get(c_id)
+            if c is None or c.hidden:
+                continue
+            channels.append(
+                Channel(
+                    title=f"{c.title} ({count} deleted)",
+                    channel_id=c.channel_id,
+                    entries_count=c.entries_count,
+                )
+            )
+        return channels
 
     def clean_cache(self) -> int:
         count = self.stor.delete_old_entries()

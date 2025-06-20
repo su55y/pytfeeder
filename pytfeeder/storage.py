@@ -178,6 +178,23 @@ class Storage:
         GROUP BY channel_id ORDER BY c1 DESC;"""
         return self.fetchall_rows(query)
 
+    def select_channels_with_deleted(self) -> list[tuple[str, int]]:
+        query = f"""
+        SELECT channel_id, SUM(is_deleted = 1) as c1
+        FROM {TB_ENTRIES}
+        WHERE is_deleted = 1
+        GROUP BY channel_id
+        ORDER BY c1 DESC;"""
+        return self.fetchall_rows(query)
+
+    def restore_channel(self, c: Channel) -> int:
+        query = f"""
+        UPDATE {TB_ENTRIES}
+        SET is_deleted = 0
+        WHERE channel_id = ?;
+        """
+        return self.update_rows(query, (c.channel_id,))
+
     def select_entries_count(
         self,
         *,

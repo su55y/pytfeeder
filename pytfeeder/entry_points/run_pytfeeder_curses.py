@@ -54,6 +54,7 @@ class Key(IntEnum):
     TAB = 9
     SLASH = ord("/")
     CTRL_X = 24
+    CTRL_R = 18
     ESC = 27
     RETURN = ord("\n")
     QUESTION_MARK = ord("?")
@@ -176,10 +177,17 @@ class App(TuiProps):
                         screen.clear()
                     if self.is_filtered:
                         self.reset_filter()
+                        if self.page_state == PageState.RESTORING:
+                            self.page_state = PageState.CHANNELS
+                            if self.enter_restore():
+                                screen.clear()
                         self.draw(screen)
                     elif self.page_state == PageState.CHANNELS:
                         sys.exit(0)
-                    elif self.page_state == PageState.ENTRIES:
+                    elif (
+                        self.page_state == PageState.ENTRIES
+                        or self.page_state == PageState.RESTORING
+                    ):
                         self.move_back_to_channels()
                     screen.refresh()
                 case Key.p:
@@ -195,6 +203,8 @@ class App(TuiProps):
                     if before != self.index:
                         self.gravity = Gravity.DOWN
                 case Key.r:
+                    if self.page_state == PageState.RESTORING:
+                        continue
                     self.status_msg = "updating..."
                     self.draw(screen)
                     asyncio.run(self.sync_and_reload())
@@ -273,6 +283,9 @@ class App(TuiProps):
                     if self.mark_all_as_deleted():
                         screen.clear()
                         self.move_back_to_channels()
+                case Key.CTRL_R:
+                    if self.enter_restore():
+                        screen.clear()
                 case Key.s:
                     self.c.hide_statusbar = not self.c.hide_statusbar
                     max_y, _ = screen.getmaxyx()
@@ -286,6 +299,8 @@ class App(TuiProps):
                         self.scroll_top = 0
                         screen.clear()
                 case Key.u:
+                    if self.page_state == PageState.RESTORING:
+                        continue
                     self.toggle_unwathced_first()
                     if self.page_state == PageState.ENTRIES:
                         self.scroll_top = 0
@@ -528,13 +543,22 @@ class App(TuiProps):
             self.play(selected_data)
             if not selected_data.is_viewed:
                 self.mark_as_watched()
+        elif (
+            self.page_state == PageState.RESTORING
+            and isinstance(selected_data, Channel)
+            and self.restore_channel(selected_data)
+        ):
+            self.page_state = PageState.CHANNELS
+            if self.is_filtered:
+                self.reset_filter()
+            self.enter_restore()
 
     def move_back_to_channels(self) -> None:
         if self.is_channels_outdated:
             self.update_channels()
         self.page_state = PageState.CHANNELS
         self.lines = list(map(Line, self.channels))
-        self.index = self.parent_index
+        self.index = max(self.parent_index, 0)
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
 
@@ -545,6 +569,8 @@ class App(TuiProps):
             title = self.channels[self.parent_index].title
         if self.is_filtered:
             title = "%d found" % len(self.lines)
+        if self.page_state == PageState.RESTORING:
+            title = "RESTORING"
 
         return " ".join(
             self.c.status_fmt.format(

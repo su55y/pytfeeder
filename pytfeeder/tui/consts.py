@@ -59,6 +59,7 @@ HELP_KEYBINDINGS = [
     ("D", "Download all unwatched from current feed"),
     ("C-x, Del", "Mark entry as deleted"),
     ("C-d", "Mark all entries as deleted"),
+    ("C-r", "Enter channels restoring"),
     ("/", "Open filter prompt (C-c or Esc to close)"),
     ("h", "Cancel filter"),
     ("s", "Toggle statusbar visability"),

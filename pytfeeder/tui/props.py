@@ -15,6 +15,7 @@ from .consts import DEFAULT_KEYBINDS
 class PageState(Enum):
     CHANNELS = auto()
     ENTRIES = auto()
+    RESTORING = auto()
 
 
 @dataclass
@@ -251,6 +252,30 @@ class TuiProps:
                 self.channels[self.parent_index].have_updates = unwatched
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = not unwatched  # type: ignore
+
+    def restore_channel(self, c: Channel) -> bool:
+        if self.page_state != PageState.RESTORING:
+            return False
+        count = self.feeder.restore_channel(c)
+        if count == 0:
+            return False
+        self.is_channels_outdated = True
+        self.status_msg = f"{count} entries was restored"
+        return True
+
+    def enter_restore(self) -> bool:
+        if self.page_state == PageState.RESTORING or self.is_filtered:
+            return False
+
+        channels = self.feeder.channels_with_deleted()
+        if len(channels) == 0:
+            self.status_msg = "No deleted"
+            return False
+
+        self.lines = list(map(Line, channels))
+        self.index = max(0, min(self.index, len(self.lines) - 1))
+        self.page_state = PageState.RESTORING
+        return True
 
     @property
     def statusbar_height(self) -> int:

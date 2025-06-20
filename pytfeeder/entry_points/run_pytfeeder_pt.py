@@ -361,7 +361,7 @@ class App(TuiProps):
     def move_back_to_channels(self) -> None:
         self.page_state = PageState.CHANNELS
         self.lines = list(map(Line, self.channels))
-        self.index = self.parent_index
+        self.index = max(self.parent_index, 0)
         self.parent_index = -1
         self.status_title = ""
 
@@ -432,6 +432,13 @@ class App(TuiProps):
             if not isinstance(channel, Channel):
                 raise Exception(f"Unexpected channel type {type(channel) = !r}")
 
+            if self.page_state == PageState.RESTORING and self.restore_channel(channel):
+                self.page_state = PageState.CHANNELS
+                if self.is_filtered:
+                    self.reset_filter()
+                self.enter_restore()
+                return
+
             if channel.entries_count == 0:
                 return
 
@@ -457,8 +464,7 @@ class App(TuiProps):
 
             if self.is_filtered:
                 self.reset_filter()
-                return
-            if self.page_state == PageState.CHANNELS:
+            elif self.page_state == PageState.CHANNELS:
                 event.app.exit()
             else:
                 self.move_back_to_channels()
@@ -611,6 +617,10 @@ class App(TuiProps):
             self.confirm_type_prompt = ConfirmType.DELETE
             setup_confirm_prompt(event)
 
+        @kb.add("c-r")
+        def _enter_restore(_) -> None:
+            _ = self.enter_restore()
+
         @kb.add("u")
         def _toggle_unwatched_first(_) -> None:
             self.toggle_unwathced_first()
@@ -630,6 +640,8 @@ class App(TuiProps):
 
         @kb.add("r")
         async def _reload(event: KeyPressEvent) -> None:
+            if self.page_state == PageState.RESTORING:
+                return
             self.status_msg = "updating..."
             event.app.invalidate()
             await self.sync_and_reload()
