@@ -29,7 +29,7 @@ pt = ["prompt_toolkit"]
 ytdl = ["yt-dlp"]
 
 [project.scripts]
-pytfeeder = "pytfeeder.entry_points.run_pytfeeder:run"
+pytfeeder = "pytfeeder.entry_points.run_pytfeeder:main"
 pytfeeder-curses = "pytfeeder.entry_points.run_pytfeeder_curses:main"
 pytfeeder-pt = "pytfeeder.entry_points.run_pytfeeder_pt:main"
 pytfeeder-rofi = "pytfeeder.entry_points.run_pytfeeder_rofi:main"

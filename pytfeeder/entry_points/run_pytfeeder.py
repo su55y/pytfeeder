@@ -154,7 +154,7 @@ def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
     )
 
 
-def run():
+def main():
     args = parse_args()
     config = Config(config_file=args.config_file)
 
@@ -223,3 +223,7 @@ def run():
 
     elif args.unwatched:
         print(feeder.unwatched_count())
+
+
+if __name__ == "__main__":
+    main()
