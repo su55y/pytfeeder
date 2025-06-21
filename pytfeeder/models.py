@@ -40,12 +40,13 @@ class Channel:
     entries_count: int = 0
     have_updates: bool = False
     hidden: bool = False
+    tags: list[str] = field(default_factory=list)
     unwatched_count: int = 0
 
     def __post_init__(self) -> None:
         if self.title == "":
             raise InvalidChannelError(f"Invalid title {self.title!r}")
-        if len(self.channel_id) != 24 and self.channel_id != "feed":
+        if len(self.channel_id) != 24 and self.channel_id not in ["feed", "tag"]:
             raise InvalidChannelError(
                 f"Invalid channel_id {len(self.channel_id) = } ({self.channel_id!r}), should be 24)"
             )
@@ -56,3 +57,12 @@ class Channel:
         if c.hidden == True:
             d["hidden"] = c.hidden
         return dumper.represent_mapping("tag:yaml.org,2002:map", d, flow_style=True)
+
+
+@dataclass
+class Tag:
+    title: str = field(hash=True)
+    channels: list[Channel] = field(default_factory=list)
+    entries_count: int = 0
+    have_updates: bool = False
+    unwatched_count: int = 0

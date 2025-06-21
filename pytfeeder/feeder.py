@@ -7,7 +7,7 @@ import asyncio
 from aiohttp import ClientSession
 
 from .config import Config
-from .models import Channel, Entry
+from .models import Channel, Entry, Tag
 from .parser import YTFeedParser
 from .storage import Storage
 
@@ -91,6 +91,19 @@ class Feeder:
             unwatched_first=unwatched_first,
             in_channels=None if include_unknown else self.config.channels,
         )
+
+    @cached_property
+    def tags_map(self) -> dict[str, Tag]:
+        d: dict[str, Tag] = {}
+        for c in self.channels:
+            for t in c.tags:
+                if t not in d:
+                    d[t] = Tag(title=t)
+                d[t].channels.append(c)
+                d[t].entries_count += c.entries_count
+                d[t].unwatched_count += c.unwatched_count
+                d[t].have_updates |= c.have_updates
+        return d
 
     @property
     def last_update(self) -> dt.datetime | None:

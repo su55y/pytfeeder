@@ -7,7 +7,7 @@ import sys
 from typing import Callable
 
 from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
-from pytfeeder.models import Channel, Entry
+from pytfeeder.models import Channel, Entry, Tag
 from .args import format_keybindings
 from .consts import DEFAULT_KEYBINDS
 
@@ -16,11 +16,13 @@ class PageState(Enum):
     CHANNELS = auto()
     ENTRIES = auto()
     RESTORING = auto()
+    TAGS = auto()
+    TAGS_CHANNELS = auto()
 
 
 @dataclass
 class Line:
-    data: Channel | Entry
+    data: Channel | Entry | Tag
     is_active: bool = False
 
 
@@ -60,6 +62,7 @@ class TuiProps:
         self.__is_notify_allowed = False
         self.__is_play_allowed = False
         self.__is_executables_checked = False
+        self._last_selected_tag_title = ""
 
     def feed(self) -> list[Entry]:
         return self.feeder.feed(
@@ -83,9 +86,7 @@ class TuiProps:
     def find_channel_index_by_id(self, channel_id: str) -> int:
         i = self._channels_indexes_map.get(channel_id)
         if i is None:
-            raise Exception(
-                f"Unknown {channel_id = !r}\nin {self._channels_indexes_map.keys() = !r}"
-            )
+            raise Exception(f"{channel_id = !r} not found")
         return i
 
     def move_prev_unwatched(self) -> None:
@@ -108,7 +109,7 @@ class TuiProps:
                 self.index = i
                 return
 
-    def format_unwatched_total_key(self, c: Channel) -> str:
+    def format_unwatched_total_key(self, c: Channel | Tag) -> str:
         w = self.__max_unwatched_num_len + self.__max_total_num_len + 3
         s = f"({c.unwatched_count}/{c.entries_count})"
         return f"{s:>{w}}"
@@ -276,6 +277,21 @@ class TuiProps:
         self.index = max(0, min(self.index, len(self.lines) - 1))
         self.page_state = PageState.RESTORING
         return True
+
+    def show_tags(self) -> bool:
+        if len(self.feeder.tags_map) == 0:
+            self.status_msg = "No tags"
+            return False
+        self.index = 0
+        self.lines = list(map(Line, self.feeder.tags_map.values()))
+        self.page_state = PageState.TAGS
+        return True
+
+    def select_tag(self, tag: Tag) -> None:
+        self.lines = list(map(Line, tag.channels))
+        self.index = 0
+        self.page_state = PageState.TAGS_CHANNELS
+        self._last_selected_tag_title = tag.title
 
     @property
     def statusbar_height(self) -> int:

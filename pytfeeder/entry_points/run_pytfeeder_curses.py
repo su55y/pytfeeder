@@ -8,7 +8,7 @@ import sys
 
 from pytfeeder import Config, Feeder, Storage, __version__
 from pytfeeder.logger import init_logger
-from pytfeeder.models import Channel, Entry
+from pytfeeder.models import Channel, Entry, Tag
 from pytfeeder.tui import args as tui_args, ConfigTUI
 from pytfeeder.tui.props import TuiProps, PageState, Line
 
@@ -154,7 +154,7 @@ class App(TuiProps):
             self.draw(screen)
             ch = screen.getch()
             match ch:
-                case Key.j | curses.KEY_DOWN | Key.TAB:
+                case Key.j | curses.KEY_DOWN:
                     if len(self.lines) > 0:
                         self.move_down()
                 case Key.k | curses.KEY_UP | curses.KEY_BTAB:
@@ -173,22 +173,7 @@ class App(TuiProps):
                         screen.clear()
                         self.move_right()
                 case Key.h | curses.KEY_LEFT:
-                    if len(self.lines) > 0:
-                        screen.clear()
-                    if self.is_filtered:
-                        self.reset_filter()
-                        if self.page_state == PageState.RESTORING:
-                            self.page_state = PageState.CHANNELS
-                            if self.enter_restore():
-                                screen.clear()
-                        self.draw(screen)
-                    elif self.page_state == PageState.CHANNELS:
-                        sys.exit(0)
-                    elif (
-                        self.page_state == PageState.ENTRIES
-                        or self.page_state == PageState.RESTORING
-                    ):
-                        self.move_back_to_channels()
+                    self.move_left(screen)
                     screen.refresh()
                 case Key.p:
                     before = self.index
@@ -286,6 +271,13 @@ class App(TuiProps):
                 case Key.CTRL_R:
                     if self.enter_restore():
                         screen.clear()
+                case Key.TAB:
+                    if self.is_filtered or self.page_state == PageState.RESTORING:
+                        continue
+                    if self.page_state == PageState.TAGS:
+                        self.move_back_to_channels()
+                    elif self.show_tags():
+                        screen.clear()
                 case Key.s:
                     self.c.hide_statusbar = not self.c.hide_statusbar
                     max_y, _ = screen.getmaxyx()
@@ -336,7 +328,7 @@ class App(TuiProps):
                     channel_title=self.channel_title(line.data.channel_id),
                 )
 
-            elif isinstance(line.data, Channel):
+            elif isinstance(line.data, Channel) or isinstance(line.data, Tag):
                 highlight = line.data.have_updates
                 if line.data.entries_count == 0:
                     attr = curses.A_DIM | curses.A_ITALIC
@@ -512,13 +504,36 @@ class App(TuiProps):
         ):
             return False
 
-        channel_id = self.lines[self.index].data.channel_id
-        self.parent_index = self.find_channel_index_by_id(channel_id)
+        selected_data = self.lines[self.index].data
+        if not isinstance(selected_data, Entry):
+            return False
+        self.parent_index = self.find_channel_index_by_id(selected_data.channel_id)
         self.is_filtered = False
-        self.lines = self.get_lines_by_id(channel_id)
+        self.lines = self.get_lines_by_id(selected_data.channel_id)
         self.index = 0
         self.scroll_top = 0
         return True
+
+    def move_left(self, screen: curses.window) -> None:
+        if len(self.lines) > 0:
+            screen.clear()
+        if self.is_filtered:
+            self.reset_filter()
+            if self.page_state == PageState.RESTORING:
+                self.page_state = PageState.CHANNELS
+                if self.enter_restore():
+                    screen.clear()
+            self.draw(screen)
+        elif self.page_state == PageState.CHANNELS:
+            sys.exit(0)
+        elif (
+            self.page_state == PageState.ENTRIES
+            or self.page_state == PageState.RESTORING
+            or self.page_state == PageState.TAGS
+        ):
+            self.move_back_to_channels()
+        elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
+            screen.clear()
 
     def move_right(self) -> None:
         selected_data = self.lines[self.index].data
@@ -552,6 +567,18 @@ class App(TuiProps):
             if self.is_filtered:
                 self.reset_filter()
             self.enter_restore()
+        elif self.page_state == PageState.TAGS and isinstance(selected_data, Tag):
+            self.select_tag(selected_data)
+        elif self.page_state == PageState.TAGS_CHANNELS and isinstance(
+            selected_data, Channel
+        ):
+            if selected_data.entries_count == 0:
+                return
+            self.parent_index = self.find_channel_index_by_id(selected_data.channel_id)
+            self.lines = self.get_lines_by_id(selected_data.channel_id)
+            self.page_state = PageState.ENTRIES
+            self.index = 0
+            self.scroll_top = 0
 
     def move_back_to_channels(self) -> None:
         if self.is_channels_outdated:
@@ -571,6 +598,10 @@ class App(TuiProps):
             title = "%d found" % len(self.lines)
         if self.page_state == PageState.RESTORING:
             title = "RESTORING"
+        elif self.page_state == PageState.TAGS:
+            title = "TAGS"
+        elif self.page_state == PageState.TAGS_CHANNELS:
+            title = self._last_selected_tag_title
 
         return " ".join(
             self.c.status_fmt.format(

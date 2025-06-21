@@ -26,7 +26,7 @@ from prompt_toolkit.styles import Style
 
 from pytfeeder import Config, Feeder, Storage, __version__
 from pytfeeder.logger import init_logger
-from pytfeeder.models import Channel, Entry
+from pytfeeder.models import Channel, Entry, Tag
 from pytfeeder.tui import args as tui_args, ConfigTUI
 from pytfeeder.tui.props import TuiProps, PageState, Line
 
@@ -227,7 +227,9 @@ class App(TuiProps):
         app.layout.focus(self.main_window)
         app.vi_state.input_mode = InputMode.NAVIGATION
 
-    def format_channel(self, i: int, channel: Channel) -> list[OneStyleAndTextTuple]:
+    def format_channel(
+        self, i: int, channel: Channel | Tag
+    ) -> list[OneStyleAndTextTuple]:
         line = self.c.channels_fmt.format(
             index=self.format_line_index(i + 1),
             new_mark=self.new_marks[channel.have_updates],
@@ -262,7 +264,7 @@ class App(TuiProps):
                 result.append([("[SetCursorPosition]", "")])
             if isinstance(line.data, Entry):
                 result.append(self.format_entry(i, line.data))
-            elif isinstance(line.data, Channel):
+            elif isinstance(line.data, Channel) or isinstance(line.data, Tag):
                 result.append(self.format_channel(i, line.data))
             result.append("\n")
 
@@ -320,7 +322,6 @@ class App(TuiProps):
 
         @kb.add("k")
         @kb.add("up")
-        @kb.add("s-tab")
         def _go_up(e: KeyPressEvent) -> None:
             w = e.app.layout.current_window
             if not w or not w.render_info:
@@ -330,7 +331,6 @@ class App(TuiProps):
 
         @kb.add("j")
         @kb.add("down")
-        @kb.add("tab")
         def _go_down(e: KeyPressEvent) -> None:
             w = e.app.layout.current_window
             if not w or not w.render_info:
@@ -418,39 +418,52 @@ class App(TuiProps):
             if self.index not in range(len(self.lines)):
                 raise Exception(f"{self.index=} out of range 0-{len(self.lines)}")
 
+            selected_data = self.lines[self.index].data
             if self.page_state == PageState.ENTRIES:
-                entry = self.lines[self.index].data
-                if not isinstance(entry, Entry):
-                    raise Exception(f"Unexpected entry type {type(entry) = !r}")
+                if not isinstance(selected_data, Entry):
+                    raise Exception(f"Unexpected entry type {type(selected_data) = !r}")
 
-                self.play(entry)
-                if not entry.is_viewed:
+                self.play(selected_data)
+                if not selected_data.is_viewed:
                     self.mark_as_watched()
                 return
+            elif self.page_state == PageState.TAGS:
+                if not isinstance(selected_data, Tag):
+                    raise Exception(f"Unexpected tag type {type(selected_data) = !r}")
+                self.select_tag(selected_data)
+                self.status_title = selected_data.title
+                return
 
-            channel = self.lines[self.index].data
-            if not isinstance(channel, Channel):
-                raise Exception(f"Unexpected channel type {type(channel) = !r}")
+            if not isinstance(selected_data, Channel):
+                raise Exception(f"Unexpected channel type {type(selected_data) = !r}")
 
-            if self.page_state == PageState.RESTORING and self.restore_channel(channel):
+            if self.page_state == PageState.RESTORING and self.restore_channel(
+                selected_data
+            ):
                 self.page_state = PageState.CHANNELS
                 if self.is_filtered:
                     self.reset_filter()
                 self.enter_restore()
                 return
 
-            if channel.entries_count == 0:
+            if selected_data.entries_count == 0:
                 return
 
-            if self.is_filtered:
-                self.parent_index = self.find_channel_index_by_id(channel.channel_id)
+            if self.is_filtered or self.page_state == PageState.TAGS_CHANNELS:
+                self.parent_index = self.find_channel_index_by_id(
+                    selected_data.channel_id
+                )
+            elif self.is_filtered:
+                self.parent_index = self.find_channel_index_by_id(
+                    selected_data.channel_id
+                )
                 self.reset_filter()
             else:
                 self.parent_index = self.index
-            self.lines = self.get_lines_by_id(channel.channel_id)
+            self.lines = self.get_lines_by_id(selected_data.channel_id)
             self.page_state = PageState.ENTRIES
             self.index = 0
-            self.status_title = channel.title
+            self.status_title = selected_data.title
 
         @kb.add("h")
         @kb.add("left")
@@ -466,6 +479,8 @@ class App(TuiProps):
                 self.reset_filter()
             elif self.page_state == PageState.CHANNELS:
                 event.app.exit()
+            elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
+                self.status_title = "TAGS"
             else:
                 self.move_back_to_channels()
 
@@ -506,10 +521,13 @@ class App(TuiProps):
             ):
                 return
 
-            channel_id = self.lines[self.index].data.channel_id
-            self.parent_index = self.find_channel_index_by_id(channel_id)
+            selected_data = self.lines[self.index].data
+            if not isinstance(selected_data, Entry):
+                return
+
+            self.parent_index = self.find_channel_index_by_id(selected_data.channel_id)
             self.is_filtered = False
-            self.lines = self.get_lines_by_id(channel_id)
+            self.lines = self.get_lines_by_id(selected_data.channel_id)
             self.index = 0
             self.status_title = self.channels[self.parent_index].title
 
@@ -619,7 +637,17 @@ class App(TuiProps):
 
         @kb.add("c-r")
         def _enter_restore(_) -> None:
-            _ = self.enter_restore()
+            if self.enter_restore():
+                self.status_title = "RESTORING"
+
+        @kb.add("tab")
+        def _show_tags(_) -> None:
+            if self.is_filtered or self.page_state == PageState.RESTORING:
+                return
+            if self.page_state == PageState.TAGS:
+                self.move_back_to_channels()
+            elif self.show_tags():
+                self.status_title = "TAGS"
 
         @kb.add("u")
         def _toggle_unwatched_first(_) -> None:
