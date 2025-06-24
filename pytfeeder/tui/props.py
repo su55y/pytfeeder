@@ -279,6 +279,8 @@ class TuiProps:
         return True
 
     def show_tags(self) -> bool:
+        if self.is_channels_outdated:
+            self.update_channels()
         if len(self.feeder.tags_map) == 0:
             self.status_msg = "No tags"
             return False

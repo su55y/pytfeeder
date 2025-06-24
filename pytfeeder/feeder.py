@@ -42,6 +42,7 @@ class Feeder:
             c.entries_count = count
             c.have_updates = bool(unwatched)
             c.unwatched_count = unwatched
+        self._reset_tags()
 
     def _reset_channels(self) -> None:
         try:
@@ -104,6 +105,14 @@ class Feeder:
                 d[t].unwatched_count += c.unwatched_count
                 d[t].have_updates |= c.have_updates
         return d
+
+    def _reset_tags(self) -> None:
+        try:
+            del self.tags_map
+        except AttributeError:
+            pass
+        except Exception:
+            raise
 
     @property
     def last_update(self) -> dt.datetime | None:
