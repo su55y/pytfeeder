@@ -106,6 +106,53 @@ class RofiPrinter:
                 end=self.c.separator,
             )
 
+    def print_tags(self) -> None:
+        if len(self.feeder.tags_map) == 0:
+            self.print_message("No tags")
+            self.print_channels()
+            return
+
+        print("\000data\037tags", end=self.c.separator)
+        self.print_message("TAGS")
+        for tag in self.feeder.tags_map.values():
+            if tag.entries_count == 0 and self.c.hide_empty:
+                continue
+            print(
+                self.c.channels_fmt.format(
+                    id=tag.title,
+                    title=html_escape(tag.title),
+                    total=tag.entries_count,
+                    unwatched=tag.unwatched_count,
+                    active=["false", "true"][tag.have_updates],
+                ),
+                end=self.c.separator,
+            )
+
+    def print_tag(self, tag: str) -> None:
+        if not tag:
+            self.print_error("Invalid tag ''")
+            sys.exit(1)
+        if tag not in self.feeder.tags_map:
+            self.print_message(f"Unknown tag {tag!r}")
+            sys.exit(0)
+        if self.feeder.tags_map[tag].entries_count == 0:
+            self.print_message(f"Tag {tag!r} is empty")
+            sys.exit(0)
+        t = self.feeder.tags_map[tag]
+        print("\000data\037", end=self.c.separator)
+        self.print_message(f"{tag} {t.unwatched_count}/{t.entries_count}")
+        for c in t.channels:
+            print(
+                self.c.channels_fmt.format(
+                    id=c.channel_id,
+                    title=html_escape(c.title),
+                    total=c.entries_count,
+                    unwatched=c.unwatched_count,
+                    active=["false", "true"][c.have_updates],
+                ),
+                end=self.c.separator,
+            )
+
     def print_message(self, message: str) -> None:
         if not self.__message_printed:
             print("\000message\037%s" % message, end=self.c.separator)
@@ -171,6 +218,10 @@ def wrapped_main():
         printer.print_channel_feed(args.channel_id)
     elif args.feed:
         printer.print_feed()
+    elif args.tags:
+        printer.print_tags()
+    elif args.tag:
+        printer.print_tag(args.tag)
     else:
         printer.print_channels()
 

@@ -53,6 +53,12 @@ print_channel_feed() {
         --datetime-fmt '<i>%d %B</i>'
 }
 
+print_tags() {
+    printf 'back\000info\037main\n'
+    pytfeeder-rofi --tags \
+        --channels-fmt '{title}\r<i><b>{unwatched}</b> new entries</i>\000info\037{id}\037active\037{active}'
+}
+
 printf '\000use-hot-keys\037true\n'
 printf '\000markup-rows\037true\n'
 
@@ -67,8 +73,13 @@ case $ROFI_RETV in
         printf '\000new-selection\0370\n'
         ;;
     main) start_menu ;;
+    tags) print_tags ;;
     *)
-        if echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{24}$' >/dev/null 2>&1; then
+        if [ "$ROFI_DATA" = tags ]; then
+            printf 'back\000info\037tags\n'
+            pytfeeder-rofi --tag "$ROFI_INFO" \
+                --channels-fmt '{title}\r<i><b>{unwatched}</b> new entries</i>\000info\037{id}\037active\037{active}'
+        elif echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{24}$' >/dev/null 2>&1; then
             print_channel_feed "$ROFI_INFO"
             printf '\000new-selection\0370\n'
         elif echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{11}$' >/dev/null 2>&1; then
@@ -117,4 +128,6 @@ case $ROFI_RETV in
     *) print_channel_feed "$ROFI_DATA" "-w=$ROFI_INFO" ;;
     esac
     ;;
+# kb-custom-6 (Ctrl+Tab) -- show tags
+15) print_tags ;;
 esac

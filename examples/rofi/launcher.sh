@@ -22,6 +22,8 @@ configuration {
   kb-custom-4: "Ctrl+a";
   kb-remove-char-forward: "Delete";
   kb-custom-5: "Ctrl+d";
+  kb-mode-next: "Shift+Right";
+  kb-custom-6: "Ctrl+Tab";
 }
 window {
   height: 90%;

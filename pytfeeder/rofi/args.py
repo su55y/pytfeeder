@@ -84,6 +84,8 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Updates all feeds and prints new entries count",
     )
+    parser.add_argument("-t", "--tag", help="Print tag's channels")
+    parser.add_argument("-T", "--tags", action="store_true", help="Print tags")
     parser.add_argument(
         "-N",
         "--unwatched-first",
