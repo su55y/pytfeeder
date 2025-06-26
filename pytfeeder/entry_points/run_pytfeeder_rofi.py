@@ -41,16 +41,16 @@ class RofiPrinter:
         for channel in self.feeder.channels:
             if channel.entries_count == 0 and self.c.hide_empty:
                 continue
-            print(
-                self.c.channels_fmt.format(
-                    id=channel.channel_id,
-                    title=html_escape(channel.title),
-                    total=channel.entries_count,
-                    unwatched=channel.unwatched_count,
-                    active=["false", "true"][channel.have_updates],
-                ),
-                end=self.c.separator,
+            line = self.c.channels_fmt.format(
+                id=channel.channel_id,
+                title=html_escape(channel.title),
+                total=channel.entries_count,
+                unwatched=channel.unwatched_count,
+                active=["false", "true"][channel.have_updates],
             )
+            if channel.entries_count == 0:
+                line += "\037nonselectable\037true"
+            print(line, end=self.c.separator)
 
     def print_feed(self) -> None:
         print("\000data\037feed", end=self.c.separator)
@@ -142,16 +142,16 @@ class RofiPrinter:
         print("\000data\037", end=self.c.separator)
         self.print_message(f"{tag} {t.unwatched_count}/{t.entries_count}")
         for c in t.channels:
-            print(
-                self.c.channels_fmt.format(
-                    id=c.channel_id,
-                    title=html_escape(c.title),
-                    total=c.entries_count,
-                    unwatched=c.unwatched_count,
-                    active=["false", "true"][c.have_updates],
-                ),
-                end=self.c.separator,
+            line = self.c.channels_fmt.format(
+                id=c.channel_id,
+                title=html_escape(c.title),
+                total=c.entries_count,
+                unwatched=c.unwatched_count,
+                active=["false", "true"][c.have_updates],
             )
+            if c.entries_count == 0:
+                line += "\037nonselectable\037true"
+            print(line, end=self.c.separator)
 
     def print_message(self, message: str) -> None:
         if not self.__message_printed:
