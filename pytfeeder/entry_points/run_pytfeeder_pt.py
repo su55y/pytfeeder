@@ -542,7 +542,14 @@ class App(TuiProps):
 
         @kb.add("q")
         def _exit(event) -> None:
-            event.app.exit()
+            if (
+                self.page_state == PageState.TAGS
+                or self.page_state == PageState.TAGS_CHANNELS
+                or self.page_state == PageState.RESTORING
+            ):
+                self.move_back_to_channels()
+            else:
+                event.app.exit()
 
         @kb.add("/")
         def _prompt_search(event: KeyPressEvent) -> None:

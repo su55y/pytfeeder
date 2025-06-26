@@ -299,7 +299,15 @@ class App(TuiProps):
                 case Key.c:
                     screen.clear()
                 case Key.q:
-                    sys.exit(0)
+                    if (
+                        self.page_state == PageState.TAGS
+                        or self.page_state == PageState.TAGS_CHANNELS
+                        or self.page_state == PageState.RESTORING
+                    ):
+                        screen.clear()
+                        self.move_back_to_channels()
+                    else:
+                        sys.exit(0)
 
     def draw(self, screen: curses.window) -> None:
         x = 0  # y = 0
