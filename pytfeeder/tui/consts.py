@@ -40,7 +40,7 @@ status-fmt keys:
 HELP_KEYBINDINGS = [
     ("q, C-c", "Quit"),
     ("h, Left", "Return to previous screen/Quit"),
-    ("j, Down, Tab", "Move to next entry"),
+    ("j, Down", "Move to next entry"),
     ("k, Up, S-Tab", "Move to previous entry"),
     ("l, Right, Enter", "Open selected feed/entry"),
     ("n", "Move to next unwatched entry"),
@@ -65,6 +65,7 @@ HELP_KEYBINDINGS = [
     ("s", "Toggle statusbar visability"),
     ("t", "Toggle empty channels visability"),
     ("u", "Toggle unwatched_first setting"),
+    ("Tab", "Open tags"),
     ("c", "Redraw screen"),
     ("F1-F4", "Execute macro 1-4"),
 ]
