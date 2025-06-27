@@ -192,6 +192,7 @@ class App(TuiProps):
                 "entry": f"fg:{white}",
                 "new-entry": f"fg:{accent}",
                 "empty": f"italic fg:{white}",
+                "new-empty": f"italic fg:{accent}",
                 "statusbar": f"bg:{accent} fg:{black}",
                 "statusbar.text": "",
             },
@@ -251,7 +252,10 @@ class App(TuiProps):
             title=entry.title,
             channel_title=self.channel_title(entry.channel_id),
         )
-        return [(f"class:{self.classnames[not entry.is_viewed]}", line)]
+        classname = self.classnames[not entry.is_viewed]
+        if self.page_state == PageState.RESTORING_ENTRIES and entry.is_deleted:
+            classname = ["empty", "new-empty"][not entry.is_viewed]
+        return [(f"class:{classname}", line)]
 
     def format_line_index(self, i: int) -> str:
         index_len = max(1, len(str(len(self.lines))))
@@ -412,9 +416,10 @@ class App(TuiProps):
                 self.index = (self.index + h) % len(self.lines)
 
         @kb.add("l", filter=have_lines)
+        @kb.add("o", filter=have_lines)
         @kb.add("enter", filter=have_lines)
         @kb.add("right", filter=have_lines)
-        def _enter_line(_) -> None:
+        def _enter_line(e: KeyPressEvent) -> None:
             if self.index not in range(len(self.lines)):
                 raise Exception(f"{self.index=} out of range 0-{len(self.lines)}")
 
@@ -427,6 +432,11 @@ class App(TuiProps):
                 if not selected_data.is_viewed:
                     self.mark_as_watched()
                 return
+            elif self.page_state == PageState.RESTORING_ENTRIES:
+                if not isinstance(selected_data, Entry):
+                    raise Exception(f"Unexpected entry type {type(selected_data) = !r}")
+                self.toggle_is_deleted(selected_data)
+                return
             elif self.page_state == PageState.TAGS:
                 if not isinstance(selected_data, Tag):
                     raise Exception(f"Unexpected tag type {type(selected_data) = !r}")
@@ -437,9 +447,13 @@ class App(TuiProps):
             if not isinstance(selected_data, Channel):
                 raise Exception(f"Unexpected channel type {type(selected_data) = !r}")
 
-            if self.page_state == PageState.RESTORING and self.restore_channel(
-                selected_data
-            ):
+            if self.page_state == PageState.RESTORING:
+                k = "".join(kp.data for kp in e.key_sequence)
+                if "o" in k or "l" in k:
+                    self.enter_restore_entries()
+                    return
+                if not self.restore_channel(selected_data):
+                    return
                 self.page_state = PageState.CHANNELS
                 if self.is_filtered:
                     self.reset_filter()
@@ -481,6 +495,8 @@ class App(TuiProps):
                 event.app.exit()
             elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
                 self.status_title = "TAGS"
+            elif self.page_state == PageState.RESTORING_ENTRIES:
+                self.enter_restore()
             else:
                 self.move_back_to_channels()
 
@@ -548,6 +564,8 @@ class App(TuiProps):
                 or self.page_state == PageState.RESTORING
             ):
                 self.move_back_to_channels()
+            elif self.page_state == PageState.RESTORING_ENTRIES:
+                self.enter_restore()
             else:
                 event.app.exit()
 

@@ -187,6 +187,32 @@ class Storage:
         ORDER BY c1 DESC;"""
         return self.fetchall_rows(query)
 
+    def select_channels_deleted_entries(self, channel_id: str) -> list[Entry]:
+        entries: list[Entry] = []
+
+        query = f"""
+        SELECT id, title, published, channel_id, is_viewed, is_deleted
+        FROM {TB_ENTRIES}
+        WHERE is_deleted = 1 AND channel_id = ?
+        ORDER BY published DESC;"""
+
+        rows = self.fetchall_rows(query, (channel_id,))
+        if rows is None:
+            return entries
+
+        for id, title, published, c_id, is_viewed, is_deleted in rows:
+            entries.append(
+                Entry(
+                    id=id,
+                    title=title,
+                    published=dt.datetime.fromisoformat(published),
+                    channel_id=c_id,
+                    is_viewed=bool(is_viewed),
+                    is_deleted=bool(is_deleted),
+                )
+            )
+        return entries
+
     def restore_channel(self, c: Channel) -> int:
         query = f"""
         UPDATE {TB_ENTRIES}
@@ -194,6 +220,14 @@ class Storage:
         WHERE channel_id = ?;
         """
         return self.update_rows(query, (c.channel_id,))
+
+    def toggle_entry_is_deleted(self, id: str) -> int:
+        query = f"""
+        UPDATE {TB_ENTRIES}
+        SET is_deleted = (1 - is_deleted)
+        WHERE id = ?;
+        """
+        return self.update_rows(query, (id,))
 
     def select_entries_count(
         self,

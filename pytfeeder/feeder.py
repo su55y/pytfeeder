@@ -179,6 +179,12 @@ class Feeder:
             )
         return channels
 
+    def channels_deleted_entries(self, channel_id: str) -> list[Entry]:
+        return self.stor.select_channels_deleted_entries(channel_id)
+
+    def toggle_is_deleted(self, id: str) -> bool:
+        return self.stor.toggle_entry_is_deleted(id) == 1
+
     def clean_cache(self) -> int:
         count = self.stor.delete_old_entries()
         self.stor.execute_vacuum()

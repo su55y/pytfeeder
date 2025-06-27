@@ -34,6 +34,7 @@ class Key(IntEnum):
     d = ord("d")
     D = ord("D")
     F = ord("F")
+    o = ord("o")
     s = ord("s")
     t = ord("t")
     u = ord("u")
@@ -168,10 +169,10 @@ class App(TuiProps):
                     if len(self.lines) > 0:
                         max_y, _ = screen.getmaxyx()
                         self.move_forward(max_y - self.statusbar_height)
-                case Key.l | curses.KEY_RIGHT | Key.RETURN:
+                case Key.l | Key.o | curses.KEY_RIGHT | Key.RETURN:
                     if len(self.lines) > 0:
                         screen.clear()
-                        self.move_right()
+                        self.move_right(ch)
                 case Key.h | curses.KEY_LEFT:
                     self.move_left(screen)
                     screen.refresh()
@@ -306,6 +307,8 @@ class App(TuiProps):
                     ):
                         screen.clear()
                         self.move_back_to_channels()
+                    elif self.page_state == PageState.RESTORING_ENTRIES:
+                        self.enter_restore()
                     else:
                         sys.exit(0)
 
@@ -326,6 +329,11 @@ class App(TuiProps):
             highlight = False
 
             if isinstance(line.data, Entry):
+                if (
+                    self.page_state == PageState.RESTORING_ENTRIES
+                    and line.data.is_deleted
+                ):
+                    attr = curses.A_DIM | curses.A_ITALIC
                 highlight = not line.data.is_viewed
                 published = line.data.published.strftime(self.c.datetime_fmt)
                 text = self.current_entry_format.format(
@@ -542,8 +550,10 @@ class App(TuiProps):
             self.move_back_to_channels()
         elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
             screen.clear()
+        elif self.page_state == PageState.RESTORING_ENTRIES:
+            self.enter_restore()
 
-    def move_right(self) -> None:
+    def move_right(self, ch: int) -> None:
         selected_data = self.lines[self.index].data
 
         if self.page_state == PageState.CHANNELS and isinstance(selected_data, Channel):
@@ -566,15 +576,22 @@ class App(TuiProps):
             self.play(selected_data)
             if not selected_data.is_viewed:
                 self.mark_as_watched()
-        elif (
-            self.page_state == PageState.RESTORING
-            and isinstance(selected_data, Channel)
-            and self.restore_channel(selected_data)
+        elif self.page_state == PageState.RESTORING and isinstance(
+            selected_data, Channel
         ):
+            if ch in (Key.l, Key.o):
+                self.enter_restore_entries()
+                return
+            if not self.restore_channel(selected_data):
+                return
             self.page_state = PageState.CHANNELS
             if self.is_filtered:
                 self.reset_filter()
             self.enter_restore()
+        elif self.page_state == PageState.RESTORING_ENTRIES and isinstance(
+            selected_data, Entry
+        ):
+            self.toggle_is_deleted(selected_data)
         elif self.page_state == PageState.TAGS and isinstance(selected_data, Tag):
             self.select_tag(selected_data)
         elif self.page_state == PageState.TAGS_CHANNELS and isinstance(

@@ -16,6 +16,7 @@ class PageState(Enum):
     CHANNELS = auto()
     ENTRIES = auto()
     RESTORING = auto()
+    RESTORING_ENTRIES = auto()
     TAGS = auto()
     TAGS_CHANNELS = auto()
 
@@ -277,6 +278,28 @@ class TuiProps:
         self.index = max(0, min(self.index, len(self.lines) - 1))
         self.page_state = PageState.RESTORING
         return True
+
+    def enter_restore_entries(self) -> bool:
+        if len(self.lines) == 0 or self.page_state != PageState.RESTORING:
+            return False
+        selected_data = self.lines[self.index].data
+        if not isinstance(selected_data, Channel):
+            self.status_msg = f"Unexpected channel type {type(selected_data)}"
+            return False
+        entries = self.feeder.channels_deleted_entries(selected_data.channel_id)
+        if len(entries) == 0:
+            self.status_msg = f"{selected_data.title!r} don't have deleted entries"
+            return False
+        self.lines = list(map(Line, entries))
+        self.index = 0
+        self.page_state = PageState.RESTORING_ENTRIES
+        return True
+
+    def toggle_is_deleted(self, entry: Entry) -> None:
+        if self.feeder.toggle_is_deleted(entry.id):
+            entry.is_deleted = not entry.is_deleted
+            self.index = max(0, min(self.index + 1, len(self.lines) - 1))
+            self.is_channels_outdated = True
 
     def show_tags(self) -> bool:
         if self.is_channels_outdated:
