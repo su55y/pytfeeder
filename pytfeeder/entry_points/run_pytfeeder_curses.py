@@ -14,34 +14,14 @@ from pytfeeder.tui.props import TuiProps, PageState, Line
 
 
 class Key(IntEnum):
-    j = ord("j")
-    J = ord("J")
-    k = ord("k")
-    K = ord("K")
-    f = ord("f")
-    b = ord("b")
-    g = ord("g")
-    G = ord("G")
-    q = ord("q")
-    l = ord("l")
-    h = ord("h")
-    a = ord("a")
-    A = ord("A")
-    p = ord("p")
-    n = ord("n")
-    c = ord("c")
-    r = ord("r")
-    d = ord("d")
-    D = ord("D")
-    F = ord("F")
-    o = ord("o")
-    s = ord("s")
-    t = ord("t")
-    u = ord("u")
-    F1 = 265
-    F2 = 266
-    F3 = 267
-    F4 = 268
+    CTRL_D = 4
+    TAB = 9
+    RETURN = ord("\n")
+    CTRL_R = 18
+    CTRL_X = 24
+    ESC = 27
+    SPACE = 32
+    SLASH = ord("/")
     N1 = ord("1")
     N2 = ord("2")
     N3 = ord("3")
@@ -51,14 +31,35 @@ class Key(IntEnum):
     N7 = ord("7")
     N8 = ord("8")
     N9 = ord("9")
-    CTRL_D = 4
-    TAB = 9
-    SLASH = ord("/")
-    CTRL_X = 24
-    CTRL_R = 18
-    ESC = 27
-    RETURN = ord("\n")
     QUESTION_MARK = ord("?")
+    A = ord("A")
+    D = ord("D")
+    F = ord("F")
+    G = ord("G")
+    J = ord("J")
+    K = ord("K")
+    a = ord("a")
+    b = ord("b")
+    c = ord("c")
+    d = ord("d")
+    f = ord("f")
+    g = ord("g")
+    h = ord("h")
+    j = ord("j")
+    k = ord("k")
+    l = ord("l")
+    n = ord("n")
+    o = ord("o")
+    p = ord("p")
+    q = ord("q")
+    r = ord("r")
+    s = ord("s")
+    t = ord("t")
+    u = ord("u")
+    F1 = 265
+    F2 = 266
+    F3 = 267
+    F4 = 268
 
 
 class Gravity(IntEnum):
