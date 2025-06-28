@@ -170,7 +170,7 @@ class App(TuiProps):
                     if len(self.lines) > 0:
                         max_y, _ = screen.getmaxyx()
                         self.move_forward(max_y - self.statusbar_height)
-                case Key.l | Key.o | curses.KEY_RIGHT | Key.RETURN:
+                case Key.l | Key.o | curses.KEY_RIGHT | Key.RETURN | Key.SPACE:
                     if len(self.lines) > 0:
                         screen.clear()
                         self.move_right(ch)
@@ -580,7 +580,7 @@ class App(TuiProps):
         elif self.page_state == PageState.RESTORING and isinstance(
             selected_data, Channel
         ):
-            if ch in (Key.l, Key.o):
+            if ch in (Key.l, Key.o, curses.KEY_RIGHT):
                 self.enter_restore_entries()
                 return
             if not self.restore_channel(selected_data):

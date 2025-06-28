@@ -419,6 +419,7 @@ class App(TuiProps):
         @kb.add("o", filter=have_lines)
         @kb.add("enter", filter=have_lines)
         @kb.add("right", filter=have_lines)
+        @kb.add("space", filter=have_lines)
         def _enter_line(e: KeyPressEvent) -> None:
             if self.index not in range(len(self.lines)):
                 raise Exception(f"{self.index=} out of range 0-{len(self.lines)}")
@@ -448,8 +449,7 @@ class App(TuiProps):
                 raise Exception(f"Unexpected channel type {type(selected_data) = !r}")
 
             if self.page_state == PageState.RESTORING:
-                k = "".join(kp.data for kp in e.key_sequence)
-                if "o" in k or "l" in k:
+                if {"o", "l", "right"} & {kp.key for kp in e.key_sequence}:
                     self.enter_restore_entries()
                     return
                 if not self.restore_channel(selected_data):
