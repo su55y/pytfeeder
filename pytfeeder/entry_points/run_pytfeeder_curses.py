@@ -159,7 +159,7 @@ class App(TuiProps):
                 case Key.j | curses.KEY_DOWN:
                     if len(self.lines) > 0:
                         self.move_down()
-                case Key.k | curses.KEY_UP | curses.KEY_BTAB:
+                case Key.k | curses.KEY_UP:
                     if len(self.lines) > 0:
                         self.move_up()
                 case Key.b | curses.KEY_PPAGE:
@@ -301,14 +301,18 @@ class App(TuiProps):
                 case Key.c:
                     screen.clear()
                 case Key.q:
+                    screen.clear()
                     if (
                         self.page_state == PageState.TAGS
-                        or self.page_state == PageState.TAGS_CHANNELS
                         or self.page_state == PageState.RESTORING
                     ):
-                        screen.clear()
                         self.move_back_to_channels()
+                    elif self.page_state == PageState.TAGS_CHANNELS:
+                        if not self.show_tags():
+                            self.move_back_to_channels()
                     elif self.page_state == PageState.RESTORING_ENTRIES:
+                        self.scroll_top = 0
+                        self.index = 0
                         self.enter_restore()
                     else:
                         sys.exit(0)
@@ -552,6 +556,8 @@ class App(TuiProps):
         elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
             screen.clear()
         elif self.page_state == PageState.RESTORING_ENTRIES:
+            self.index = 0
+            self.scroll_top = 0
             self.enter_restore()
 
     def move_right(self, ch: int) -> None:
@@ -581,6 +587,7 @@ class App(TuiProps):
             selected_data, Channel
         ):
             if ch in (Key.l, Key.o, curses.KEY_RIGHT):
+                self.scroll_top = 0
                 self.enter_restore_entries()
                 return
             if not self.restore_channel(selected_data):
@@ -622,7 +629,10 @@ class App(TuiProps):
             title = self.channels[self.parent_index].title
         if self.is_filtered:
             title = "%d found" % len(self.lines)
-        if self.page_state == PageState.RESTORING:
+        if (
+            self.page_state == PageState.RESTORING
+            or self.page_state == PageState.RESTORING_ENTRIES
+        ):
             title = "RESTORING"
         elif self.page_state == PageState.TAGS:
             title = "TAGS"

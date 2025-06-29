@@ -379,13 +379,11 @@ class App(TuiProps):
 
         @kb.add("k", filter=have_lines)
         @kb.add("up", filter=have_lines)
-        @kb.add("s-tab", filter=have_lines)
         def _up(_) -> None:
             self.index = (self.index - 1) % len(self.lines)
 
         @kb.add("j", filter=have_lines)
         @kb.add("down", filter=have_lines)
-        @kb.add("tab", filter=have_lines)
         def _down(_) -> None:
             self.index = (self.index + 1) % len(self.lines)
 
@@ -496,6 +494,7 @@ class App(TuiProps):
             elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
                 self.status_title = "TAGS"
             elif self.page_state == PageState.RESTORING_ENTRIES:
+                self.index = 0
                 self.enter_restore()
             else:
                 self.move_back_to_channels()
@@ -560,11 +559,14 @@ class App(TuiProps):
         def _exit(event) -> None:
             if (
                 self.page_state == PageState.TAGS
-                or self.page_state == PageState.TAGS_CHANNELS
                 or self.page_state == PageState.RESTORING
             ):
                 self.move_back_to_channels()
+            elif self.page_state == PageState.TAGS_CHANNELS:
+                if not self.show_tags():
+                    self.move_back_to_channels()
             elif self.page_state == PageState.RESTORING_ENTRIES:
+                self.index = 0
                 self.enter_restore()
             else:
                 event.app.exit()
