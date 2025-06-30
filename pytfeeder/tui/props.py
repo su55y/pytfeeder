@@ -255,6 +255,15 @@ class TuiProps:
                 for i in range(len(self.lines)):
                     self.lines[i].data.is_viewed = not unwatched  # type: ignore
 
+    def _reset_filter(self) -> None:
+        self.is_filtered = False
+        self.index = 0
+        if self.page_state == PageState.CHANNELS:
+            self.lines = list(map(Line, self.channels))
+        elif self.page_state == PageState.ENTRIES:
+            selected_data = self.channels[self.parent_index]
+            self.lines = self.get_lines_by_id(selected_data.channel_id)
+
     def restore_channel(self, c: Channel) -> bool:
         if self.page_state != PageState.RESTORING:
             return False

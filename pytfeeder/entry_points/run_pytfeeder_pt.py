@@ -74,7 +74,6 @@ class App(TuiProps):
         self.filter_text = ""
         self.help_index = 0
         self.is_help_opened = False
-        self.__lines_backup: list[Line] = list()
         self.macros = {
             "f1": self.c.macro1,
             "f2": self.c.macro2,
@@ -110,7 +109,7 @@ class App(TuiProps):
             if buf.text == "":
                 return False
             condition = lambda v: buf.text.lower() in v.data.title.lower()
-            self.lines = list(filter(condition, self.__lines_backup))
+            self.lines = list(filter(condition, self.lines))
             self.is_filtered = True
             self.index = 0
             buf.text = ""
@@ -305,12 +304,8 @@ class App(TuiProps):
 
     def reset_filter(self) -> None:
         self.filter_text = ""
-        self.is_filtered = False
-        self.lines = self.__lines_backup.copy()
-        self.__lines_backup = list()
         self.status_title = ""
-        if self.page_state == PageState.ENTRIES:
-            self.status_title = self.channels[self.parent_index].title
+        self._reset_filter()
 
     @property
     def _help_keybindings(self) -> KeyBindings:
@@ -461,17 +456,15 @@ class App(TuiProps):
             if selected_data.entries_count == 0:
                 return
 
-            if self.is_filtered or self.page_state == PageState.TAGS_CHANNELS:
-                self.parent_index = self.find_channel_index_by_id(
-                    selected_data.channel_id
-                )
-            elif self.is_filtered:
-                self.parent_index = self.find_channel_index_by_id(
-                    selected_data.channel_id
-                )
-                self.reset_filter()
-            else:
+            if not self.is_filtered and self.page_state != PageState.TAGS_CHANNELS:
                 self.parent_index = self.index
+            else:
+                self.parent_index = self.find_channel_index_by_id(
+                    selected_data.channel_id
+                )
+                if self.is_filtered:
+                    self.reset_filter()
+
             self.lines = self.get_lines_by_id(selected_data.channel_id)
             self.page_state = PageState.ENTRIES
             self.index = 0
@@ -575,7 +568,6 @@ class App(TuiProps):
         def _prompt_search(event: KeyPressEvent) -> None:
             if self.is_filtered:
                 return
-            self.__lines_backup = self.lines.copy()
             event.app.layout.focus(self.filter_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
 

@@ -658,15 +658,9 @@ class App(TuiProps):
         self.is_filtered = True
 
     def reset_filter(self) -> None:
-        self.is_filtered = False
-        self.index = 0
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
-        if self.page_state == PageState.CHANNELS:
-            self.lines = list(map(Line, self.channels))
-        elif self.page_state == PageState.ENTRIES:
-            selected_data = self.channels[self.parent_index]
-            self.lines = self.get_lines_by_id(selected_data.channel_id)
+        self._reset_filter()
 
     def jump(self, keyword: str) -> None:
         try:
