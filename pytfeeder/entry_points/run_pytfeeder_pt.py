@@ -443,7 +443,10 @@ class App(TuiProps):
 
             if self.page_state == PageState.RESTORING:
                 if {"o", "l", "right"} & {kp.key for kp in e.key_sequence}:
-                    self.enter_restore_entries()
+                    reset_filter = self.is_filtered
+                    if self.enter_restore_entries():
+                        if reset_filter:
+                            self.filter_text = ""
                     return
                 if not self.restore_channel(selected_data):
                     return
@@ -482,6 +485,9 @@ class App(TuiProps):
 
             if self.is_filtered:
                 self.reset_filter()
+                if self.page_state == PageState.RESTORING:
+                    self.page_state = PageState.CHANNELS
+                    _ = self.enter_restore()
             elif self.page_state == PageState.CHANNELS:
                 event.app.exit()
             elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
@@ -554,6 +560,8 @@ class App(TuiProps):
                 self.page_state == PageState.TAGS
                 or self.page_state == PageState.RESTORING
             ):
+                if self.is_filtered:
+                    self.reset_filter()
                 self.move_back_to_channels()
             elif self.page_state == PageState.TAGS_CHANNELS:
                 if not self.show_tags():

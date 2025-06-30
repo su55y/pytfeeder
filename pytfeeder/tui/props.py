@@ -51,6 +51,7 @@ class TuiProps:
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
         self.parent_index = -1
+        self.parent_index_restore = -1
         self.status_last_update = ""
         self.status_msg_lifetime = 3
         self._status_msg_creation_time = 0.0
@@ -263,6 +264,8 @@ class TuiProps:
         elif self.page_state == PageState.ENTRIES:
             selected_data = self.channels[self.parent_index]
             self.lines = self.get_lines_by_id(selected_data.channel_id)
+        elif self.page_state == PageState.TAGS:
+            self.show_tags()
 
     def restore_channel(self, c: Channel) -> bool:
         if self.page_state != PageState.RESTORING:
@@ -274,9 +277,13 @@ class TuiProps:
         self.status_msg = f"{count} entries was restored"
         return True
 
-    def enter_restore(self) -> bool:
+    def enter_restore(self, index: int = -1) -> bool:
         if self.page_state == PageState.RESTORING or self.is_filtered:
             return False
+        if index < 0:
+            index = self.index
+        else:
+            self.parent_index_restore = -1
 
         channels = self.feeder.channels_with_deleted()
         if len(channels) == 0:
@@ -284,7 +291,7 @@ class TuiProps:
             return False
 
         self.lines = list(map(Line, channels))
-        self.index = max(0, min(self.index, len(self.lines) - 1))
+        self.index = max(0, min(index, len(self.lines) - 1))
         self.page_state = PageState.RESTORING
         return True
 
@@ -299,7 +306,10 @@ class TuiProps:
         if len(entries) == 0:
             self.status_msg = f"{selected_data.title!r} don't have deleted entries"
             return False
+        if self.is_filtered:
+            self._reset_filter()
         self.lines = list(map(Line, entries))
+        self.parent_index_restore = self.index
         self.index = 0
         self.page_state = PageState.RESTORING_ENTRIES
         return True

@@ -306,6 +306,8 @@ class App(TuiProps):
                         self.page_state == PageState.TAGS
                         or self.page_state == PageState.RESTORING
                     ):
+                        if self.is_filtered:
+                            self.reset_filter()
                         self.move_back_to_channels()
                     elif self.page_state == PageState.TAGS_CHANNELS:
                         if not self.show_tags():
@@ -556,9 +558,8 @@ class App(TuiProps):
         elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
             screen.clear()
         elif self.page_state == PageState.RESTORING_ENTRIES:
-            self.index = 0
-            self.scroll_top = 0
-            self.enter_restore()
+            self.gravity = Gravity.DOWN
+            self.enter_restore(self.parent_index_restore)
 
     def move_right(self, ch: int) -> None:
         selected_data = self.lines[self.index].data
@@ -587,8 +588,8 @@ class App(TuiProps):
             selected_data, Channel
         ):
             if ch in (Key.l, Key.o, curses.KEY_RIGHT):
-                self.scroll_top = 0
-                self.enter_restore_entries()
+                if self.enter_restore_entries():
+                    self.scroll_top = 0
                 return
             if not self.restore_channel(selected_data):
                 return
