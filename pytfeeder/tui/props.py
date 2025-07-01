@@ -38,6 +38,7 @@ class TuiProps:
         self.__max_total_num_len = 0
         self._set_channels()
         self._channels_indexes_map = self._make_channels_indexes_map()
+        self._tags_indexes_map = self._make_tags_indexes_map()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
         self.help_status = " version {version} [h,q,Left]: close help".format(
             version=__version__
@@ -52,6 +53,7 @@ class TuiProps:
         self.page_state = PageState.CHANNELS
         self.parent_index = -1
         self.parent_index_restore = -1
+        self.parent_index_tags = -1
         self.status_last_update = ""
         self.status_msg_lifetime = 3
         self._status_msg_creation_time = 0.0
@@ -64,7 +66,6 @@ class TuiProps:
         self.__is_notify_allowed = False
         self.__is_play_allowed = False
         self.__is_executables_checked = False
-        self._last_selected_tag_title = ""
 
     def feed(self) -> list[Entry]:
         return self.feeder.feed(
@@ -326,16 +327,27 @@ class TuiProps:
         if len(self.feeder.tags_map) == 0:
             self.status_msg = "No tags"
             return False
-        self.index = 0
+        self.index = 0 if self.parent_index_tags == -1 else self.parent_index_tags
+        self.parent_index_tags = -1
         self.lines = list(map(Line, self.feeder.tags_map.values()))
         self.page_state = PageState.TAGS
         return True
 
     def select_tag(self, tag: Tag) -> None:
         self.lines = list(map(Line, tag.channels))
+        self.parent_index_tags = self.index
         self.index = 0
         self.page_state = PageState.TAGS_CHANNELS
-        self._last_selected_tag_title = tag.title
+
+    def tag_by_index(self, index: int) -> Tag:
+        if index not in range(len(self.feeder.tags_map)):
+            raise Exception(f"{index=} not in range 0..{len(self.feeder.tags_map)}")
+        return list(self.feeder.tags_map.values())[index]
+
+    def find_tag_index(self, k: str) -> int:
+        if k not in self._tags_indexes_map:
+            raise Exception(f"Unknown tag {k}")
+        return self._tags_indexes_map[k]
 
     @property
     def statusbar_height(self) -> int:
@@ -371,6 +383,9 @@ class TuiProps:
 
     def _make_channels_indexes_map(self) -> dict[str, int]:
         return {c.channel_id: i for i, c in enumerate(self.channels)}
+
+    def _make_tags_indexes_map(self) -> dict[str, int]:
+        return {t: i for i, t in enumerate(self.feeder.tags_map)}
 
     def update_channels(self) -> None:
         self.feeder.refresh_channels_stats()

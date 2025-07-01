@@ -362,6 +362,8 @@ class App(TuiProps):
         self.lines = list(map(Line, self.channels))
         self.index = max(self.parent_index, 0)
         self.parent_index = -1
+        self.parent_index_restore = -1
+        self.parent_index_tags = -1
         self.status_title = ""
 
     @property
@@ -434,6 +436,9 @@ class App(TuiProps):
             elif self.page_state == PageState.TAGS:
                 if not isinstance(selected_data, Tag):
                     raise Exception(f"Unexpected tag type {type(selected_data) = !r}")
+                if self.is_filtered:
+                    self.reset_filter()
+                    self.index = self.find_tag_index(selected_data.title)
                 self.select_tag(selected_data)
                 self.status_title = selected_data.title
                 return
@@ -488,6 +493,14 @@ class App(TuiProps):
                 if self.page_state == PageState.RESTORING:
                     self.page_state = PageState.CHANNELS
                     _ = self.enter_restore()
+                elif (
+                    self.page_state == PageState.TAGS_CHANNELS
+                    and self.parent_index_tags > -1
+                ):
+                    self.index = self.parent_index_tags
+                    tag = self.tag_by_index(self.parent_index_tags)
+                    self.select_tag(tag)
+                    self.status_title = tag.title
             elif self.page_state == PageState.CHANNELS:
                 event.app.exit()
             elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
@@ -495,6 +508,11 @@ class App(TuiProps):
             elif self.page_state == PageState.RESTORING_ENTRIES:
                 self.index = 0
                 self.enter_restore()
+            elif self.parent_index_tags > -1:
+                self.index = self.parent_index_tags
+                tag = self.tag_by_index(self.parent_index_tags)
+                self.select_tag(self.tag_by_index(self.parent_index_tags))
+                self.status_title = tag.title
             else:
                 self.move_back_to_channels()
 

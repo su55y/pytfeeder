@@ -546,6 +546,13 @@ class App(TuiProps):
                 self.page_state = PageState.CHANNELS
                 if self.enter_restore():
                     screen.clear()
+            elif (
+                self.page_state == PageState.TAGS_CHANNELS
+                and self.parent_index_tags > -1
+            ):
+                self.index = self.parent_index_tags
+                self.select_tag(self.tag_by_index(self.parent_index_tags))
+
             self.draw(screen)
         elif self.page_state == PageState.CHANNELS:
             sys.exit(0)
@@ -554,7 +561,11 @@ class App(TuiProps):
             or self.page_state == PageState.RESTORING
             or self.page_state == PageState.TAGS
         ):
-            self.move_back_to_channels()
+            if self.page_state == PageState.ENTRIES and self.parent_index_tags > -1:
+                self.index = self.parent_index_tags
+                self.select_tag(self.tag_by_index(self.parent_index_tags))
+            else:
+                self.move_back_to_channels()
         elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
             screen.clear()
         elif self.page_state == PageState.RESTORING_ENTRIES:
@@ -602,12 +613,17 @@ class App(TuiProps):
         ):
             self.toggle_is_deleted(selected_data)
         elif self.page_state == PageState.TAGS and isinstance(selected_data, Tag):
+            if self.is_filtered:
+                self.reset_filter()
+                self.index = self.find_tag_index(selected_data.title)
             self.select_tag(selected_data)
         elif self.page_state == PageState.TAGS_CHANNELS and isinstance(
             selected_data, Channel
         ):
             if selected_data.entries_count == 0:
                 return
+            if self.is_filtered:
+                self.reset_filter()
             self.parent_index = self.find_channel_index_by_id(selected_data.channel_id)
             self.lines = self.get_lines_by_id(selected_data.channel_id)
             self.page_state = PageState.ENTRIES
@@ -620,6 +636,8 @@ class App(TuiProps):
         self.page_state = PageState.CHANNELS
         self.lines = list(map(Line, self.channels))
         self.index = max(self.parent_index, 0)
+        self.parent_index_restore = -1
+        self.parent_index_tags = -1
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
 
@@ -637,8 +655,8 @@ class App(TuiProps):
             title = "RESTORING"
         elif self.page_state == PageState.TAGS:
             title = "TAGS"
-        elif self.page_state == PageState.TAGS_CHANNELS:
-            title = self._last_selected_tag_title
+        elif self.page_state == PageState.TAGS_CHANNELS and self.parent_index_tags > -1:
+            title = self.tag_by_index(self.parent_index_tags).title
 
         return " ".join(
             self.c.status_fmt.format(
