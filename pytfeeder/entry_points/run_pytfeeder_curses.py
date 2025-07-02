@@ -316,6 +316,11 @@ class App(TuiProps):
                         self.scroll_top = 0
                         self.index = 0
                         self.enter_restore()
+                    elif (
+                        self.page_state == PageState.ENTRIES
+                        and self.parent_index_tags > -1
+                    ):
+                        self.move_back_to_tag()
                     else:
                         sys.exit(0)
 
@@ -562,8 +567,7 @@ class App(TuiProps):
             or self.page_state == PageState.TAGS
         ):
             if self.page_state == PageState.ENTRIES and self.parent_index_tags > -1:
-                self.index = self.parent_index_tags
-                self.select_tag(self.tag_by_index(self.parent_index_tags))
+                self.move_back_to_tag()
             else:
                 self.move_back_to_channels()
         elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():

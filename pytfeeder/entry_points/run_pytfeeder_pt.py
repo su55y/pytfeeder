@@ -509,10 +509,10 @@ class App(TuiProps):
                 self.index = 0
                 self.enter_restore()
             elif self.parent_index_tags > -1:
-                self.index = self.parent_index_tags
-                tag = self.tag_by_index(self.parent_index_tags)
-                self.select_tag(self.tag_by_index(self.parent_index_tags))
-                self.status_title = tag.title
+                if self.is_filtered:
+                    self.filter_text = ""
+                self.move_back_to_tag()
+                self.status_title = self.tag_by_index(self.parent_index_tags).title
             else:
                 self.move_back_to_channels()
 
@@ -587,6 +587,11 @@ class App(TuiProps):
             elif self.page_state == PageState.RESTORING_ENTRIES:
                 self.index = 0
                 self.enter_restore()
+            elif self.page_state == PageState.ENTRIES and self.parent_index_tags > -1:
+                if self.is_filtered:
+                    self.filter_text = ""
+                self.move_back_to_tag()
+                self.status_title = self.tag_by_index(self.parent_index_tags).title
             else:
                 event.app.exit()
 

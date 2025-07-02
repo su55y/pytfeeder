@@ -349,6 +349,13 @@ class TuiProps:
             raise Exception(f"Unknown tag {k}")
         return self._tags_indexes_map[k]
 
+    def move_back_to_tag(self) -> None:
+        if self.is_filtered:
+            self._reset_filter()
+        self.index = self.parent_index_tags
+        self.parent_index = -1
+        self.select_tag(self.tag_by_index(self.parent_index_tags))
+
     @property
     def statusbar_height(self) -> int:
         return 1 ^ self.c.hide_statusbar
