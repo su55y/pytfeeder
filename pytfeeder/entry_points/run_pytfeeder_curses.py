@@ -271,7 +271,7 @@ class App(TuiProps):
                         screen.clear()
                         self.move_back_to_channels()
                 case Key.CTRL_R:
-                    if self.enter_restore():
+                    if self.enter_restore(0):
                         screen.clear()
                 case Key.TAB:
                     if self.is_filtered or self.page_state == PageState.RESTORING:

@@ -281,15 +281,16 @@ class TuiProps:
     def enter_restore(self, index: int = -1) -> bool:
         if self.page_state == PageState.RESTORING or self.is_filtered:
             return False
-        if index < 0:
-            index = self.index
-        else:
-            self.parent_index_restore = -1
 
         channels = self.feeder.channels_with_deleted()
         if len(channels) == 0:
             self.status_msg = "No deleted"
             return False
+
+        if index < 0:
+            index = self.index
+        else:
+            self.parent_index_restore = -1
 
         self.lines = list(map(Line, channels))
         self.index = max(0, min(index, len(self.lines) - 1))

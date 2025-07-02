@@ -688,7 +688,7 @@ class App(TuiProps):
 
         @kb.add("c-r")
         def _enter_restore(_) -> None:
-            if self.enter_restore():
+            if self.enter_restore(0):
                 self.status_title = "RESTORING"
 
         @kb.add("tab")
