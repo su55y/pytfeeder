@@ -480,6 +480,7 @@ class App(TuiProps):
 
         @kb.add("h")
         @kb.add("left")
+        @kb.add("backspace")
         def _back(event) -> None:
             if self.is_help_opened:
                 self.is_help_opened = False

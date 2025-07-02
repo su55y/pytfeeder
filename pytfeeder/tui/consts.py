@@ -39,7 +39,7 @@ status-fmt keys:
 
 HELP_KEYBINDINGS = [
     ("q, C-c", "Quit"),
-    ("h, Left, q", "Return to previous screen/Quit"),
+    ("h, Left, q, Backspace", "Return to previous screen/Quit"),
     ("j, Down", "Move to next entry"),
     ("k, Up", "Move to previous entry"),
     ("l, o, Right, Enter, Space", "Open selected feed/entry"),

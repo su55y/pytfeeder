@@ -174,7 +174,7 @@ class App(TuiProps):
                     if len(self.lines) > 0:
                         screen.clear()
                         self.move_right(ch)
-                case Key.h | curses.KEY_LEFT:
+                case Key.h | curses.KEY_LEFT | curses.KEY_BACKSPACE:
                     self.move_left(screen)
                     screen.refresh()
                 case Key.p:
