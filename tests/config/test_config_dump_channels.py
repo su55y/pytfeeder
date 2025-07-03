@@ -21,19 +21,20 @@ class TestDumpChannels(unittest.TestCase):
         cls.channels_tmp_file.close()
         cls.channels_path = Path(cls.channels_tmp_file.name)
         tmp_c = Config(channels_filepath=cls.channels_path)
-        assert tmp_c.channels == channels_mock
+        assert tmp_c.all_channels == channels_mock
 
     def test_dump_channels(self):
-        new_channel = Channel(channel_id="abcdefghijklmnopqrstuvw2", title="Channel 3")
-        channels = channels_mock.copy()
-        channels.append(new_channel)
-
+        channels = [
+            *channels_mock.copy(),
+            Channel(channel_id="abcdefghijklmnopqrstuvw2", title="Channel 3"),
+        ]
         old_config = Config(channels_filepath=self.channels_path)
-        old_config.channels.append(new_channel)
+        old_config.channels = channels
         old_config.dump_channels()
 
         c = Config(channels_filepath=self.channels_path)
-        self.assertEqual(c.channels, channels)
+        self.maxDiff = None
+        self.assertEqual(c.all_channels, channels)
 
     def test_dump_channels_format(self):
         c = Config(channels_filepath=self.channels_path)
