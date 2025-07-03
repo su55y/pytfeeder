@@ -182,14 +182,14 @@ def main():
             print(f"Error: {e}")
             sys.exit(1)
 
-        if channel := {c.channel_id: c for c in config.channels}.get(
+        if channel := {c.channel_id: c for c in config.all_channels}.get(
             new_channel.channel_id
         ):
             print(
                 f"Channel {channel.title!r} ({channel.channel_id = }) already exists in {config.channels_filepath!s}"
             )
             sys.exit(1)
-        config.channels.append(new_channel)
+        config.all_channels.append(new_channel)
         config.dump_channels()
         print(f"{new_channel.title!r} just added")
         sys.exit(0)

@@ -46,7 +46,7 @@ class Channel:
     def __post_init__(self) -> None:
         if self.title == "":
             raise InvalidChannelError(f"Invalid title {self.title!r}")
-        if len(self.channel_id) != 24 and self.channel_id not in ["feed", "tag"]:
+        if len(self.channel_id) != 24 and self.channel_id not in ("feed", "tag"):
             raise InvalidChannelError(
                 f"Invalid channel_id {len(self.channel_id) = } ({self.channel_id!r}), should be 24)"
             )
@@ -56,6 +56,8 @@ class Channel:
         d: dict[str, Any] = {"channel_id": c.channel_id, "title": c.title}
         if c.hidden == True:
             d["hidden"] = c.hidden
+        if len(c.tags) > 0:
+            d["tags"] = c.tags
         return dumper.represent_mapping("tag:yaml.org,2002:map", d, flow_style=True)
 
 

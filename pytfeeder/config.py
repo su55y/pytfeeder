@@ -161,7 +161,7 @@ class Config:
             _ = shutil.copyfile(self.channels_filepath, tmp_name)
             with self.channels_filepath.open("w") as f:
                 yaml.dump(
-                    self.channels,
+                    self.all_channels,
                     f,
                     Dumper=ChannelDumper,
                     allow_unicode=True,
