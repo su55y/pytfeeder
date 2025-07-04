@@ -60,6 +60,7 @@ HELP_KEYBINDINGS = [
     ("C-x, Del", "Mark entry as deleted"),
     ("C-d", "Mark all entries as deleted"),
     ("C-r", "Enter channels restoring"),
+    ("C-o", "Open channel in browser"),
     ("Enter, Space", "Restore whole channel in restore mode"),
     ("l, o, Right", "Enter channel in restore mode"),
     ("/", "Open filter prompt (C-c or Esc to close)"),

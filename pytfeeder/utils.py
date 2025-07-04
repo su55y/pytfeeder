@@ -1,6 +1,7 @@
 from os.path import expandvars
 from pathlib import Path
 import subprocess as sp
+import sys
 
 from .models import Channel, Entry
 
@@ -108,3 +109,20 @@ def notify(msg: str) -> bool:
     if p.returncode != 0:
         return False
     return True
+
+
+def open_url(url: str) -> None:
+    popen = lambda c, shell=False: sp.Popen(
+        c,
+        stderr=sp.DEVNULL,
+        stdout=sp.DEVNULL,
+        shell=shell,
+    )
+    if sys.platform.startswith("linux"):
+        popen(["xdg-open", url])
+    elif sys.platform == "darwin":
+        popen(["open", url])
+    elif sys.platform.startswith("win"):
+        popen(["cmd", "/c", "start", "", url], shell=True)
+    else:
+        raise NotImplementedError()

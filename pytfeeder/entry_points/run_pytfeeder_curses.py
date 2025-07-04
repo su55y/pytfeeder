@@ -17,6 +17,7 @@ class Key(IntEnum):
     CTRL_D = 4
     TAB = 9
     RETURN = ord("\n")
+    CTRL_O = 15
     CTRL_R = 18
     CTRL_X = 24
     ESC = 27
@@ -273,6 +274,8 @@ class App(TuiProps):
                 case Key.CTRL_R:
                     if self.enter_restore(0):
                         screen.clear()
+                case Key.CTRL_O:
+                    self.open_channel_in_browser()
                 case Key.TAB:
                     if self.is_filtered or self.page_state == PageState.RESTORING:
                         continue

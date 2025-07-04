@@ -691,6 +691,10 @@ class App(TuiProps):
             if self.enter_restore(0):
                 self.status_title = "RESTORING"
 
+        @kb.add("c-o")
+        def _open_channel_in_browser(_) -> None:
+            self.open_channel_in_browser()
+
         @kb.add("tab")
         def _show_tags(_) -> None:
             if self.is_filtered or self.page_state == PageState.RESTORING:

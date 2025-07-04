@@ -553,3 +553,36 @@ class TuiProps:
             self.status_msg = "Play not allowed (setsid or mpv not found)"
             return
         utils.play_video(entry, self.__is_notify_allowed)
+
+    def open_channel_in_browser(self) -> None:
+        url = "https://www.youtube.com/channel/{channel_id}"
+        if (
+            self.page_state
+            in (PageState.CHANNELS, PageState.TAGS_CHANNELS, PageState.RESTORING)
+            and self.lines
+            and self.index in range(len(self.lines))
+        ):
+            channel = self.lines[self.index].data
+            if not isinstance(channel, Channel):
+                return
+        else:
+            if self.page_state == PageState.ENTRIES:
+                if self.parent_index == 0 and not self.c.hide_feed:
+                    parent_index = self.find_channel_index_by_id(
+                        self.lines[self.index].data.channel_id  # type: ignore
+                    )
+                else:
+                    parent_index = self.parent_index
+                channels = self.channels
+            elif self.page_state == PageState.RESTORING_ENTRIES:
+                parent_index = self.parent_index_restore
+                channels = self.feeder.channels_with_deleted()
+            else:
+                return
+            if parent_index not in range(len(channels)):
+                return
+            channel = channels[parent_index]
+        if len(channel.channel_id) != 24:
+            return
+        self.status_msg = f"Opening {channel.title!r} in browser"
+        utils.open_url(url.format(channel_id=channel.channel_id))
