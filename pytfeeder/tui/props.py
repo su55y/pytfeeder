@@ -297,10 +297,11 @@ class TuiProps:
         self.page_state = PageState.RESTORING
         return True
 
-    def enter_restore_entries(self) -> bool:
-        if len(self.lines) == 0 or self.page_state != PageState.RESTORING:
-            return False
-        selected_data = self.lines[self.index].data
+    def enter_restore_entries(self, channel_id: str | None = None) -> bool:
+        if channel_id:
+            selected_data = self.channels[self.find_channel_index_by_id(channel_id)]
+        else:
+            selected_data = self.lines[self.index].data
         if not isinstance(selected_data, Channel):
             self.status_msg = f"Unexpected channel type {type(selected_data)}"
             return False
@@ -311,7 +312,8 @@ class TuiProps:
         if self.is_filtered:
             self._reset_filter()
         self.lines = list(map(Line, entries))
-        self.parent_index_restore = self.index
+        if not channel_id:
+            self.parent_index_restore = self.index
         self.index = 0
         self.page_state = PageState.RESTORING_ENTRIES
         return True

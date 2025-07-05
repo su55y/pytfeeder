@@ -554,6 +554,8 @@ class App(TuiProps):
                 self.page_state = PageState.CHANNELS
                 if self.enter_restore():
                     screen.clear()
+            elif self.page_state == PageState.RESTORING_ENTRIES:
+                self.enter_restore_entries(self.lines[self.index].data.channel_id)  # type: ignore
             elif (
                 self.page_state == PageState.TAGS_CHANNELS
                 and self.parent_index_tags > -1
