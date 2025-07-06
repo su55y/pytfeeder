@@ -19,14 +19,16 @@ SELECT_QUERY="\
     WHERE is_deleted = 0 AND channel_id = '%s' \
     ORDER BY published DESC"
 
-channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" | jq -r '.[]|.channel_id+" "+.title' | fzf --with-nth 2.. --preview='')"
+channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" |
+    jq -r '.[] | select((.hidden // false) == false) |.channel_id+" "+.title' |
+    fzf --with-nth 2.. --preview='')"
 [ -n "$channel_line" ] || exit 0
 channel_id="${channel_line%% *}"
 
 # shellcheck disable=SC2016,SC2059
 selected_line="$(sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" "$(printf "$SELECT_QUERY" "$channel_id")" |
     fzf --bind='ctrl-space:execute-silent(\
-    notify-send -a pytfeeder "Playing \"$(echo {} | sed "s/^[-_0-9a-zA-Z]\{11\}[ \t]*//;s/[[ \t]*$//")\"..." &&\
+    notify-send -i youtube -a pytfeeder "Playing \"$(echo {} | sed "s/^[-_0-9a-zA-Z]\{11\}[ \t]*//;s/[[ \t]*$//")\"..." &&\
     setsid -f mpv "https://youtu.be/$(echo {} | cut -d" " -f1)" >/dev/null 2>&1)' \
         --with-nth 2.. --preview='')"
 [ -n "$selected_line" ] || exit 0
