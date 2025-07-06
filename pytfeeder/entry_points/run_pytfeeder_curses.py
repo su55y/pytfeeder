@@ -316,6 +316,8 @@ class App(TuiProps):
                         if not self.show_tags():
                             self.move_back_to_channels()
                     elif self.page_state == PageState.RESTORING_ENTRIES:
+                        if self.is_filtered:
+                            self.reset_filter()
                         self.scroll_top = 0
                         self.index = 0
                         self.enter_restore()
