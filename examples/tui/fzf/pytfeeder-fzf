@@ -3,6 +3,9 @@
 PYTFEEDER_CONFIG_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/pytfeeder/channels.yaml"
 PYTFEEDER_DB_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/pytfeeder/pytfeeder.db"
 DOWNLOAD_DIR="$HOME/Videos/YouTube"
+PYTFEEDER_FZF_ALL_CHANNELS_LIST=/tmp/pytfeeder_fzf_all_channels_list.txt
+PYTFEEDER_FZF_NE_CHANNELS_LIST=/tmp/pytfeeder_fzf_non_empty_channels_list.txt
+PYTFEEDER_FZF_CHANNELS_LIST=/tmp/pytfeeder_fzf_channels_list.txt
 
 if [ ! -f "$PYTFEEDER_CONFIG_PATH" ]; then
     echo "config file $PYTFEEDER_CONFIG_PATH not found"
@@ -14,28 +17,57 @@ if [ ! -f "$PYTFEEDER_DB_PATH" ]; then
     exit 1
 fi
 
+yaml2json "$PYTFEEDER_CONFIG_PATH" |
+    jq -r '.[] | select((.hidden // false) == false) | .channel_id+" "+.title' \
+        >"$PYTFEEDER_FZF_ALL_CHANNELS_LIST"
+
+_ids=$(awk '{r = r (NR==1 ? "" : ",") "'"'"'" $1 "'"'"'" } END { print r }' \
+    "$PYTFEEDER_FZF_ALL_CHANNELS_LIST")
+
+sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" "\
+    SELECT channel_id FROM tb_entries \
+    WHERE is_deleted = 0 and channel_id IN ($_ids) \
+    GROUP BY channel_id" >"$PYTFEEDER_FZF_NE_CHANNELS_LIST"
+
+[ -f "$PYTFEEDER_FZF_CHANNELS_LIST" ] && printf '' >"$PYTFEEDER_FZF_CHANNELS_LIST"
+while IFS= read -r line; do
+    if grep -qx "${line%% *}" "$PYTFEEDER_FZF_NE_CHANNELS_LIST"; then
+        echo "$line" >>"$PYTFEEDER_FZF_CHANNELS_LIST"
+    fi
+done <"$PYTFEEDER_FZF_ALL_CHANNELS_LIST"
+
 SELECT_QUERY="\
     SELECT id, title FROM tb_entries \
     WHERE is_deleted = 0 AND channel_id = '%s' \
     ORDER BY published DESC"
 
-channel_line="$(yaml2json "$PYTFEEDER_CONFIG_PATH" |
-    jq -r '.[] | select((.hidden // false) == false) |.channel_id+" "+.title' |
-    fzf --with-nth 2.. --preview='')"
-[ -n "$channel_line" ] || exit 0
-channel_id="${channel_line%% *}"
-
 # shellcheck disable=SC2016,SC2059
-selected_line="$(sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" "$(printf "$SELECT_QUERY" "$channel_id")" |
-    fzf --bind='ctrl-space:execute-silent(\
-    notify-send -i youtube -a pytfeeder "Playing \"$(echo {} | sed "s/^[-_0-9a-zA-Z]\{11\}[ \t]*//;s/[[ \t]*$//")\"..." &&\
+while :; do
+    channel_line="$(fzf --with-nth 2.. --preview='' <"$PYTFEEDER_FZF_CHANNELS_LIST")"
+    [ -n "$channel_line" ] || exit 0
+    channel_id="${channel_line%% *}"
+
+    selected_line="$(printf '__go_back__\n%s\n' \
+        "$(sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" \
+            "$(printf "$SELECT_QUERY" "$channel_id")" |
+            fzf --header '[Esc]: Go back, [Ctrl+Space]: Play' \
+                --bind='ctrl-space:execute-silent(\
+    notify-send -i youtube -a pytfeeder "Playing \"$(echo {} |\
+    sed "s/^[-_0-9a-zA-Z]\{11\}[ \t]*//;s/[[ \t]*$//")\"..." &&\
     setsid -f mpv "https://youtu.be/$(echo {} | cut -d" " -f1)" >/dev/null 2>&1)' \
-        --with-nth 2.. --preview='')"
-[ -n "$selected_line" ] || exit 0
+                --with-nth 2.. --preview='')")"
+    [ -n "$selected_line" ] || exit 0
 
-vid_id="${selected_line%% *}"
-vid_title="$(echo "${selected_line#* }" | xargs)"
+    vid_id="${selected_line%% *}"
+    if [ "$vid_id" = __go_back__ ]; then
+        vid_id=
+        continue
+    fi
+    vid_title="$(echo "${selected_line#* }" | xargs)"
+    break
+done
 
+[ -n "$vid_id" ] || exit 0
 notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
 qid="$(tsp yt-dlp "https://youtu.be/$vid_id" -R infinite -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
 tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>/dev/null
