@@ -195,9 +195,9 @@ class Feeder:
         self.stor.execute_vacuum()
         return count
 
-    async def sync_entries(self) -> tuple[int, Exception | None]:
+    async def sync_entries(self, verbose: bool = False) -> tuple[int, Exception | None]:
         try:
-            r = await self._sync_entries()
+            r = await self._sync_entries(verbose)
         except Exception as e:
             return 0, e
         else:
@@ -205,12 +205,29 @@ class Feeder:
         finally:
             self.update_lock_file()
 
-    async def _sync_entries(self) -> int:
+    async def _sync_entries(self, verbose: bool = False) -> int:
+        current_done = 0
+
+        def print_progress(_):
+            nonlocal current_done
+            current_done += 1
+            w = len(str(len(self.config.all_channels)))
+            print(
+                f"\033[0G{current_done:{w}d}/{len(self.config.all_channels)}",
+                end="",
+                flush=True,
+            )
+            if current_done == len(self.config.all_channels):
+                print()
+
         async with ClientSession() as s:
             tasks = [
                 asyncio.create_task(self._sync_channel(s, c))
                 for c in self.config.all_channels
             ]
+            if verbose:
+                for t in tasks:
+                    t.add_done_callback(print_progress)
             results = await asyncio.gather(*tasks)
             sum_of_new = 0
             for new, err in results:

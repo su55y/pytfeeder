@@ -126,7 +126,7 @@ class TuiProps:
 
     def initial_update(self) -> None:
         print("updating...")
-        new, err = asyncio.run(self.feeder.sync_entries())
+        new, err = asyncio.run(self.feeder.sync_entries(verbose=True))
         if err:
             self.status_msg = f"Error: {err}"
             return
