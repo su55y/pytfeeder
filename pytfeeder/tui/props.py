@@ -66,6 +66,7 @@ class TuiProps:
         self.__is_notify_allowed = False
         self.__is_play_allowed = False
         self.__is_executables_checked = False
+        self._restore_entries_channel_id: str | None = None
 
     def feed(self) -> list[Entry]:
         return self.feeder.feed(
@@ -298,22 +299,18 @@ class TuiProps:
         return True
 
     def enter_restore_entries(self, channel_id: str | None = None) -> bool:
-        if channel_id:
-            selected_data = self.channels[self.find_channel_index_by_id(channel_id)]
-        else:
-            selected_data = self.lines[self.index].data
-        if not isinstance(selected_data, Channel):
-            self.status_msg = f"Unexpected channel type {type(selected_data)}"
-            return False
-        entries = self.feeder.channels_deleted_entries(selected_data.channel_id)
-        if len(entries) == 0:
-            self.status_msg = f"{selected_data.title!r} don't have deleted entries"
-            return False
-        if self.is_filtered:
-            self._reset_filter()
-        self.lines = list(map(Line, entries))
         if not channel_id:
-            self.parent_index_restore = self.index
+            channel_id = self.lines[self.index].data.channel_id  # type: ignore
+            if self.is_filtered:
+                self._reset_filter()
+            else:
+                self.parent_index_restore = self.index
+        entries = self.feeder.channels_deleted_entries(channel_id)
+        if len(entries) == 0:
+            self.status_msg = f"Channel don't have deleted entries"
+            return False
+        self._restore_entries_channel_id = channel_id
+        self.lines = list(map(Line, entries))
         self.index = 0
         self.page_state = PageState.RESTORING_ENTRIES
         return True

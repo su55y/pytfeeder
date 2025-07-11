@@ -495,7 +495,13 @@ class App(TuiProps):
                     self.page_state = PageState.CHANNELS
                     _ = self.enter_restore()
                 elif self.page_state == PageState.RESTORING_ENTRIES:
-                    self.enter_restore_entries(self.lines[self.index].data.channel_id)  # type: ignore
+                    if len(self.lines):
+                        channel_id = self.lines[self.index].data.channel_id  # type: ignore
+                    elif self._restore_entries_channel_id:
+                        channel_id = self._restore_entries_channel_id
+                    else:
+                        raise Exception("Unknown parent channel")
+                    self.enter_restore_entries(channel_id)
                 elif (
                     self.page_state == PageState.TAGS_CHANNELS
                     and self.parent_index_tags > -1
