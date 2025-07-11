@@ -279,7 +279,7 @@ class TuiProps:
         self.status_msg = f"{count} entries was restored"
         return True
 
-    def enter_restore(self, index: int = -1) -> bool:
+    def enter_restore(self, index: int = -1, *, is_move_back: bool = False) -> bool:
         if self.page_state == PageState.RESTORING or self.is_filtered:
             return False
 
@@ -289,7 +289,7 @@ class TuiProps:
             return False
 
         if index < 0:
-            index = self.index
+            index = self.index if not is_move_back else 0
         else:
             self.parent_index_restore = -1
 
@@ -307,7 +307,7 @@ class TuiProps:
                 self.parent_index_restore = self.index
         entries = self.feeder.channels_deleted_entries(channel_id)
         if len(entries) == 0:
-            self.status_msg = f"Channel don't have deleted entries"
+            self.status_msg = "Channel don't have deleted entries"
             return False
         self._restore_entries_channel_id = channel_id
         self.lines = list(map(Line, entries))

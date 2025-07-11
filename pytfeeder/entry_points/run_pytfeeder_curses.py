@@ -587,7 +587,7 @@ class App(TuiProps):
             screen.clear()
         elif self.page_state == PageState.RESTORING_ENTRIES:
             self.gravity = Gravity.DOWN
-            self.enter_restore(self.parent_index_restore)
+            self.enter_restore(self.parent_index_restore, is_move_back=True)
 
     def move_right(self, ch: int) -> None:
         selected_data = self.lines[self.index].data

@@ -515,7 +515,7 @@ class App(TuiProps):
             elif self.page_state == PageState.TAGS_CHANNELS and self.show_tags():
                 self.status_title = "TAGS"
             elif self.page_state == PageState.RESTORING_ENTRIES:
-                self.enter_restore(self.parent_index_restore)
+                self.enter_restore(self.parent_index_restore, is_move_back=True)
             elif self.parent_index_tags > -1:
                 if self.is_filtered:
                     self.filter_text = ""
