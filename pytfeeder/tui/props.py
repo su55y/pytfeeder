@@ -352,6 +352,8 @@ class TuiProps:
     def move_back_to_tag(self) -> None:
         if self.is_filtered:
             self._reset_filter()
+        if self.is_channels_outdated:
+            self.update_channels()
         self.index = self.parent_index_tags
         self.parent_index = -1
         self.select_tag(self.tag_by_index(self.parent_index_tags))

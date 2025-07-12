@@ -217,7 +217,10 @@ class App(TuiProps):
 
         if self.confirm_type_prompt == ConfirmType.DELETE:
             if self.mark_all_as_deleted():
-                self.move_back_to_channels()
+                if self.parent_index_tags > -1:
+                    self.move_back_to_tag()
+                else:
+                    self.move_back_to_channels()
         elif self.confirm_type_prompt == ConfirmType.DOWNLOAD:
             self.download_all()
         self.confirm_type_prompt = ConfirmType.NONE
@@ -680,8 +683,11 @@ class App(TuiProps):
         @kb.add("c-x")
         def _mark_entry_as_deleted(_) -> None:
             if self.mark_as_deleted() and len(self.lines) == 0:
-                self.update_channels()
-                self.move_back_to_channels()
+                if self.parent_index_tags > -1:
+                    self.move_back_to_tag()
+                else:
+                    self.update_channels()
+                    self.move_back_to_channels()
 
         @kb.add("c-d")
         def _mark_all_as_deleted(event: KeyPressEvent) -> None:

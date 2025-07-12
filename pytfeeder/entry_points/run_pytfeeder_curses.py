@@ -254,7 +254,10 @@ class App(TuiProps):
                     if self.mark_as_deleted():
                         screen.clear()
                         if len(self.lines) == 0:
-                            self.move_back_to_channels()
+                            if self.parent_index_tags > -1:
+                                self.move_back_to_tag()
+                            else:
+                                self.move_back_to_channels()
                 case Key.CTRL_D:
                     if (
                         self.page_state != PageState.ENTRIES
@@ -270,7 +273,10 @@ class App(TuiProps):
                         continue
                     if self.mark_all_as_deleted():
                         screen.clear()
-                        self.move_back_to_channels()
+                        if self.parent_index_tags > -1:
+                            self.move_back_to_tag()
+                        else:
+                            self.move_back_to_channels()
                 case Key.CTRL_R:
                     if self.enter_restore(0):
                         screen.clear()
