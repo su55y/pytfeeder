@@ -9,7 +9,7 @@ from typing import Callable
 from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
 from pytfeeder.models import Channel, Entry, Tag
 from .args import format_keybindings
-from .consts import DEFAULT_KEYBINDS
+from .consts import DEFAULT_KEYBINDS, DEFAULT_KEYBINDS_R, DEFAULT_KEYBINDS_RE
 
 
 class PageState(Enum):
@@ -384,7 +384,25 @@ class TuiProps:
     @property
     def status_keybinds(self) -> str:
         if self.is_filtered:
+            if self.page_state == PageState.RESTORING:
+                return f"[q]: return, [h]: cancel filter, {DEFAULT_KEYBINDS_R}"
+            if self.page_state == PageState.RESTORING_ENTRIES:
+                return f"[q]: return, [h]: cancel filter, {DEFAULT_KEYBINDS_RE}"
+            if (
+                self.page_state == PageState.TAGS
+                or self.page_state == PageState.TAGS_CHANNELS
+                or (
+                    self.page_state == PageState.ENTRIES and self.parent_index_tags > -1
+                )
+            ):
+                return f"[q]: return, [h]: cancel filter {DEFAULT_KEYBINDS}"
             return f"[h]: cancel filter, {DEFAULT_KEYBINDS}"
+        if self.page_state == PageState.RESTORING:
+            return DEFAULT_KEYBINDS_R
+        if self.page_state == PageState.RESTORING_ENTRIES:
+            return DEFAULT_KEYBINDS_RE
+        if self.page_state == PageState.ENTRIES and self._is_feed_opened:
+            return f"{DEFAULT_KEYBINDS}, [F]: open channel"
         return DEFAULT_KEYBINDS
 
     @property
