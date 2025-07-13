@@ -358,6 +358,18 @@ class TuiProps:
         self.parent_index = -1
         self.select_tag(self.tag_by_index(self.parent_index_tags))
 
+    def move_home(self) -> None:
+        if self.is_filtered:
+            self._reset_filter()
+        if self.is_channels_outdated:
+            self.update_channels()
+        self.index = 0
+        self.page_state = PageState.CHANNELS
+        self.lines = list(map(Line, self.channels))
+        self.parent_index = -1
+        self.parent_index_restore = -1
+        self.parent_index_tags = -1
+
     @property
     def statusbar_height(self) -> int:
         return 1 ^ self.c.hide_statusbar

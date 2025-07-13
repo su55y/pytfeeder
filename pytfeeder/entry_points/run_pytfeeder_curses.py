@@ -15,6 +15,7 @@ from pytfeeder.tui.props import TuiProps, PageState, Line
 
 class Key(IntEnum):
     CTRL_D = 4
+    CTRL_H = 8
     TAB = 9
     RETURN = ord("\n")
     CTRL_O = 15
@@ -277,6 +278,10 @@ class App(TuiProps):
                             self.move_back_to_tag()
                         else:
                             self.move_back_to_channels()
+                case Key.CTRL_H:
+                    self.scroll_top = 0
+                    self.move_home()
+
                 case Key.CTRL_R:
                     if self.enter_restore(0):
                         screen.clear()

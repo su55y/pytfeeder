@@ -701,6 +701,13 @@ class App(TuiProps):
             self.confirm_type_prompt = ConfirmType.DELETE
             setup_confirm_prompt(event)
 
+        @kb.add("c-h")
+        def _move_home(_) -> None:
+            if self.is_filtered:
+                self.filter_text = ""
+            self.status_title = ""
+            self.move_home()
+
         @kb.add("c-r")
         def _enter_restore(_) -> None:
             if self.enter_restore(0):

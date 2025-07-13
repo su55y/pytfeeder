@@ -59,6 +59,7 @@ HELP_KEYBINDINGS = [
     ("D", "Download all unwatched from current feed"),
     ("C-x, Del", "Mark entry as deleted"),
     ("C-d", "Mark all entries as deleted"),
+    ("C-h", "Move to start screen"),
     ("C-r", "Enter channels restoring"),
     ("C-o", "Open channel in browser"),
     ("Enter, Space", "Restore whole channel in restore mode"),
