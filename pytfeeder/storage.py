@@ -217,7 +217,7 @@ class Storage:
         query = f"""
         UPDATE {TB_ENTRIES}
         SET is_deleted = 0
-        WHERE channel_id = ?;
+        WHERE channel_id = ? AND is_deleted = 1;
         """
         return self.update_rows(query, (c.channel_id,))
 
