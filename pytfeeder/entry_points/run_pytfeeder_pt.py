@@ -591,8 +591,12 @@ class App(TuiProps):
             ):
                 if self.is_filtered:
                     self.reset_filter()
+                if self.is_channels_outdated:
+                    self.update_channels()
                 self.move_back_to_channels()
             elif self.page_state == PageState.TAGS_CHANNELS:
+                if self.is_channels_outdated:
+                    self.update_channels()
                 if not self.show_tags():
                     self.move_back_to_channels()
             elif self.page_state == PageState.RESTORING_ENTRIES:
