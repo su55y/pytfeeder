@@ -189,7 +189,11 @@ class TuiProps:
             return False
         self.is_channels_outdated = True
         self.lines = self.get_lines_by_id(self.channels[self.parent_index].channel_id)
-        self.index = max(0, min(self.index, len(self.lines) - 1))
+        if len(self.lines) == 0:
+            if self.c.hide_empty:
+                self.parent_index = max(0, self.parent_index - 1)
+        else:
+            self.index = max(0, min(self.index, len(self.lines) - 1))
         return True
 
     def mark_all_as_deleted(self) -> bool:
