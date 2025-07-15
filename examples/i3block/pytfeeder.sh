@@ -1,20 +1,17 @@
 #!/bin/sh
 
-ICON=""
-UPDATE_LOCK_PATH=/tmp/pytfeeder_update.lock
-UPDATE_INTERVAL_SEC=$((3600 * 2))
+ICON=
+[ -n "$UPDATE_LOCK_PATH" ] || UPDATE_LOCK_PATH=/tmp/pytfeeder_update.lock
+[ -n "$UPDATE_INTERVAL_SEC" ] || UPDATE_INTERVAL_SEC=$((3600 * 2))
 LAST_UPDATE_TIMESTAMP=0
 
-notify() {
-    [ -n "$1" ] || return
-    notify-send -i youtube -a pytfeeder "$@"
-}
+notify() { [ -n "$1" ] && notify-send -i youtube -a pytfeeder "$@"; }
 
 update() {
-    notify "Start updating..."
+    notify 'Start updating...'
     UPDATES="$(pytfeeder -s)"
     case $UPDATES in
-    0) notify "No updates" ;;
+    0) notify 'No updates' ;;
     0* | *[!0-9]*) notify "Error: $UPDATES" ;;
     [[:digit:]]*) notify "$UPDATES new updates" ;;
     *) notify "Error: $UPDATES" ;;
