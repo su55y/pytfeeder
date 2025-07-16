@@ -1,14 +1,14 @@
 #!/bin/sh
 
-PYTFEEDER_CONFIG_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/pytfeeder/channels.yaml"
+PYTFEEDER_CHANNELS_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/pytfeeder/channels.yaml"
 PYTFEEDER_DB_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/pytfeeder/pytfeeder.db"
-DOWNLOAD_DIR="$HOME/Videos/YouTube"
+DOWNLOAD_OUTPUT="$HOME/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
 PYTFEEDER_FZF_ALL_CHANNELS_LIST=/tmp/pytfeeder_fzf_all_channels_list.txt
 PYTFEEDER_FZF_NE_CHANNELS_LIST=/tmp/pytfeeder_fzf_non_empty_channels_list.txt
 PYTFEEDER_FZF_CHANNELS_LIST=/tmp/pytfeeder_fzf_channels_list.txt
 
-if [ ! -f "$PYTFEEDER_CONFIG_PATH" ]; then
-    echo "config file $PYTFEEDER_CONFIG_PATH not found"
+if [ ! -f "$PYTFEEDER_CHANNELS_PATH" ]; then
+    echo "config file $PYTFEEDER_CHANNELS_PATH not found"
     exit 1
 fi
 
@@ -17,9 +17,8 @@ if [ ! -f "$PYTFEEDER_DB_PATH" ]; then
     exit 1
 fi
 
-yaml2json "$PYTFEEDER_CONFIG_PATH" |
-    jq -r '.[] | select((.hidden // false) == false) | .channel_id+" "+.title' \
-        >"$PYTFEEDER_FZF_ALL_CHANNELS_LIST"
+yq -r '.[] | select((.hidden // false) == false) | .channel_id+" "+.title' \
+    "$PYTFEEDER_CHANNELS_PATH" >"$PYTFEEDER_FZF_ALL_CHANNELS_LIST"
 
 _ids=$(awk '{r = r (NR==1 ? "" : ",") "'"'"'" $1 "'"'"'" } END { print r }' \
     "$PYTFEEDER_FZF_ALL_CHANNELS_LIST")
@@ -46,11 +45,14 @@ while :; do
     channel_line="$(fzf --with-nth 2.. --preview='' <"$PYTFEEDER_FZF_CHANNELS_LIST")"
     [ -n "$channel_line" ] || exit 0
     channel_id="${channel_line%% *}"
+    channel_title="${channel_line#* }"
 
     selected_line="$(printf '__go_back__\n%s\n' \
         "$(sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" \
             "$(printf "$SELECT_QUERY" "$channel_id")" |
-            fzf --header '[Esc]: Go back, [Ctrl+Space]: Play' \
+            fzf \
+                --ghost="$channel_title" \
+                --header='[esc,ctrl-q]: Go back, [ctrl-space]: Play' \
                 --bind='ctrl-space:execute-silent(\
     notify-send -i youtube -a pytfeeder "Playing \"$(echo {} |\
     sed "s/^[-_0-9a-zA-Z]\{11\}[ \t]*//;s/[[ \t]*$//")\"..." &&\
@@ -63,11 +65,11 @@ while :; do
         vid_id=
         continue
     fi
-    vid_title="$(echo "${selected_line#* }" | xargs)"
+    vid_title="$(echo "${selected_line#* }" | sed 's/^[ \t]*//; s/[ \t\n]*$//')"
     break
 done
 
 [ -n "$vid_id" ] || exit 0
 notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
-qid="$(tsp yt-dlp "https://youtu.be/$vid_id" -R infinite -o "$DOWNLOAD_DIR/%(uploader)s/%(title)s.%(ext)s")"
-tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>/dev/null
+qid="$(tsp -L pytfeeder yt-dlp "https://youtu.be/$vid_id" -o "$DOWNLOAD_OUTPUT")"
+tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>&1
