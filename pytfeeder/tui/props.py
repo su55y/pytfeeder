@@ -24,7 +24,6 @@ class PageState(Enum):
 @dataclass
 class Line:
     data: Channel | Entry | Tag
-    is_active: bool = False
 
 
 class TuiProps:

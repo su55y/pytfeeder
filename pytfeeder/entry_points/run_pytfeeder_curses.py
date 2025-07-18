@@ -280,6 +280,7 @@ class App(TuiProps):
                             self.move_back_to_channels()
                 case Key.CTRL_H:
                     self.scroll_top = 0
+                    screen.clear()
                     self.move_home()
 
                 case Key.CTRL_R:
@@ -345,11 +346,11 @@ class App(TuiProps):
         max_y, max_x = screen.getmaxyx()
         max_rows = max_y - self.statusbar_height
         self.update_scroll_top(max_rows)
-        self.update_active()
         index_len = len(str(len(self.lines)))
         for i, line in enumerate(
             self.lines[self.scroll_top : self.scroll_top + max_rows]
         ):
+            is_active = i + self.scroll_top == self.index
             attr = None
             color = ColorPair.NONE
             text = "-"
@@ -385,10 +386,10 @@ class App(TuiProps):
                     unwatched_total=self.format_unwatched_total_key(line.data),
                 )
 
-            if highlight and line.is_active:
+            if highlight and is_active:
                 color = ColorPair.ACTIVE
                 attr = curses.A_BOLD
-            elif line.is_active:
+            elif is_active:
                 color = ColorPair.ACTIVE
             elif highlight:
                 color = ColorPair.NEW
@@ -431,10 +432,6 @@ class App(TuiProps):
                     self.scroll_top = max(self.scroll_top - 1, 0)
                 if self.index + 1 == len(self.lines):
                     self.scroll_top = max((self.index + 1) - max_rows, 0)
-
-    def update_active(self) -> None:
-        for i in range(len(self.lines)):
-            self.lines[i].is_active = i == self.index
 
     def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
         if self.page_state != PageState.ENTRIES:
