@@ -1,11 +1,33 @@
 #!/bin/sh
 
 ICON=
-[ -n "$UPDATE_LOCK_PATH" ] || UPDATE_LOCK_PATH=/tmp/pytfeeder_update.lock
-[ -n "$UPDATE_INTERVAL_SEC" ] || UPDATE_INTERVAL_SEC=$((3600 * 2))
 LAST_UPDATE_TIMESTAMP=0
 
+: "${UPDATE_LOCK_PATH:=/tmp/pytfeeder_update.lock}"
+: "${UPDATE_INTERVAL_SEC:=(3600 * 2)}"
+
+: "${PRINT_CHANNELS:=1}"
+CHANNELS_FILEPATH="${XDG_CONFIG_HOME:-$HOME/.config}/pytfeeder/channels.yaml"
+STORAGE_FILEPATH="${XDG_DATA_DIR:-$HOME/.local/share}/pytfeeder/pytfeeder.db"
+
 notify() { [ -n "$1" ] && notify-send -i youtube -a pytfeeder "$@"; }
+
+channels_with_updates() {
+    limit=$1
+    case $limit in
+    [[:digit:]]*) ;;
+    *)
+        notify "Invalid number '$limit'"
+        exit 0
+        ;;
+    esac
+    channels_list="$(sqlite3 <. -init /dev/null -column "$STORAGE_FILEPATH" \
+        "SELECT channel_id FROM tb_entries ORDER BY published DESC LIMIT $limit" |
+        awk '{ printf "%s .channel_id == \"%s\" ", sep, $0; sep="or" }')"
+    if [ -n "$channels_list" ]; then
+        yq -r ".[] | select($channels_list) | .title" "$CHANNELS_FILEPATH" || notify 'yq error'
+    fi
+}
 
 update() {
     notify 'Start updating...'
@@ -13,7 +35,14 @@ update() {
     case $UPDATES in
     0) notify 'No updates' ;;
     0* | *[!0-9]*) notify "Error: $UPDATES" ;;
-    [[:digit:]]*) notify "$UPDATES new updates" ;;
+    [[:digit:]]*)
+        if [ $PRINT_CHANNELS -eq 1 ]; then
+            channels="$(channels_with_updates $UPDATES)"
+            notify "$(printf '%d new updates\n%s' "$UPDATES" "$channels")"
+        else
+            notify "$UPDATES new updates"
+        fi
+        ;;
     *) notify "Error: $UPDATES" ;;
     esac
 }
@@ -32,9 +61,9 @@ case $BLOCK_BUTTON in
     ;;
 2) update ;;
 3)
-    channels_with_updates="$(pytfeeder -f '{channels_with_updates}')"
-    if [ -n "$channels_with_updates" ]; then
-        notify 'Channels with updates:' "$channels_with_updates"
+    channels="$(pytfeeder -f '{channels_with_updates}')"
+    if [ -n "$channels" ]; then
+        notify 'Channels with updates:' "$channels"
     else
         notify 'No updates'
     fi
