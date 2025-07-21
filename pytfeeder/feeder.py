@@ -195,9 +195,13 @@ class Feeder:
         self.stor.execute_vacuum()
         return count
 
-    async def sync_entries(self, verbose: bool = False) -> tuple[int, Exception | None]:
+    async def sync_entries(
+        self,
+        verbose: bool = False,
+        report_hidden: bool = True,
+    ) -> tuple[int, Exception | None]:
         try:
-            r = await self._sync_entries(verbose)
+            r = await self._sync_entries(verbose=verbose, report_hidden=report_hidden)
         except Exception as e:
             return 0, e
         else:
@@ -205,7 +209,7 @@ class Feeder:
         finally:
             self.update_lock_file()
 
-    async def _sync_entries(self, verbose: bool = False) -> int:
+    async def _sync_entries(self, *, verbose: bool, report_hidden: bool) -> int:
         current_done = 0
 
         def print_progress(_):
@@ -220,11 +224,18 @@ class Feeder:
             if current_done == len(self.config.all_channels):
                 print()
 
+        tasks = []
         async with ClientSession() as s:
-            tasks = [
-                asyncio.create_task(self._sync_channel(s, c))
-                for c in self.config.all_channels
-            ]
+            for c in self.config.all_channels:
+                return_count = True
+                if not report_hidden:
+                    return_count = not c.hidden
+                tasks.append(
+                    asyncio.create_task(
+                        self._sync_channel(s, c, return_count=return_count)
+                    )
+                )
+
             if verbose:
                 for t in tasks:
                     t.add_done_callback(print_progress)
@@ -237,7 +248,11 @@ class Feeder:
             return sum_of_new
 
     async def _sync_channel(
-        self, session: ClientSession, channel: Channel
+        self,
+        session: ClientSession,
+        channel: Channel,
+        *,
+        return_count: bool = True,
     ) -> tuple[int, Exception | None]:
         try:
             self.log.debug(f"trying to sync {channel.title!r} ({channel.channel_id!r})")
@@ -251,6 +266,8 @@ class Feeder:
                     "%d new entries for %r (%r)"
                     % (count, channel.title, channel.channel_id)
                 )
+            if not return_count:
+                return 0, None
             return count, None
 
     async def _fetch_and_sync_entries(

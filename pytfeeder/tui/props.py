@@ -126,7 +126,9 @@ class TuiProps:
 
     def initial_update(self) -> None:
         print("updating...")
-        new, err = asyncio.run(self.feeder.sync_entries(verbose=True))
+        new, err = asyncio.run(
+            self.feeder.sync_entries(verbose=True, report_hidden=False)
+        )
         if err:
             self.status_msg = f"Error: {err}"
             return
@@ -503,7 +505,7 @@ class TuiProps:
         if self.page_state == PageState.ENTRIES:
             channel_id = self.channels[self.parent_index].channel_id
 
-        new, err = await self.feeder.sync_entries()
+        new, err = await self.feeder.sync_entries(report_hidden=False)
         if err:
             self.status_msg = f"Error: {err}"
             return
