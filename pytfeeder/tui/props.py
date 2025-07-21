@@ -46,7 +46,6 @@ class TuiProps:
         self.index = 0
         self.is_filtered = False
         self._is_feed_opened = False
-        self.lines = list(map(Line, self.channels))
         self.max_len_chan_title = max(len(c.title) for c in self.channels)
         self.new_marks = {0: " " * len(self.c.new_mark), 1: self.c.new_mark}
         self.page_state = PageState.CHANNELS
@@ -59,6 +58,7 @@ class TuiProps:
         self._status_msg_text = ""
         if self.is_update_needed:
             self.initial_update()
+        self.lines = list(map(Line, self.channels))
         self.refresh_last_update()
         self.is_channels_outdated = False
         self.__is_download_allowed = False
