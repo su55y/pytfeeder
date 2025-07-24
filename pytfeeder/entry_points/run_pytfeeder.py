@@ -29,6 +29,12 @@ def parse_args() -> argparse.Namespace:
         help="Remove entries with channel_id that unknown to channels.yaml and execute VACUUM",
     )
     parser.add_argument(
+        "-H",
+        "--ignore-hidden",
+        action="store_true",
+        help="Excludes updates count of hidden channels on `--sync`",
+    )
+    parser.add_argument(
         "-p",
         "--dump-config",
         action="store_true",
@@ -215,7 +221,9 @@ def main():
         sys.exit(0)
 
     if args.sync:
-        (new, err) = asyncio.run(feeder.sync_entries())
+        (new, err) = asyncio.run(
+            feeder.sync_entries(report_hidden=not args.ignore_hidden)
+        )
         if err:
             print(f"Error: {err}")
         else:

@@ -201,6 +201,7 @@ class Feeder:
         report_hidden: bool = True,
     ) -> tuple[int, Exception | None]:
         try:
+            self.log.debug(f"sync start: {verbose=!r}, {report_hidden=!r}")
             r = await self._sync_entries(verbose=verbose, report_hidden=report_hidden)
         except Exception as e:
             return 0, e
