@@ -23,16 +23,21 @@ channels_with_updates() {
         ;;
     esac
     channels_list="$(sqlite3 <. -init /dev/null -column "$STORAGE_FILEPATH" \
-        "SELECT channel_id FROM tb_entries ORDER BY published DESC LIMIT $limit" |
-        awk '{ printf "%s .channel_id == \"%s\" ", sep, $0; sep="or" }')"
+        "SELECT channel_id FROM tb_entries WHERE channel_id IN (\
+        $(yq -r "[.[] | select((.hidden // false) == false) |\
+        .channel_id | \"'\"+.+\"'\"] | join(\", \")" "$CHANNELS_FILEPATH"))\
+        ORDER BY published DESC LIMIT $limit" |
+        awk 'NF { printf "%s .channel_id == \"%s\" ", sep, $0; sep="or" }')"
+
     if [ -n "$channels_list" ]; then
-        yq -r ".[] | select($channels_list) | .title" "$CHANNELS_FILEPATH" || notify 'yq error'
+        yq -r ".[] | select((.hidden // false) == false) |\
+            select($channels_list) | .title" "$CHANNELS_FILEPATH" || notify 'yq error'
     fi
 }
 
 update() {
     notify 'Start updating...'
-    UPDATES="$(pytfeeder -s)"
+    UPDATES="$(pytfeeder -s -H)"
     case $UPDATES in
     0) notify 'No updates' ;;
     0* | *[!0-9]*) notify "Error: $UPDATES" ;;
