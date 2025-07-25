@@ -77,14 +77,14 @@ class Storage:
     def add_entries(self, entries: list[Entry]) -> int:
         if not entries:
             return 0
-        query = f"INSERT OR IGNORE INTO {TB_ENTRIES} (id, title, published, channel_id) VALUES (?, ?, ?, ?)"
+
+        placeholders = ", ".join(["(?, ?, ?, ?)"] * len(entries))
+        query = f"INSERT OR IGNORE INTO {TB_ENTRIES} (id, title, published, channel_id) VALUES {placeholders}"
+        params = tuple(
+            v for e in entries for v in (e.id, e.title, e.published, e.channel_id)
+        )
         with self.get_cursor() as cursor:
-            new_entries = [
-                (entry.id, entry.title, entry.published, entry.channel_id)
-                for entry in entries
-            ]
-            self.log.debug(f"{len(new_entries) = }")
-            rowcount = cursor.executemany(query, new_entries).rowcount
+            rowcount = cursor.execute(query, params).rowcount
             self.log.debug(f"{rowcount = }")
             return rowcount
 
