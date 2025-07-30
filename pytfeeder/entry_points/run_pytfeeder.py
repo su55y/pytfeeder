@@ -66,7 +66,7 @@ def parse_args() -> argparse.Namespace:
 def entries_stats(feeder: Feeder) -> str:
     max_title_len = max(len(c.title) for c in feeder.config.channels)
     max_title_len = max(max_title_len, 24)
-    channels_map = {c.channel_id: c.title for c in feeder.config.channels}
+    channels_map = {c.channel_id: c.title for c in feeder.config.all_channels}
     stats = feeder.stor.select_stats()
 
     total_count = feeder.total_entries_count()
