@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 from pytfeeder import Config, Feeder, Storage, utils, defaults, __version__
-from pytfeeder.logger import init_logger
+from pytfeeder.logger import LogLevel, init_logger
 
 
 def parse_args() -> argparse.Namespace:
@@ -52,6 +52,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-u", "--unwatched", action="store_true", help="Prints unwatched entries count"
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Verbosity level: -v: prints progress on sync, -vv prints debug log to stdout",
     )
     parser.add_argument(
         "-V",
@@ -171,6 +178,10 @@ def main():
     if not config.data_dir.exists():
         config.data_dir.mkdir(parents=True)
 
+    if args.verbose > 1:
+        config.logger.file = None
+        config.logger.stream = True
+        config.logger.level = LogLevel.DEBUG
     init_logger(config.logger)
 
     if args.add_channel:
@@ -222,7 +233,10 @@ def main():
 
     if args.sync:
         (new, err) = asyncio.run(
-            feeder.sync_entries(report_hidden=not args.ignore_hidden)
+            feeder.sync_entries(
+                verbose=args.verbose > 0,
+                report_hidden=not args.ignore_hidden,
+            )
         )
         if err:
             print(f"Error: {err}")
