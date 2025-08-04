@@ -1,9 +1,9 @@
+import asyncio
 import datetime as dt
 from functools import lru_cache, cached_property
 import logging
 import time
 
-import asyncio
 from aiohttp import ClientSession
 
 from .config import Config
