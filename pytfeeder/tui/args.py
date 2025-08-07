@@ -5,12 +5,17 @@ from pytfeeder.defaults import default_config_path, default_channels_filepath
 from . import consts
 
 
-def format_keybindings() -> list[str]:
-    max_keys_w = max(len(keys) for keys, _ in consts.HELP_KEYBINDINGS)
+def format_keybindings(macros: dict[str, str] = {}) -> list[str]:
+    max_keys_w = max(len(keys) for keys in consts.HELP_KEYBINDINGS)
     tab = " " * 4
+    if len(macros):
+        del consts.HELP_KEYBINDINGS["F1-F4"]
+        for key in macros:
+            if macros[key]:
+                consts.HELP_KEYBINDINGS[key] = macros[key]
     return [
         f"{tab}{keys:<{max_keys_w}}{tab}{desc}"
-        for keys, desc in consts.HELP_KEYBINDINGS
+        for keys, desc in consts.HELP_KEYBINDINGS.items()
     ]
 
 

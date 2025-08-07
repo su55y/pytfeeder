@@ -42,7 +42,13 @@ class TuiProps:
         self.help_status = " version {version} [h,q,Left]: close help".format(
             version=__version__
         )
-        self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings()))
+        macros = {
+            "F1": self.c.macro1,
+            "F2": self.c.macro2,
+            "F3": self.c.macro3,
+            "F4": self.c.macro4,
+        }
+        self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings(macros)))
         self.index = 0
         self.is_filtered = False
         self._is_feed_opened = False
