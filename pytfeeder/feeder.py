@@ -278,7 +278,7 @@ class Feeder:
         parser = YTFeedParser(
             raw_feed, skip_shorts=self.config.skip_shorts, log=self.log
         )
-        if not len(parser.entries):
+        if len(parser.entries) == 0 and not self.config.skip_shorts:
             self.log.error(f"can't parse feed for {channel_id}\n{raw_feed[:80] = !r}")
             return 0
         return self.stor.add_entries(parser.entries)

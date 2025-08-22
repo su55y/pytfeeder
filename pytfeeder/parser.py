@@ -17,6 +17,7 @@ class YTFeedParser:
     def __init__(
         self,
         raw: str,
+        *,
         skip_shorts: bool = False,
         log: logging.Logger | None = None,
     ) -> None:
