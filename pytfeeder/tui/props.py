@@ -510,6 +510,30 @@ class TuiProps:
             self.index = self.find_channel_index_by_id(current_channel_id)
             self.reload_lines()
 
+    def toggle_alphabetic_sort(self) -> None:
+        if self.is_filtered or self.page_state not in (
+            PageState.CHANNELS,
+            PageState.ENTRIES,
+        ):
+            return
+        self.c.alphabetic_sort = not self.c.alphabetic_sort
+        index = self.index
+        if self.page_state == PageState.ENTRIES:
+            index = self.parent_index
+
+        if self.c.alphabetic_sort:
+            self.feeder.channels_aplhabetic_sort()
+        else:
+            self.feeder.channels_default()
+
+        current_channel_id = self.channels[index].channel_id
+
+        self.update_channels()
+
+        if self.page_state == PageState.CHANNELS:
+            self.index = self.find_channel_index_by_id(current_channel_id)
+            self.reload_lines()
+
     async def sync_and_reload(self) -> None:
         channel_id = None
         if self.page_state == PageState.ENTRIES:

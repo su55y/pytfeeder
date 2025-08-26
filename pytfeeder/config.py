@@ -34,6 +34,9 @@ class Config:
     __visible_channels: list[Channel] = dc.field(
         default_factory=list, repr=False, kw_only=True
     )
+    __original_channels: list[Channel] = dc.field(
+        default_factory=list, repr=False, kw_only=True
+    )
 
     def __init__(
         self,
@@ -81,6 +84,7 @@ class Config:
     def channels(self) -> list[Channel]:
         return self.__visible_channels
 
+
     @property
     def all_channels(self) -> list[Channel]:
         return self.__channels
@@ -90,7 +94,11 @@ class Config:
         assert isinstance(channels_, list), "Unexpected channels value type"
         self.__channels = channels_
         self.__visible_channels = [c for c in self.__channels if not c.hidden]
+        self.__original_channels = self.__visible_channels.copy()
         self.__is_channels_set = True
+
+    def reset_channels(self) -> None:
+        self.__visible_channels = self.__original_channels.copy()
 
     def _parse_config_file(self, config_path: Path) -> None:
         try:

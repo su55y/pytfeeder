@@ -52,6 +52,10 @@ class Feeder:
         except Exception:
             raise
 
+    def channels_default(self) -> None:
+        self._reset_channels()
+        self.config.reset_channels()
+
     def channels_aplhabetic_sort(self) -> None:
         self._reset_channels()
         self.config.channels.sort(key=lambda c_: c_.title.lower())

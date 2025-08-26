@@ -575,6 +575,10 @@ class App(TuiProps):
             self.status_title = self.channels[self.parent_index].title
 
         @kb.add("s")
+        def _toggle_alphabetic_sort(_) -> None:
+            self.toggle_alphabetic_sort()
+
+        @kb.add("S")
         def _toggle_status_visability(_) -> None:
             self.c.hide_statusbar = not self.c.hide_statusbar
             self.statusbar_window.height = Dimension.exact(self.statusbar_height)

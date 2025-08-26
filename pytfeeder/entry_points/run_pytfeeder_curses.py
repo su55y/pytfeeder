@@ -56,6 +56,7 @@ class Key(IntEnum):
     q = ord("q")
     r = ord("r")
     s = ord("s")
+    S = ord("S")
     t = ord("t")
     u = ord("u")
     F1 = 265
@@ -295,12 +296,17 @@ class App(TuiProps):
                         self.move_back_to_channels()
                     elif self.show_tags():
                         screen.clear()
+
                 case Key.s:
+                    self.toggle_alphabetic_sort()
+
+                case Key.S:
                     self.c.hide_statusbar = not self.c.hide_statusbar
                     max_y, _ = screen.getmaxyx()
                     self.gravity = Gravity.UP
                     self.update_scroll_top(max_rows=max_y - self.statusbar_height)
                     screen.clear()
+
                 case Key.t:
                     before = len(self.lines)
                     self.toggle_empty_channels_visability()
