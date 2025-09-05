@@ -151,7 +151,7 @@ def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
 
         fmt = re.sub(r"\{last_update(#[^}]+)?\}", replacer_, fmt)
 
-        lu = feeder.last_update
+        lu = feeder.updater.last_update
         last_update = lu.strftime(fmts.pop()) if lu else "Unknown"
     if "{channels_with_updates}" in fmt:
         channels_with_updates = "\n".join(

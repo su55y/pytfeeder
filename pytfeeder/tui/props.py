@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import asyncio
-import datetime as dt
 from enum import Enum, auto
 import time
 import sys
@@ -147,15 +146,7 @@ class TuiProps:
     @property
     def is_update_needed(self) -> bool:
         return not self.c.no_update and (
-            self.c.always_update or self.is_update_interval_expired()
-        )
-
-    def is_update_interval_expired(self) -> bool:
-        last_update = self.feeder.last_update
-        if last_update is None:
-            return True
-        return last_update < (
-            dt.datetime.now() - dt.timedelta(minutes=self.c.update_interval)
+            self.c.always_update or self.feeder.updater.is_update_expired
         )
 
     def handle_move(self, gravity: int) -> bool:
@@ -479,7 +470,7 @@ class TuiProps:
             self.channels.sort(key=lambda c: not c.have_updates)
 
     def refresh_last_update(self) -> None:
-        last_update = self.feeder.last_update
+        last_update = self.feeder.updater.last_update
         if last_update is None:
             self.status_last_update = "Unknown"
         else:

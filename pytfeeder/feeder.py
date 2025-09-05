@@ -1,8 +1,6 @@
 import asyncio
-import datetime as dt
 from functools import lru_cache, cached_property
 import logging
-import time
 
 from aiohttp import ClientSession
 
@@ -10,6 +8,7 @@ from .config import Config
 from .models import Channel, Entry, Tag
 from .parser import YTFeedParser
 from .storage import Storage
+from .updater import Updater
 
 YT_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=%s"
 
@@ -23,6 +22,7 @@ class Feeder:
     ) -> None:
         self.stor = storage
         self.config = config
+        self.updater = Updater(lock_file=self.config.lock_file, update_interval=self.config.tui.update_interval)
         self.log = log or logging.getLogger()
         self.__channels_map = {c.channel_id: c for c in self.config.all_channels}
 
@@ -118,17 +118,6 @@ class Feeder:
         except Exception:
             raise
 
-    @property
-    def last_update(self) -> dt.datetime | None:
-        if not self.config.lock_file.exists():
-            self.log.warning(f"lock_file not found at {self.config.lock_file}")
-            return None
-        try:
-            return dt.datetime.fromtimestamp(float(self.config.lock_file.read_text()))
-        except Exception as e:
-            self.log.error(f"Can't read timestamp from lock_file: {e!r}")
-            return None
-
     def mark_as_watched(
         self,
         id: str | None = None,
@@ -204,15 +193,17 @@ class Feeder:
         verbose: bool = False,
         report_hidden: bool = True,
     ) -> tuple[int, Exception | None]:
+        failed = False
         try:
             self.log.debug(f"sync start: {verbose=!r}, {report_hidden=!r}")
             r = await self._sync_entries(verbose=verbose, report_hidden=report_hidden)
         except Exception as e:
+            failed = True
             return 0, e
         else:
             return r, None
         finally:
-            self.update_lock_file()
+            self.updater.update_lock_file(failed)
 
     async def _sync_entries(self, *, verbose: bool, report_hidden: bool) -> int:
         current_done = 0
@@ -294,9 +285,3 @@ class Feeder:
             if resp.status == 200:
                 return await resp.text()
             raise Exception(f"{resp.status} {resp.reason} {resp.url}")
-
-    def update_lock_file(self) -> None:
-        try:
-            self.config.lock_file.write_text(time.strftime("%s"))
-        except Exception as e:
-            self.log.error(repr(e))
