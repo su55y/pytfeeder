@@ -200,6 +200,7 @@ class Config:
         for hidden_key in {
             "_Config__channels",
             "_Config__visible_channels",
+            "_Config__original_channels",
             "storage_path",
         }:
             if hidden_key in obj:
