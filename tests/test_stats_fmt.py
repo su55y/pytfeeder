@@ -18,7 +18,7 @@ class TestStatsFmt(unittest.TestCase):
         cls.last_update = dt.datetime.now()
 
         lf, lf_name = tempfile.mkstemp(prefix="pytfeeder_update", suffix=".lock")
-        os.write(lf, cls.last_update.strftime("%s").encode())
+        os.write(lf, f"0:{cls.last_update.strftime('%s')}".encode())
         os.close(lf)
         cls.lock_file = Path(lf_name)
 
