@@ -19,7 +19,7 @@ from pytfeeder.tui import ConfigTUI
 
 
 STORAGE_FILENAME = "pytfeeder.db"
-
+DEFAULT_UPDATE_INTERVAL_MINS = 30
 
 @dc.dataclass
 class Config:
@@ -30,6 +30,7 @@ class Config:
     rofi: ConfigRofi
     tui: ConfigTUI
     lock_file: Path
+    update_interval: int = DEFAULT_UPDATE_INTERVAL_MINS
     __channels: list[Channel] = dc.field(default_factory=list, repr=False, kw_only=True)
     __visible_channels: list[Channel] = dc.field(
         default_factory=list, repr=False, kw_only=True

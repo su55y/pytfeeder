@@ -53,7 +53,7 @@ tui:
   no_update: false
   status_fmt: '{msg} {index} {title} {keybinds}'
   unwatched_first: false
-  update_interval: 30
+update_interval: 30
 """.strip()
 
 

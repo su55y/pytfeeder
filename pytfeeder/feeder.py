@@ -22,7 +22,7 @@ class Feeder:
     ) -> None:
         self.stor = storage
         self.config = config
-        self.updater = Updater(lock_file=self.config.lock_file, update_interval=self.config.tui.update_interval)
+        self.updater = Updater(lock_file=self.config.lock_file, update_interval=self.config.update_interval)
         self.log = log or logging.getLogger()
         self.__channels_map = {c.channel_id: c for c in self.config.all_channels}
 

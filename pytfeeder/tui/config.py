@@ -26,7 +26,6 @@ class ConfigTUI:
     no_update: bool = False
     status_fmt: str = consts.DEFAULT_STATUS_FMT
     unwatched_first: bool = False
-    update_interval: int = consts.DEFAULT_UPDATE_INTERVAL_MINS
     macro1: str = ""
     macro2: str = ""
     macro3: str = ""

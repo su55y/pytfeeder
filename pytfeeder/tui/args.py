@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+from pytfeeder.config import DEFAULT_UPDATE_INTERVAL_MINS
 from pytfeeder.defaults import default_config_path, default_channels_filepath
 from . import consts
 
@@ -149,7 +150,7 @@ def create_parser() -> argparse.ArgumentParser:
         "--update-interval",
         metavar="INT",
         type=int,
-        help=f"Update interval in minutes (default: {consts.DEFAULT_UPDATE_INTERVAL_MINS})",
+        help=f"Update interval in minutes (default: {DEFAULT_UPDATE_INTERVAL_MINS})",
     )
     parser.add_argument(
         "-U", "--always-update", action="store_true", help="Update all feeds on startup"

@@ -5,7 +5,6 @@ DEFAULT_FEED_ENTRIES_FMT = "{index} {new_mark} {published} {channel_title} {titl
 DEFAULT_LAST_UPDATE_FMT = "%D %T"
 DEFAULT_NEW_MARK = "N"
 DEFAULT_STATUS_FMT = "{msg} {index} {title} {keybinds}"
-DEFAULT_UPDATE_INTERVAL_MINS = 30
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 DEFAULT_KEYBINDS_R = "[l,Right,o]: enter channel, [Space,Enter]: restore channel"
 DEFAULT_KEYBINDS_RE = (

@@ -149,5 +149,5 @@ tui:
   # entries sorting order, prefering unwatched over newer but watched
   unwatched_first: false
 
-  # interval in minutes between updates on start (used if always_update=false)
-  update_interval: 30
+# interval in minutes between updates on start (used if always_update=false)
+update_interval: 30
