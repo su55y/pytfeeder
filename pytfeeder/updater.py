@@ -15,7 +15,7 @@ class Updater:
 
     def _read_state(self) -> None:
         try:
-            fails, lu = self.lock_file.read_text().split(":")[:2]
+            fails, lu = self.lock_file.read_text().split(":", maxsplit=1)
             self.fails = int(fails)
             self.last_update = dt.datetime.fromtimestamp(float(lu))
         except Exception as e:
