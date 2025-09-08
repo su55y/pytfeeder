@@ -5,7 +5,7 @@ import datetime as dt
 class Updater:
     def __init__(self, lock_file: Path, update_interval: int) -> None:
         self.fails = 0
-        self.last_update = dt.datetime.now()
+        self.last_update = dt.datetime.now() - dt.timedelta(minutes=update_interval + 1)
         self.lock_file = lock_file
         self.max_retries = 5
         self.update_interval = update_interval

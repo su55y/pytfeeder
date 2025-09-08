@@ -21,6 +21,7 @@ from pytfeeder.tui import ConfigTUI
 STORAGE_FILENAME = "pytfeeder.db"
 DEFAULT_UPDATE_INTERVAL_MINS = 30
 
+
 @dc.dataclass
 class Config:
     channels_filepath: Path
@@ -85,7 +86,6 @@ class Config:
     def channels(self) -> list[Channel]:
         return self.__visible_channels
 
-
     @property
     def all_channels(self) -> list[Channel]:
         return self.__channels
@@ -129,6 +129,10 @@ class Config:
             self.tui.update(tui_object)
         if (skip_shorts := config_dict.get("skip_shorts")) is not None:
             self.skip_shorts = bool(skip_shorts)
+        if (
+            update_interval := config_dict.get("update_interval")
+        ) is not None and update_interval >= 0:
+            self.update_interval = update_interval
 
     def _set_data_paths(
         self,
