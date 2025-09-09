@@ -13,8 +13,7 @@ DEFAULT_KEYBINDS_RE = (
 DEFAULT_DOWNLOAD_OUTPUT = "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
 
 OPTIONS_DESCRIPTION = """
-macros available only in entries screens.
-macros args:
+macros available only in entries screens with args:
     $1 - id
     $2 - title
 
