@@ -6,9 +6,20 @@ import sys
 from pytfeeder import Config, Feeder, Storage, utils, defaults, __version__
 from pytfeeder.logger import LogLevel, init_logger
 
+STATS_FMT_KEYS = """
+stats-fmt keys:
+    {total}                 - total entries count
+    {unwatched}             - new entries count
+    {deleted}               - marked as deleted entries count
+    {last_update}           - last update datetime, can be used with fmt like `{last_update#%%D %%T}`
+    {channels_with_updates} - channels with new entries
+"""
+
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        epilog=STATS_FMT_KEYS, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
     parser.add_argument(
         "-c",
@@ -40,7 +51,9 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Dump the current config in yaml format",
     )
-    parser.add_argument("-f", "--stats-fmt", help="Print formatted stats")
+    parser.add_argument(
+        "-f", "--stats-fmt", metavar="STR", help="Print formatted stats"
+    )
     parser.add_argument(
         "-s",
         "--sync",
