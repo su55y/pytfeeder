@@ -1,3 +1,4 @@
+import logging
 from os.path import expandvars
 from pathlib import Path
 import subprocess as sp
@@ -13,7 +14,7 @@ def expand_path(path: Path) -> Path:
 def fetch_channel_info(url: str) -> Channel:
     from yt_dlp import YoutubeDL
 
-    with YoutubeDL({"quiet": True}) as ydl:
+    with YoutubeDL({"quiet": True, "logger": logging.getLogger()}) as ydl:
         info = ydl.extract_info(url, download=False, process=False)
         if not info or not isinstance(info, dict):
             raise Exception(f"Can't extract info by url: {url}")
