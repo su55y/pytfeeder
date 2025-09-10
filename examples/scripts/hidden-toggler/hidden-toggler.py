@@ -36,7 +36,6 @@ def run():
         )
 
         if res.returncode != 0:
-            # print(f"{res.returncode=!r}")
             return res.returncode
 
         if res.stdout.startswith(SAVE_KB):
@@ -51,14 +50,14 @@ def run():
 
 def main() -> int:
     try:
-        _ = run()
+        res = run()
     except KeyboardInterrupt:
-        pass
+        return 0
     except Exception as e:
         print(e)
         return 1
-
-    return 0
+    else:
+        return res
 
 
 if __name__ == "__main__":
