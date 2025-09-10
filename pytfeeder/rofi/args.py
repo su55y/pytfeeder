@@ -19,7 +19,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-c",
-        "--config-file",
+        "--config",
         metavar="PATH",
         default=default_config_path(),
         type=Path,

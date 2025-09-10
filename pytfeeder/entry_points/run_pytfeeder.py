@@ -20,10 +20,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         epilog=STATS_FMT_KEYS, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("-a", "--add-channel", metavar="URL", help="Add channel by url")
+    parser.add_argument(
+        "-a", "--add", metavar="URL", help="Add channel to channels config by url"
+    )
     parser.add_argument(
         "-c",
-        "--config-file",
+        "--config",
         default=defaults.default_config_path(),
         metavar="PATH",
         type=Path,
@@ -182,7 +184,7 @@ def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
 
 def main():
     args = parse_args()
-    config = Config(config_file=args.config_file)
+    config = Config(config_file=args.config)
 
     if args.dump_config:
         print(config.dump(), end="")
@@ -197,7 +199,8 @@ def main():
         config.logger.level = LogLevel.DEBUG
     init_logger(config.logger)
 
-    if args.add_channel:
+    if args.add:
+        channel_url = args.add
         if not config.channels_filepath.exists():
             answ = input(
                 f"Channels file {config.channels_filepath} not exists,\ncreate it?: "
@@ -207,7 +210,7 @@ def main():
             config.channels_filepath.touch(0o644, exist_ok=False)
 
         try:
-            new_channel = utils.fetch_channel_info(args.add_channel)
+            new_channel = utils.fetch_channel_info(channel_url)
         except Exception as e:
             print(f"Error: {e}")
             sys.exit(1)

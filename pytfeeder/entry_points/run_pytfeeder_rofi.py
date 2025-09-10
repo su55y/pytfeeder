@@ -183,7 +183,7 @@ def wrapped_main():
     global print_error
 
     args = rofi_args.parse_args()
-    config = Config(config_file=args.config_file)
+    config = Config(config_file=args.config)
     config.rofi.update(vars(args))
 
     if not config.storage_path.exists():
