@@ -1,5 +1,7 @@
 #!/usr/bin/env -S python -u
 
+import argparse
+from pathlib import Path
 import subprocess as sp
 import sys
 
@@ -9,8 +11,23 @@ DEFAULT_CONFIG_PATH = defaults.default_config_path()
 SAVE_KB = "ctrl-s"
 
 
-def run():
-    config = Config(DEFAULT_CONFIG_PATH)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-C",
+        "--channels-file",
+        type=Path,
+        metavar="PATH",
+        help=f"channels path (default: {defaults.default_channels_filepath()})",
+    )
+    return parser.parse_args()
+
+
+def run(channels_filepath: Path | None = None):
+    config = Config(DEFAULT_CONFIG_PATH, channels_filepath=channels_filepath)
+    if len(config.all_channels) == 0:
+        print(f"No channels configured in {config.channels_filepath}")
+        sys.exit(0)
     icons = ["󰄱", "\033[1;32m󰱒"]
     index = 0
 
@@ -49,8 +66,9 @@ def run():
 
 
 def main() -> int:
+    args = parse_args()
     try:
-        res = run()
+        res = run(args.channels_file)
     except KeyboardInterrupt:
         return 0
     except Exception as e:
