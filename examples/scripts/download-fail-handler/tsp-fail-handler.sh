@@ -1,11 +1,6 @@
 #!/bin/sh
 
-notify() { notify-send -a tsp-fail-handler "$1"; }
-
-if [ $# -ne 4 ]; then
-    notify "Unexpected arguments count $# ($*)"
-    exit 1
-fi
+[ $# -eq 4 ] || exit 0
 
 LOG_FILE=/tmp/tsp_fail_handler.log
 FAILED_JOBS_HISTORY=/tmp/tsp_failed_jobs_history.log
@@ -15,8 +10,6 @@ jobid="$1"
 error="$2"
 outfile="$3"
 cmd="$4"
-
-[ "$error" != 1 ] && exit 0
 
 # verify that job has label 'pytfeeder'
 pattern="^$jobid\s+(running|finished)\s+[^\s]+\s+\[pytfeeder\]\K(yt-dlp.+)$"
@@ -36,7 +29,7 @@ echo "$cmd" >>$FAILED_JOBS_HISTORY
 printf '%s Handling fail\n -- jobid: %s\n -- error: %s\n -- outfile: %s\n -- cmd: %s\n' \
     "$(date +%T)" "$jobid" "$error" "$outfile" "$cmd" >>$LOG_FILE
 
-notify "Enqueuing back ($((trynum + 1))) '$cmd'..."
+notify-send -a tsp-fail-handler "Enqueuing back ($((trynum + 1))) '$cmd'..."
 notify_cmd="$(tsp -l | grep -oP "^\d+\s+queued\s+\(file\)\s+\[$jobid\]&&\s\K(.+)$")"
 new_jobid="$(tsp $cmd)"
 if [ -n "$notify_cmd" ]; then
