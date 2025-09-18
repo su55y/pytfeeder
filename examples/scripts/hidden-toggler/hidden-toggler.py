@@ -9,6 +9,7 @@ from pytfeeder import Config, defaults
 
 DEFAULT_CONFIG_PATH = defaults.default_config_path()
 SAVE_KB = "ctrl-s"
+TOGGLE_KB = "ctrl-space"
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,13 +38,13 @@ def run(channels_filepath: Path | None = None):
             for i, c in enumerate(config.all_channels)
         )
         if index > 0:
-            opts = f"--sync --bind='ctrl-space:accept,start:{'+'.join('down' for _ in range(index))}'"
+            opts = f"--sync --bind='{TOGGLE_KB}:accept,start:{'+'.join('down' for _ in range(index))}'"
         else:
-            opts = "--bind='ctrl-space:accept'"
+            opts = f"--bind='{TOGGLE_KB}:accept'"
 
         res = sp.run(
             f"fzf --ansi --preview='' --with-nth=2.. --accept-nth=1\
-                --header '{SAVE_KB}: Save changes' --layout=reverse\
+                --header '{TOGGLE_KB}: Toggle hidden, {SAVE_KB}: Save changes' --layout=reverse\
                 --expect='{SAVE_KB}' {opts}",
             input=all_channels_str,
             capture_output=True,
@@ -57,6 +58,7 @@ def run(channels_filepath: Path | None = None):
 
         if res.stdout.startswith(SAVE_KB):
             config.dump_channels()
+            print(f"Changes saved to {config.channels_filepath}")
             return 0
 
         index = int(res.stdout)
