@@ -31,7 +31,10 @@ class Updater:
 
     def update_lock_file(self, failed: bool) -> None:
         self.last_update = dt.datetime.now()
-        self.fails += failed
+        if failed:
+            self.fails += failed
+        else:
+            self.fails = 0
         try:
             self.lock_file.write_text(f"{self.fails}:{self.last_update.strftime('%s')}")
         except Exception as e:
