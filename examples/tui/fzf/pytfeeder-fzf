@@ -36,7 +36,7 @@ while IFS= read -r line; do
 done <"$PYTFEEDER_FZF_ALL_CHANNELS_LIST"
 
 SELECT_QUERY="\
-    SELECT id, title FROM tb_entries \
+    SELECT id, is_viewed, title FROM tb_entries \
     WHERE is_deleted = 0 AND channel_id = '%s' \
     ORDER BY published DESC"
 
@@ -47,29 +47,35 @@ while :; do
     channel_id="${channel_line%% *}"
     channel_title="${channel_line#* }"
 
-    selected_line="$(printf '__go_back__\n%s\n' \
-        "$(sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" \
+    selected_line="$( echo __go_back__ |
+        sqlite3 <. -init /dev/null -column "$PYTFEEDER_DB_PATH" \
             "$(printf "$SELECT_QUERY" "$channel_id")" |
-            fzf \
-                --ghost="$channel_title" \
-                --header='[esc,ctrl-q]: Go back, [ctrl-space]: Play' \
-                --bind='ctrl-space:execute-silent(\
+            while read -r line; do
+                line=$(echo "$line" | tr -s ' ')
+                id="${line%% *}"
+                is_viewed="$(echo "$line" | cut -d' ' -f 2)"
+                title="$(echo "$line" | cut -d' ' -f 3-)"
+                if [ $is_viewed -eq 0 ]; then
+                    printf '%s \033[1;32m%s\033[0m\n' "$id" "$title"
+                else
+                    echo "$id $title"
+                fi
+            done | fzf --ansi --ghost="$channel_title" \
+            --header='[esc,ctrl-q]: Go back, [ctrl-space]: Play' \
+            --bind='ctrl-space:execute-silent(\
     notify-send -i youtube -a pytfeeder "Playing \"$(echo {} |\
     sed "s/^[-_0-9a-zA-Z]\{11\}[ \t]*//;s/[[ \t]*$//")\"..." &&\
     setsid -f mpv "https://youtu.be/$(echo {} | cut -d" " -f1)" >/dev/null 2>&1)' \
-                --with-nth 2.. --preview='')")"
-    [ -n "$selected_line" ] || exit 0
+            --with-nth 2.. --preview=''
+    )"
+
+    [ -n "$selected_line" ] || continue
 
     vid_id="${selected_line%% *}"
-    if [ "$vid_id" = __go_back__ ]; then
-        vid_id=
-        continue
-    fi
     vid_title="$(echo "${selected_line#* }" | sed 's/^[ \t]*//; s/[ \t\n]*$//')"
-    break
-done
 
-[ -n "$vid_id" ] || exit 0
-notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
-qid="$(tsp -L pytfeeder yt-dlp "https://youtu.be/$vid_id" -o "$DOWNLOAD_OUTPUT")"
-tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>&1
+    [ -n "$vid_id" ] || exit 0
+    notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
+    qid="$(tsp -L pytfeeder yt-dlp "https://youtu.be/$vid_id" -o "$DOWNLOAD_OUTPUT")"
+    tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>&1
+done
