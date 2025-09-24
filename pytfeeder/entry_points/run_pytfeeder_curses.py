@@ -601,7 +601,11 @@ class App(TuiProps):
             screen.clear()
         elif self.page_state == PageState.RESTORING_ENTRIES:
             self.gravity = Gravity.DOWN
-            self.enter_restore(self.parent_index_restore, is_move_back=True)
+            if self._is_in_restore_from_channel and self._restore_entries_channel_id:
+                self.page_state = PageState.ENTRIES
+                self.lines = self.get_lines_by_id(self._restore_entries_channel_id)
+            else:
+                self.enter_restore(self.parent_index_restore, is_move_back=True)
 
     def move_right(self, ch: int) -> None:
         selected_data = self.lines[self.index].data

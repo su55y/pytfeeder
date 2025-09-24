@@ -71,6 +71,7 @@ class TuiProps:
         self.__is_play_allowed = False
         self.__is_executables_checked = False
         self._restore_entries_channel_id: str | None = None
+        self._is_in_restore_from_channel = False
 
     def feed(self) -> list[Entry]:
         return self.feeder.feed(
@@ -288,7 +289,10 @@ class TuiProps:
         if self.page_state == PageState.ENTRIES:
             selected_data = self.channels[self.parent_index]
             if selected_data.channel_id != "feed":
+                self._is_in_restore_from_channel = True
                 return self.enter_restore_entries(selected_data.channel_id)
+
+        self._is_in_restore_from_channel = False
 
         channels = self.feeder.channels_with_deleted()
         if len(channels) == 0:
@@ -312,6 +316,7 @@ class TuiProps:
                 self._reset_filter()
             else:
                 self.parent_index_restore = self.index
+
         entries = self.feeder.channels_deleted_entries(channel_id)
         if len(entries) == 0:
             self.status_msg = "Channel don't have deleted entries"
