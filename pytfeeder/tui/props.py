@@ -287,7 +287,8 @@ class TuiProps:
 
         if self.page_state == PageState.ENTRIES:
             selected_data = self.channels[self.parent_index]
-            return self.enter_restore_entries(selected_data.channel_id)
+            if selected_data.channel_id != "feed":
+                return self.enter_restore_entries(selected_data.channel_id)
 
         channels = self.feeder.channels_with_deleted()
         if len(channels) == 0:
