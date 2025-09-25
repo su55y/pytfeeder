@@ -11,6 +11,8 @@ error="$2"
 outfile="$3"
 cmd="$4"
 
+[ "$error" -eq 0 ] && exit 0
+
 # verify that job has label 'pytfeeder'
 pattern="^$jobid\s+(running|finished)\s+[^\s]+\s+\[pytfeeder\]\K(yt-dlp.+)$"
 [ "$(tsp -l | grep -oP "$pattern")" = "$cmd" ] || exit 0
