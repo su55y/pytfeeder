@@ -22,7 +22,10 @@ class Feeder:
     ) -> None:
         self.stor = storage
         self.config = config
-        self.updater = Updater(lock_file=self.config.lock_file, update_interval=self.config.update_interval)
+        self.updater = Updater(
+            lock_file=self.config.lock_file,
+            update_interval=self.config.update_interval,
+        )
         self.log = log or logging.getLogger()
         self.__channels_map = {c.channel_id: c for c in self.config.all_channels}
 
@@ -256,15 +259,13 @@ class Feeder:
         except Exception as e:
             self.log.error(f"cannot sync channel ({channel.channel_id}): {e}")
             return 0, e
-        else:
-            if count > 0:
-                self.log.info(
-                    "%d new entries for %r (%r)"
-                    % (count, channel.title, channel.channel_id)
-                )
-            if not return_count:
-                return 0, None
+        if count > 0:
+            self.log.info(
+                f"{count} new entries for {channel.title} ({channel.channel_id})"
+            )
+        if return_count:
             return count, None
+        return 0, None
 
     async def _fetch_and_sync_entries(
         self, session: ClientSession, channel_id: str
