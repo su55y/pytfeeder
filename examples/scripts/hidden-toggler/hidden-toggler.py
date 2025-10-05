@@ -47,7 +47,7 @@ def run(channels_filepath: Path | None = None) -> int:
     _ = len(config.all_channels)
     while True:
         all_channels_str = "\n".join(
-            f"{i} {icons[c.hidden]} {c.title} ({c.unwatched_count}/{c.entries_count})\033[0m"
+            f"{i} {icons[c.hidden]} {'\033[3;2m' if c.entries_count == 0 else ''}{c.title} ({c.unwatched_count}/{c.entries_count})\033[0m"
             for i, c in enumerate(config.all_channels)
         )
         if index > 0:
