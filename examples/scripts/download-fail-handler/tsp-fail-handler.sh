@@ -5,6 +5,7 @@
 LOG_FILE=/tmp/tsp_fail_handler.log
 FAILED_JOBS_HISTORY=/tmp/tsp_failed_jobs_history.log
 MAX_RETRIES=3
+JOB_LABEL=pytfeeder
 
 jobid="$1"
 error="$2"
@@ -13,8 +14,8 @@ cmd="$4"
 
 [ "$error" -eq 0 ] && exit 0
 
-# verify that job has label 'pytfeeder'
-pattern="^$jobid\s+(running|finished)\s+[^\s]+\s+\[pytfeeder\]\K(yt-dlp.+)$"
+# verify that job has target label
+pattern="^$jobid\s+(running|finished)\s+[^\s]+\s+\[$JOB_LABEL\]\K(yt-dlp.+)$"
 [ "$(tsp -l | grep -oP "$pattern")" = "$cmd" ] || exit 0
 
 trynum="$(grep -cx "$cmd" $FAILED_JOBS_HISTORY)"
@@ -33,7 +34,7 @@ printf '%s Handling fail\n -- jobid: %s\n -- error: %s\n -- outfile: %s\n -- cmd
 
 notify-send -a tsp-fail-handler "Enqueuing back ($((trynum + 1))) '$cmd'..."
 notify_cmd="$(tsp -l | grep -oP "^\d+\s+queued\s+\(file\)\s+\[$jobid\]&&\s\K(.+)$")"
-new_jobid="$(tsp $cmd)"
+new_jobid="$(tsp -L $JOB_LABEL $cmd)"
 if [ -n "$notify_cmd" ]; then
     set -- $notify_cmd
     shift
