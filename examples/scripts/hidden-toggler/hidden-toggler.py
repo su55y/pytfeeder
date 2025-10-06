@@ -10,7 +10,7 @@ from pytfeeder import Config, defaults, Storage
 DEFAULT_CONFIG_PATH = defaults.default_config_path()
 SAVE_KB = "ctrl-s"
 TOGGLE_KB = "ctrl-space"
-
+CHANNEL_FMT = "{index} {icon} {title} ({stats})\033[0m"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -29,13 +29,7 @@ def run(channels_filepath: Path | None = None) -> int:
     stor = Storage(db_file=config.storage_path)
     stats = stor.select_channels_stats()
     for c in config.all_channels:
-        stat = stats.get(c.channel_id)
-        if stat is None:
-            continue
-        count, unwatched = stat
-        c.entries_count = count
-        c.have_updates = bool(unwatched)
-        c.unwatched_count = unwatched
+        c.entries_count, c.unwatched_count = stats.get(c.channel_id) or (0, 0)
 
     if len(config.all_channels) == 0:
         print(f"No channels configured in {config.channels_filepath}")
@@ -43,13 +37,17 @@ def run(channels_filepath: Path | None = None) -> int:
     icons = ["󰄱", "\033[1;32m󰱒"]
     index = 0
 
-    config.reset_channels()
-    _ = len(config.all_channels)
     while True:
         all_channels_str = "\n".join(
-            f"{i} {icons[c.hidden]} {'\033[3;2m' if c.entries_count == 0 else ''}{c.title} ({c.unwatched_count}/{c.entries_count})\033[0m"
+            CHANNEL_FMT.format(
+                index=i,
+                icon=icons[c.hidden],
+                title=("\033[3;2m" if c.entries_count == 0 else "") + c.title,
+                stats=f"{c.unwatched_count}/{c.entries_count}",
+            )
             for i, c in enumerate(config.all_channels)
         )
+
         if index > 0:
             opts = f"--sync --bind='{TOGGLE_KB}:accept,start:{'+'.join('down' for _ in range(index))}'"
         else:
