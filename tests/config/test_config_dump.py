@@ -15,18 +15,6 @@ logger:
   fmt: null
   level: notset
   stream: false
-rofi:
-  alphabetic_sort: false
-  channel_feed_limit: -1
-  channels_fmt: "{title}\0info\x1F{id}"
-  datetime_fmt: '%D %T'
-  entries_fmt: "{title}\0info\x1F{id}\x1Fmeta\x1F{meta}"
-  feed_entries_fmt: "{title}\0info\x1F{id}\x1Fmeta\x1F{meta}"
-  feed_limit: -1
-  hide_empty: false
-  hide_feed: false
-  separator: "\n"
-  unwatched_first: false
 skip_shorts: false
 tui:
   alphabetic_sort: false

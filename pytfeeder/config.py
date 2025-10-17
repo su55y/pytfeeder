@@ -14,7 +14,6 @@ from .defaults import (
 from .logger import LoggerConfig, LogLevel
 from .models import Channel, ChannelDumper
 from .utils import expand_path
-from pytfeeder.rofi import ConfigRofi, Separator
 from pytfeeder.tui import ConfigTUI
 
 
@@ -28,7 +27,6 @@ class Config:
     logger: LoggerConfig
     skip_shorts: bool
     storage_path: Path
-    rofi: ConfigRofi
     tui: ConfigTUI
     lock_file: Path
     update_interval: int = DEFAULT_UPDATE_INTERVAL_MINS
@@ -50,7 +48,6 @@ class Config:
         logger_config: LoggerConfig | None = None,
         skip_shorts: bool = False,
         storage_path: Path | None = None,
-        rofi: ConfigRofi | None = None,
         tui: ConfigTUI | None = None,
         lock_file: Path | None = None,
     ) -> None:
@@ -64,7 +61,6 @@ class Config:
 
         self.lock_file = lock_file or default_lockfile_path()
         self.logger = logger_config or LoggerConfig()
-        self.rofi = rofi or ConfigRofi()
         self.tui = tui or ConfigTUI()
         self.skip_shorts = skip_shorts
 
@@ -123,8 +119,6 @@ class Config:
             self.lock_file = expand_path(lock_file)
         if logger_object := config_dict.get("logger"):
             self.logger.update(logger_object)
-        if rofi_object := config_dict.get("rofi"):
-            self.rofi.update(rofi_object)
         if tui_object := config_dict.get("tui"):
             self.tui.update(tui_object)
         if (skip_shorts := config_dict.get("skip_shorts")) is not None:
@@ -193,9 +187,6 @@ class Config:
             type(Path()), lambda d, p: d.represent_scalar(strtag, str(p))
         )
         yaml.add_representer(
-            Separator, lambda d, s: d.represent_scalar(strtag, s, style='"')
-        )
-        yaml.add_representer(
             LogLevel, lambda d, l: d.represent_scalar(strtag, l.name.lower())
         )
 
@@ -228,7 +219,6 @@ class Config:
             repr_str += "channels: []\n"
 
         repr_str += f"{repr(self.logger).strip()}\n"
-        repr_str += f"{repr(self.rofi).strip()}\n"
         repr_str += f"{repr(self.tui).strip()}\n"
         repr_str += f"skip_shorts: {self.skip_shorts}\n"
         return repr_str.strip()
