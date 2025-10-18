@@ -31,14 +31,14 @@ play() {
 }
 
 start_menu() {
-    pytfeeder-rofi "$@" \
+    "$HELPER" "$@" \
         --channels-fmt '{title}\r<i><b>{unwatched}</b> new entries</i>\000info\037{id}\037active\037{active}'
     printf '\000new-selection\0370\n'
 }
 
 print_feed() {
     printf 'back\000info\037main\n'
-    pytfeeder-rofi "$@" -f \
+    "$HELPER" "$@" -f \
         --feed-entries-fmt '{title}\r<b><i>{channel_title}</i></b> {published}\000info\037{id}\037meta\037{meta}\037active\037{active}' \
         --datetime-fmt '<i>%d %B</i>'
 }
@@ -48,14 +48,14 @@ print_channel_feed() {
     channel_id="$1"
     shift
     printf 'back\000info\037main\n'
-    pytfeeder-rofi "$@" -i="$channel_id" \
+    "$HELPER" "$@" -i="$channel_id" \
         --entries-fmt '{title}\r<b>{published}</b>\000info\037{id}\037meta\037{meta}\037active\037{active}' \
         --datetime-fmt '<i>%d %B</i>'
 }
 
 print_tags() {
     printf 'back\000info\037main\n'
-    pytfeeder-rofi --tags \
+    "$HELPER" --tags \
         --channels-fmt '{title}\r<i><b>{unwatched}</b> new entries</i>\000info\037{id}\037active\037{active}'
 }
 
@@ -77,13 +77,13 @@ case $ROFI_RETV in
     *)
         if [ "$ROFI_DATA" = tags ]; then
             printf 'back\000info\037tags\n'
-            pytfeeder-rofi --tag "$ROFI_INFO" \
+            "$HELPER" --tag "$ROFI_INFO" \
                 --channels-fmt '{title}\r<i><b>{unwatched}</b> new entries</i>\000info\037{id}\037active\037{active}'
         elif echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{24}$' >/dev/null 2>&1; then
             print_channel_feed "$ROFI_INFO"
             printf '\000new-selection\0370\n'
         elif echo "$ROFI_INFO" | grep -sP '^[-_0-9a-zA-Z]{11}$' >/dev/null 2>&1; then
-            pytfeeder-rofi -w="$ROFI_INFO" >/dev/null 2>&1
+            "$HELPER" -w="$ROFI_INFO" >/dev/null 2>&1
             play "https://youtu.be/$ROFI_INFO" "$1"
         else
             err_msg "invalid id '$ROFI_INFO'"

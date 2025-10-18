@@ -6,11 +6,15 @@ SCRIPTPATH="$(
 )"
 
 [ -f "$SCRIPTPATH/helper.sh" ] || {
-    notify-send -i "rofi" -a "youtube feed" "helper script not found"
+    notify-send -i rofi -a pytfeeder-rofi 'helper script not found'
     exit 1
 }
 
-# theme string
+[ -f "$SCRIPTPATH/helper.py" ] || {
+    notify-send -i rofi -a pytfeeder-rofi 'py helper script not found'
+    exit 1
+}
+
 theme() {
     cat <<EOF
 configuration {
@@ -42,7 +46,7 @@ element.selected.urgent {
 EOF
 }
 
-SCRIPTPATH="$SCRIPTPATH" rofi -i -show "pytfeeder-rofi-launcher" \
-    -modi "pytfeeder-rofi-launcher:$SCRIPTPATH/helper.sh" \
+HELPER="$SCRIPTPATH/helper.py" rofi -i -show pytfeeder-rofi \
+    -modi "pytfeeder-rofi:$SCRIPTPATH/helper.sh" \
     -no-config -theme-str "$(theme)" \
     -normal-window -eh 2
