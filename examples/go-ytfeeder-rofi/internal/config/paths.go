@@ -7,14 +7,19 @@ import (
 )
 
 const (
-	pytfeeder    = "pytfeeder"
-	configYaml   = "config.yaml"
-	channelsYaml = "channels.yaml"
-	StorageName  = "pytfeeder.db"
+	pytfeeder      = "pytfeeder"
+	configYaml     = "config.yaml"
+	rofiConfigYaml = "rofi_config.yaml"
+	channelsYaml   = "channels.yaml"
+	StorageName    = "pytfeeder.db"
 )
 
 func DefaultConfigPath() string {
 	return filepath.Join(configDir(), pytfeeder, configYaml)
+}
+
+func DefaultRofiConfigPath() string {
+	return filepath.Join(configDir(), pytfeeder, rofiConfigYaml)
 }
 
 func defaultChannelsPath() string {

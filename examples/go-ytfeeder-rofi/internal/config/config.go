@@ -13,10 +13,12 @@ import (
 )
 
 const (
-	DefaultChannelsFmt    = "{title}\000info\037{id}\037active\037{active}"
-	DefaultEntriesFmt     = "{title}\000info\037{id}\037active\037{active}"
-	DefaultFeedEntriesFmt = "{title}\000info\037{id}\037active\037{active}"
-	DefaultDatetimeFmt    = "%b %d"
+	DefaultChannelsFmt      = "{title}\000info\037{id}\037active\037{active}"
+	DefaultEntriesFmt       = "{title}\000info\037{id}\037active\037{active}"
+	DefaultFeedEntriesFmt   = "{title}\000info\037{id}\037active\037{active}"
+	DefaultDatetimeFmt      = "%b %d"
+	DefaultChannelFeedLimit = 15
+	DefaultFeedLimit        = 100
 )
 
 func defaultSeparator() yaml.Node {
@@ -46,7 +48,7 @@ type Config struct {
 	ChannelsPath string `yaml:"channels_filepath"`
 	DataDir      string `yaml:"data_dir"`
 	StorageFile  string `yaml:"-"`
-	RofiConfig   `yaml:"rofi"`
+	RofiConfig   `yaml:"-"`
 }
 
 func defaultConfig() Config {
@@ -55,34 +57,53 @@ func defaultConfig() Config {
 		defaultDataDir(),
 		defaultStoragePath(),
 		RofiConfig{
-			ChannelFeedLimit: -1,
+			ChannelFeedLimit: DefaultChannelFeedLimit,
 			ChannelsFmt:      DefaultChannelsFmt,
 			DatetimeFmt:      DefaultDatetimeFmt,
 			EntriesFmt:       DefaultEntriesFmt,
 			FeedEntriesFmt:   DefaultFeedEntriesFmt,
-			FeedLimit:        -1,
+			FeedLimit:        DefaultFeedLimit,
 			Separator:        defaultSeparator(),
 		},
 	}
 }
 
-func GetConfig(path string) Config {
-	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		fmt.Printf("ERR: Config not found at %s\n", path)
-		return defaultConfig()
+func GetConfig(configPath string, rofiConfigPath string) Config {
+	c := Config{}
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		fmt.Printf("ERR: Config not found at %s\n", configPath)
+		c = defaultConfig()
 	} else if err != nil {
 		fmt.Printf("ERR: %v\n", err)
 		os.Exit(1)
+	} else {
+		file, err := os.OpenFile(configPath, os.O_RDONLY, 0644)
+		if err != nil {
+			fmt.Printf("ERR: Opening config: %v (%s)", err, configPath)
+		}
+		if err := yaml.NewDecoder(file).Decode(&c); err != nil {
+			fmt.Printf("ERR: Decoding config: %s (%s)\n", err.Error(), configPath)
+			os.Exit(1)
+		}
 	}
 
-	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
-	if err != nil {
-		fmt.Printf("ERR: Opening config: %v (%s)", err, path)
+	if _, err := os.Stat(rofiConfigPath); err == nil {
+		file, err := os.OpenFile(rofiConfigPath, os.O_RDONLY, 0644)
+		if err != nil {
+			fmt.Printf("ERR: Opening config: %v (%s)", err, rofiConfigPath)
+		}
+		if err := yaml.NewDecoder(file).Decode(&c.RofiConfig); err != nil {
+			fmt.Printf("ERR: Decoding config: %s (%s)\n", err.Error(), rofiConfigPath)
+			os.Exit(1)
+		}
 	}
-	var c Config
-	if err := yaml.NewDecoder(file).Decode(&c); err != nil {
-		fmt.Printf("ERR: Decoding config: %s (%s)\n", err.Error(), path)
-		os.Exit(1)
+
+	if c.ChannelFeedLimit <= 0 {
+		c.ChannelFeedLimit = DefaultChannelFeedLimit
+	}
+
+	if c.FeedLimit <= 0 {
+		c.FeedLimit = DefaultFeedLimit
 	}
 
 	if c.ChannelsFmt == "" {

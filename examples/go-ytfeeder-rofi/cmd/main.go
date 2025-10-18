@@ -23,6 +23,7 @@ import (
 
 var (
 	configPath     string
+	rofiConfigPath string
 	printConfig    bool
 	channelId      string
 	channelsFmt    string
@@ -37,6 +38,12 @@ func parseArgs() {
 		"c",
 		config.DefaultConfigPath(),
 		"Config filepath",
+	)
+	flag.StringVar(
+		&rofiConfigPath,
+		"C",
+		config.DefaultRofiConfigPath(),
+		"Rofi config filepath",
 	)
 	flag.StringVar(
 		&channelsFmt,
@@ -78,7 +85,7 @@ func unescapeFmt(f string) string {
 
 func main() {
 	parseArgs()
-	c := config.GetConfig(configPath)
+	c := config.GetConfig(configPath, rofiConfigPath)
 	if printConfig {
 		c.Print()
 		os.Exit(0)
