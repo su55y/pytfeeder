@@ -18,11 +18,11 @@ def html_escape(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-DEFAULT_CHANNEL_FEED_LIMIT = 15
-DEFAULT_FEED_LIMIT = 100
-DEFAULT_CHANNELS_FMT = "{title}\000info\037{id}"
-DEFAULT_ENTRIES_FMT = "{title}\000info\037{id}\037meta\037{meta}"
-DEFAULT_DATETIME_FMT = "%D %T"
+DEFAULT_CHANNEL_FEED_LIMIT = -1
+DEFAULT_FEED_LIMIT = -1
+DEFAULT_CHANNELS_FMT = "{title}\000info\037{id}\037active\037{active}"
+DEFAULT_ENTRIES_FMT = "{title}\000info\037{id}\037active\037{active}"
+DEFAULT_DATETIME_FMT = "%b %d"
 DEFAULT_SEPARATOR = "\n"
 
 
@@ -62,7 +62,7 @@ class RofiConfig:
             return
         if alphabetic_sort := d.get("alphabetic_sort", self.alphabetic_sort):
             self.alphabetic_sort = alphabetic_sort
-        if (channel_feed_limit := d.get("channel_feed_limit", 0)) > 0:
+        if channel_feed_limit := d.get("channel_feed_limit", -1):
             self.channel_feed_limit = channel_feed_limit
         if channels_fmt := d.get("channels_fmt"):
             self.channels_fmt = channels_fmt
@@ -72,7 +72,7 @@ class RofiConfig:
             self.datetime_fmt = datetime_fmt
         if entries_fmt := d.get("entries_fmt"):
             self.entries_fmt = entries_fmt
-        if (feed_limit := d.get("feed_limit", 0)) > 0:
+        if feed_limit := d.get("feed_limit", -1):
             self.feed_limit = feed_limit
         if hide_empty := d.get("hide_empty", False):
             self.hide_empty = hide_empty
@@ -165,16 +165,11 @@ class RofiPrinter:
     def print_entries(self, entries: list[Entry], fmt: str) -> None:
         for entry in entries:
             channel_title = html_escape(self.feeder.channel_title(entry.channel_id))
-            meta = channel_title
-            if len(parts := meta.split()):
-                meta += "%s%s" % (",".join(parts), "".join(parts))
-
             print(
                 fmt.format(
                     title=html_escape(entry.title),
                     id=entry.id,
                     channel_title=channel_title,
-                    meta=meta,
                     published=entry.published.strftime(self.c.datetime_fmt),
                     active=["true", "false"][entry.is_viewed],
                 ),

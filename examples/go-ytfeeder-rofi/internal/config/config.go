@@ -17,8 +17,8 @@ const (
 	DefaultEntriesFmt       = "{title}\000info\037{id}\037active\037{active}"
 	DefaultFeedEntriesFmt   = "{title}\000info\037{id}\037active\037{active}"
 	DefaultDatetimeFmt      = "%b %d"
-	DefaultChannelFeedLimit = 15
-	DefaultFeedLimit        = 100
+	DefaultChannelFeedLimit = -1
+	DefaultFeedLimit        = -1
 )
 
 func defaultSeparator() yaml.Node {

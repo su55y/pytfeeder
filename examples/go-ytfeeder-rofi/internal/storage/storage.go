@@ -46,12 +46,15 @@ func (s *Storage) SelectEntries(
 		order = "is_viewed, published"
 	}
 
-	args = append(args, limit)
-
 	stmt := fmt.Sprintf(`
 	SELECT id, title, published, channel_id, is_viewed, is_deleted
 	FROM tb_entries WHERE is_deleted = 0 %s %s
-	ORDER BY %s DESC LIMIT ?`, andChannelId, andInChannels, order)
+	ORDER BY %s DESC`, andChannelId, andInChannels, order)
+
+	if limit > 0 {
+		stmt = fmt.Sprintf(`%s LIMIT ?`, stmt)
+		args = append(args, limit)
+	}
 
 	rows, err := s.db.Query(stmt, args...)
 	if err != nil {
