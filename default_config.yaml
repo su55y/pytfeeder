@@ -22,49 +22,10 @@ logger:
   level: notset
   stream: false
 
-rofi:
-  # sort channels list in alphabetic order instead of the order defined in channels.yaml
-  alphabetic_sort: false
-
-  # limit for channel feed, no limit if -1
-  channel_feed_limit: -1
-
-  # channels print format, available keys:
-  # -- id              - channel_id value
-  # -- title           - channel title
-  # -- entries_count   - total number of channel entries except deleted
-  # -- unwatched_count - number of new channel entries
-  # -- active          - true if have_updates else false
-  channels_fmt: "{title}\0info\x1f{id}"
-
-  # datetime format for the {published} key of entry format
-  datetime_fmt: '%D %T'
-
-  # entries print format, available keys:
-  # -- id            - 11 characters long video id
-  # -- title         - video title
-  # -- channel_title - the title of the channel this video is from
-  # -- meta          - the title of channel, splitted and joined by template 'a b' = 'a b,a,b'
-  # -- published       - published in `datetime-fmt` format (rss `published` value or fetch date)
-  # -- active          - true if unwatched else false
-  entries_fmt: "{title}\0info\x1f{id}\x1fmeta\x1f{meta}"
-  feed_entries_fmt: "{title}\0info\x1f{id}\x1fmeta\x1f{meta}"
-
-  # limit for common feed, no limit if -1
-  feed_limit: -1
-
-  # don't show common 'Feed' channel
-  hide_feed: false
-
-  # lines separator
-  separator: "\n"
-
-  # entries sorting order, prefering unwatched over newer but watched
-  unwatched_first: false
-
 # If true entries with `/shorts/` in url will not be stored
 skip_shorts: false
 
+# tui section
 tui:
   # sort channels list in alphabetic order instead of the order defined in channels.yaml
   alphabetic_sort: false
