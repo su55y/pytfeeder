@@ -6,7 +6,11 @@ from pathlib import Path
 import sys
 from typing import Any
 
-import yaml
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
+
 
 from pytfeeder import Config, Feeder, Storage
 from pytfeeder.defaults import default_config_path
@@ -56,8 +60,9 @@ class RofiConfig:
     def load(self, file: Path) -> None:
         if not file.exists():
             return
-        with open(file) as f:
-            d = yaml.safe_load(f)
+        with open(file, "rb") as f:
+            d = tomllib.load(f)
+
         if not isinstance(d, dict):
             return
         if alphabetic_sort := d.get("alphabetic_sort", self.alphabetic_sort):
@@ -261,7 +266,7 @@ def create_parser() -> argparse.ArgumentParser:
         "-C",
         "--rofi-config",
         metavar="PATH",
-        default=default_config_path().with_name("rofi_config.yaml"),
+        default=default_config_path().with_name("rofi_config.toml"),
         type=Path,
         help="Rofi config file path (default: %(default)s)",
     )

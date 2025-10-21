@@ -1,0 +1,40 @@
+# sort channels list in alphabetic order instead of the order defined in channels.yaml
+alphabetic_sort = false
+
+# limit for channel feed, no limit if -1
+channel_feed_limit = -1
+
+# channels print format, available keys:
+# -- id              - channel_id value
+# -- title           - channel title
+# -- entries_count   - total number of channel entries except deleted
+# -- unwatched_count - number of new channel entries
+# -- active          - true if have_updates else false
+channels_fmt = '{title}\0info\x1f{id}'
+
+# datetime format for the {published} key of entry format
+datetime_fmt = '%b %d'
+
+# entries print format, available keys:
+# -- id            - 11 characters long video id
+# -- title         - video title
+# -- channel_title - channel title
+# -- published     - published timestamp (uses `datetime-fmt`)
+# -- active        - true if unwatched else false
+entries_fmt = '{title}\0info\x1f{id}\x1factive\x1f{active}'
+feed_entries_fmt = '{title}\0info\x1f{id}\x1factive\x1f{active}'
+
+# limit for common feed, no limit if -1
+feed_limit = -1
+
+# don't show common 'Feed' channel
+hide_feed = false
+
+# don't show empty channels
+hide_empty = false
+
+# lines separator
+separator = "\n"
+
+# entries sorting order, prefering unwatched over newer but watched
+unwatched_first = false
