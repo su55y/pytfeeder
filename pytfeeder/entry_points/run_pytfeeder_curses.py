@@ -338,9 +338,21 @@ class App(TuiProps):
                     elif self.page_state == PageState.RESTORING_ENTRIES:
                         if self.is_filtered:
                             self.reset_filter()
+                            self.gravity = Gravity.DOWN
+                        if (
+                            self._is_in_restore_from_channel
+                            and self._restore_entries_channel_id
+                        ):
+                            self.page_state = PageState.ENTRIES
+                            self.lines = self.get_lines_by_id(
+                                self._restore_entries_channel_id
+                            )
+                        else:
+                            self.enter_restore(
+                                self.parent_index_restore, is_move_back=True
+                            )
                         self.scroll_top = 0
                         self.index = 0
-                        self.enter_restore()
                     elif (
                         self.page_state == PageState.ENTRIES
                         and self.parent_index_tags > -1
