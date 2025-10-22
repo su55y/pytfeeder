@@ -720,6 +720,8 @@ class App(TuiProps):
 
         @kb.add("c-h")
         def _move_home(_) -> None:
+            if self.page_state == PageState.CHANNELS:
+                return
             if self.is_filtered:
                 self.filter_text = ""
             self.status_title = ""

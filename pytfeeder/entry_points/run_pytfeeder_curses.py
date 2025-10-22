@@ -280,6 +280,8 @@ class App(TuiProps):
                         else:
                             self.move_back_to_channels()
                 case Key.CTRL_H:
+                    if self.page_state == PageState.CHANNELS:
+                        continue
                     self.scroll_top = 0
                     screen.clear()
                     self.move_home()
