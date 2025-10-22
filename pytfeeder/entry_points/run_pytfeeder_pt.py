@@ -644,6 +644,15 @@ class App(TuiProps):
             event.app.layout.focus(self.filter_buffer)
             event.app.vi_state.input_mode = InputMode.INSERT
 
+        @kb.add("c-f")
+        def _go_to_feed(event: KeyPressEvent) -> None:
+            if self.c.hide_feed:
+                return
+            self.page_state = PageState.CHANNELS
+            self.index = 0
+            self.reset_filter()
+            _enter_line(event)
+
         for n in "123456789":
 
             @kb.add(n)

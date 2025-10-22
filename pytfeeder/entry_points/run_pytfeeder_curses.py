@@ -15,6 +15,7 @@ from pytfeeder.tui.props import TuiProps, PageState, Line
 
 class Key(IntEnum):
     CTRL_D = 4
+    CTRL_F = 6
     CTRL_H = 8
     TAB = 9
     RETURN = ord("\n")
@@ -279,6 +280,13 @@ class App(TuiProps):
                             self.move_back_to_tag()
                         else:
                             self.move_back_to_channels()
+                case Key.CTRL_F:
+                    if self.c.hide_feed:
+                        continue
+                    self.page_state = PageState.CHANNELS
+                    self.index = 0
+                    self.reset_filter()
+                    self.move_right(Key.l)
                 case Key.CTRL_H:
                     if self.page_state == PageState.CHANNELS:
                         continue
