@@ -281,7 +281,7 @@ class App(TuiProps):
                         else:
                             self.move_back_to_channels()
                 case Key.CTRL_F:
-                    if self.c.hide_feed:
+                    if self.c.hide_feed or self._is_feed_opened:
                         continue
                     self.page_state = PageState.CHANNELS
                     self.index = 0
@@ -697,6 +697,7 @@ class App(TuiProps):
         self.parent_index_tags = -1
         self.scroll_top = 0
         self.gravity = Gravity.DOWN
+        self._is_feed_opened = False
 
     @property
     def status(self) -> str:

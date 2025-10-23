@@ -381,6 +381,7 @@ class TuiProps:
         self.parent_index = -1
         self.parent_index_restore = -1
         self.parent_index_tags = -1
+        self._is_feed_opened = False
 
     @property
     def statusbar_height(self) -> int:

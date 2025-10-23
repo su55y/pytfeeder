@@ -368,6 +368,7 @@ class App(TuiProps):
         self.parent_index_restore = -1
         self.parent_index_tags = -1
         self.status_title = ""
+        self._is_feed_opened = False
 
     @property
     def _main_keybindings(self) -> KeyBindings:
@@ -646,7 +647,7 @@ class App(TuiProps):
 
         @kb.add("c-f")
         def _go_to_feed(event: KeyPressEvent) -> None:
-            if self.c.hide_feed:
+            if self.c.hide_feed or self._is_feed_opened:
                 return
             self.page_state = PageState.CHANNELS
             self.index = 0
