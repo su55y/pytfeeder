@@ -210,17 +210,14 @@ class Feeder:
 
     async def _sync_entries(self, *, verbose: bool, report_hidden: bool) -> int:
         current_done = 0
+        channels_count = len(self.config.all_channels)
+        w = len(str(channels_count))
 
         def print_progress(_):
-            nonlocal current_done
+            nonlocal current_done, channels_count, w
             current_done += 1
-            w = len(str(len(self.config.all_channels)))
-            print(
-                f"\033[0G{current_done:{w}d}/{len(self.config.all_channels)}",
-                end="",
-                flush=True,
-            )
-            if current_done == len(self.config.all_channels):
+            print(f"\033[0G{current_done:{w}d}/{channels_count}", end="", flush=True)
+            if current_done == channels_count:
                 print()
 
         tasks = []
@@ -229,15 +226,13 @@ class Feeder:
                 return_count = True
                 if not report_hidden:
                     return_count = not c.hidden
-                tasks.append(
-                    asyncio.create_task(
-                        self._sync_channel(s, c, return_count=return_count)
-                    )
+                t = asyncio.create_task(
+                    self._sync_channel(s, c, return_count=return_count)
                 )
-
-            if verbose:
-                for t in tasks:
+                if verbose:
                     t.add_done_callback(print_progress)
+                tasks.append(t)
+
             results = await asyncio.gather(*tasks)
             sum_of_new = 0
             for new, err in results:
@@ -254,14 +249,14 @@ class Feeder:
         return_count: bool = True,
     ) -> tuple[int, Exception | None]:
         try:
-            self.log.debug(f"trying to sync {channel.title!r} ({channel.channel_id!r})")
+            self.log.debug(f"trying to sync {channel.title!r} ({channel.channel_id})")
             count = await self._fetch_and_sync_entries(session, channel.channel_id)
         except Exception as e:
             self.log.error(f"cannot sync channel ({channel.channel_id}): {e}")
             return 0, e
         if count > 0:
             self.log.info(
-                f"{count} new entries for {channel.title} ({channel.channel_id})"
+                f"{count} new entries for {channel.title!r} ({channel.channel_id})"
             )
         if return_count:
             return count, None
@@ -270,19 +265,18 @@ class Feeder:
     async def _fetch_and_sync_entries(
         self, session: ClientSession, channel_id: str
     ) -> int:
-        raw_feed = await self._fetch_feed(session, channel_id)
+        url = YT_FEED_URL % channel_id
+        raw_feed = await self._fetch_feed(session, url)
         parser = YTFeedParser(
             raw_feed, skip_shorts=self.config.skip_shorts, log=self.log
         )
         if len(parser.entries) == 0 and not self.config.skip_shorts:
-            self.log.error(f"can't parse feed for {channel_id}\n{raw_feed[:80] = !r}")
+            self.log.error(f"can't parse feed for {url}\n{raw_feed[:80]!r}")
             return 0
         return self.stor.add_entries(parser.entries)
 
-    async def _fetch_feed(self, session: ClientSession, channel_id: str) -> str:
-        url = YT_FEED_URL % channel_id
+    async def _fetch_feed(self, session: ClientSession, url: str) -> str:
         async with session.get(url) as resp:
             self.log.debug(f"{resp.status} {resp.reason} {resp.url}")
-            if resp.status == 200:
-                return await resp.text()
-            raise Exception(f"{resp.status} {resp.reason} {resp.url}")
+            resp.raise_for_status()
+            return await resp.text()
