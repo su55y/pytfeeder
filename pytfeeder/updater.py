@@ -9,6 +9,7 @@ class Updater:
         self.lock_file = lock_file
         self.max_retries = 5
         self.update_interval = update_interval
+        self._state_from_file = False
 
         if self.lock_file.exists():
             self._read_state()
@@ -18,6 +19,7 @@ class Updater:
             fails, lu = self.lock_file.read_text().split(":", maxsplit=1)
             self.fails = int(fails)
             self.last_update = dt.datetime.fromtimestamp(float(lu))
+            self._state_from_file = True
         except Exception as e:
             raise Exception(f"Can't read update state: {e}")
 
@@ -30,7 +32,8 @@ class Updater:
         )
 
     def update_lock_file(self, failed: bool) -> None:
-        self.last_update = dt.datetime.now()
+        if not self._state_from_file or not failed:
+            self.last_update = dt.datetime.now()
         if failed:
             self.fails += failed
         else:
