@@ -59,10 +59,10 @@ def init_logger(c: LoggerConfig) -> None:
     log.setLevel(c.level)
 
     h: logging.Handler = logging.NullHandler()
-    if c.file:
-        h = logging.FileHandler(c.file)
-    elif c.stream:
+    if c.stream:
         h = logging.StreamHandler()
+    elif c.file:
+        h = logging.FileHandler(c.file)
 
     if c.fmt is not None:
         h.setFormatter(logging.Formatter(c.fmt))
