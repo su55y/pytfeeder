@@ -15,14 +15,6 @@ class LogLevel(IntEnum):
     ERROR = logging.ERROR
 
 
-log_levels_map: dict[str, LogLevel] = {
-    "debug": LogLevel.DEBUG,
-    "info": LogLevel.INFO,
-    "warning": LogLevel.WARNING,
-    "error": LogLevel.ERROR,
-}
-
-
 @dataclass
 class LoggerConfig:
     file: Path | None = None
@@ -38,7 +30,7 @@ class LoggerConfig:
         for k, v in kwargs.items():
             if k in vars(self) and v is not None:
                 if k == "level":
-                    v = log_levels_map.get(v.lower(), self.level)
+                    v = LogLevel._member_map_.get(v.upper(), self.level)
                 elif k == "file":
                     v = expand_path(v)
                 setattr(self, k, v)
