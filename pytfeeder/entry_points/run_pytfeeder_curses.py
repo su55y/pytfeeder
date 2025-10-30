@@ -7,7 +7,7 @@ from typing import Literal
 import sys
 
 from pytfeeder import Config, Feeder, Storage, __version__
-from pytfeeder.logger import init_logger
+from pytfeeder.logger import init_logger, LogLevel
 from pytfeeder.models import Channel, Entry, Tag
 from pytfeeder.tui import args as tui_args, ConfigTUI
 from pytfeeder.tui.props import TuiProps, PageState, Line
@@ -826,6 +826,10 @@ def main():
     if not config.storage_path.parent.exists():
         config.storage_path.parent.mkdir(parents=True)
 
+    if args.debug:
+        config.logger.file = None
+        config.logger.stream = True
+        config.logger.level = LogLevel.DEBUG
     init_logger(config.logger)
 
     feeder = Feeder(config, Storage(config.storage_path))

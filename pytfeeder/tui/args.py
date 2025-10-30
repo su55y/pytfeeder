@@ -60,6 +60,12 @@ def create_parser() -> argparse.ArgumentParser:
         help=f"Channels path (default: {default_channels_filepath()})",
     )
     parser.add_argument(
+        "-D",
+        "--debug",
+        action="store_true",
+        help="Print debug log to stdout",
+    )
+    parser.add_argument(
         "--datetime-fmt",
         metavar="STR",
         help=f"Datetime format for `{{published}}` format key (default: {consts.DEFAULT_DATETIME_FMT.replace('%', '%%')!r})",
