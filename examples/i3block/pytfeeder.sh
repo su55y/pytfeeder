@@ -76,7 +76,12 @@ case $BLOCK_BUTTON in
     ;;
 esac
 
-VALUE="$(pytfeeder -f '{unwatched} ({last_update#%H:%M})')"
+lud="$(date -d "@$(cut -d: -f2 "$UPDATE_LOCK_PATH" 2>/dev/null)" +%d 2>/dev/null)"
+if [ -z "$lud" ] || [ "$lud" != "$(date +%d)" ]; then
+    VALUE="$(pytfeeder -f '{unwatched} ({last_update#%H:%M %b %d})')"
+else
+    VALUE="$(pytfeeder -f '{unwatched} ({last_update#%H:%M})')"
+fi
 case $VALUE in
 *Unknown*) VALUE="${VALUE%% *}" ;;
 esac
