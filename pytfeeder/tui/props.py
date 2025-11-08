@@ -620,7 +620,7 @@ class TuiProps:
         if not self.__is_play_allowed:
             self.status_msg = "Play not allowed (setsid or mpv not found)"
             return
-        utils.play_video(entry, self.__is_notify_allowed)
+        utils.play_video(entry, self.c.play_cmd, self.__is_notify_allowed)
 
     def open_channel_in_browser(self) -> None:
         url = "https://www.youtube.com/channel/{channel_id}"

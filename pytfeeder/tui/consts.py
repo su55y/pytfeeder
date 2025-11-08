@@ -11,6 +11,13 @@ DEFAULT_KEYBINDS_RE = (
     "[l,Right,Space,Enter]: restore entry, [h,Left,Backspace,q]: return"
 )
 DEFAULT_DOWNLOAD_OUTPUT = "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
+DEFAULT_PLAY_CMD = [
+    "setsid",
+    "-f",
+    "mpv",
+    "{url}",
+    "--ytdl-raw-options=retries=infinite",
+]
 
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens with args:

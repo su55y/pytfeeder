@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from . import consts
@@ -24,6 +24,7 @@ class ConfigTUI:
     last_update_fmt: str = consts.DEFAULT_LAST_UPDATE_FMT
     new_mark: str = consts.DEFAULT_NEW_MARK
     no_update: bool = False
+    play_cmd: list[str] = field(default_factory=lambda: consts.DEFAULT_PLAY_CMD)
     status_fmt: str = consts.DEFAULT_STATUS_FMT
     unwatched_first: bool = False
     macro1: str = ""

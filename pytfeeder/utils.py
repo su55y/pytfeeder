@@ -137,20 +137,15 @@ def download_all(
         download_video(e, output, send_notification)
 
 
-def play_video(entry: Entry, send_notification: bool = False) -> None:
+def play_video(
+    entry: Entry,
+    play_cmd: list[str],
+    send_notification: bool = False,
+) -> None:
     if send_notification:
         _ = notify(f"{entry.title} playing...")
-    _ = sp.Popen(
-        [
-            "setsid",
-            "-f",
-            "mpv",
-            f"https://youtu.be/{entry.id}",
-            "--ytdl-raw-options=retries=infinite",
-        ],
-        stdout=sp.DEVNULL,
-        stderr=sp.DEVNULL,
-    )
+    cmd = [s.format(url=f"https://youtu.be/{entry.id}") for s in play_cmd]
+    _ = sp.Popen(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
 
 
 def notify(msg: str) -> bool:

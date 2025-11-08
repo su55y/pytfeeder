@@ -99,6 +99,10 @@ tui:
   # never update on startup
   no_update: false
 
+  # Popen(play_cmd) on play video, should include `{url}` placeholder
+  play_cmd:
+    ['setsid', '-f', 'mpv', '{url}', '--ytdl-raw-options=retries=infinite']
+
   # status bar format, available keys:
   # -- index       - current line index
   # -- last_update - time of last update (formatted with `last_update_fmt`)
