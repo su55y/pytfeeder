@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from xml.etree.ElementTree import XML
 
 
-from .models import Channel, Entry
+from .models import Channel
 
 
 def expand_path(path: Path) -> Path:
@@ -23,18 +23,16 @@ def fetch_channel_info(url: str) -> Channel:
 def _parse_channel_info(
     raw: str, cid: str | None, username: str | None
 ) -> Channel | None:
-    SCHEMA = "{http://www.w3.org/2005/Atom}%s"
-    NAMESPACE = {"yt": "http://www.youtube.com/xml/schemas/2015"}
-    try:
-        t = XML(raw)
-        title = t.findtext(SCHEMA % "title") or username
-        channel_id = t.findtext("yt:channelId", namespaces=NAMESPACE)
-        if channel_id:
-            channel_id = f"UC{channel_id}"
-        else:
-            channel_id = cid
-    except:
-        return None
+    t = XML(raw)
+    title = t.findtext("{http://www.w3.org/2005/Atom}title") or username
+    channel_id = t.findtext(
+        "yt:channelId",
+        namespaces={"yt": "http://www.youtube.com/xml/schemas/2015"},
+    )
+    if channel_id:
+        channel_id = f"UC{channel_id}"
+    else:
+        channel_id = cid
     if not title or not channel_id:
         return None
     return Channel(channel_id=channel_id, title=title)
@@ -88,74 +86,6 @@ def human_readable_size(size: int) -> str:
     p = math.pow(1024, i)
     s = round(size / p, 2)
     return "%s %s" % (s, size_name[i])
-
-
-def download_video(entry: Entry, output: str, send_notification: bool = True) -> None:
-    p = sp.check_output(
-        [
-            "tsp",
-            "-L",
-            "pytfeeder",
-            "yt-dlp",
-            f"https://youtu.be/{entry.id}",
-            "-o",
-            output,
-        ],
-        shell=False,
-    )
-
-    if not send_notification:
-        return
-
-    _ = notify(f"⬇️Start downloading {entry.title!r}...")
-
-    _ = sp.run(
-        [
-            "tsp",
-            "-D",
-            p.decode(),
-            "notify-send",
-            "-i",
-            "youtube",
-            "-a",
-            "pytfeeder",
-            f"✅Download done: {entry.title}",
-        ],
-        stdout=sp.DEVNULL,
-        stderr=sp.DEVNULL,
-    )
-
-
-def download_all(
-    entries: list[Entry],
-    output: str,
-    send_notification: bool = False,
-) -> None:
-    if send_notification:
-        _ = notify(f"⬇️Start downloading {len(entries)} entries...")
-    for e in entries:
-        download_video(e, output, send_notification)
-
-
-def play_video(
-    entry: Entry,
-    play_cmd: list[str],
-    send_notification: bool = False,
-) -> None:
-    if send_notification:
-        _ = notify(f"{entry.title} playing...")
-    cmd = [s.format(url=f"https://youtu.be/{entry.id}") for s in play_cmd]
-    _ = sp.Popen(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
-
-
-def notify(msg: str) -> bool:
-    if not msg:
-        return True
-    cmd = ["notify-send", "-i", "youtube", "-a", "pytfeeder", msg]
-    p = sp.run(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
-    if p.returncode != 0:
-        return False
-    return True
 
 
 def open_url(url: str) -> None:

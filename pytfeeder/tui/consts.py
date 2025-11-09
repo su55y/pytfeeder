@@ -18,6 +18,7 @@ DEFAULT_PLAY_CMD = [
     "{url}",
     "--ytdl-raw-options=retries=infinite",
 ]
+DEFAULT_NOTIFY_CMD = ["notify-send", "-i", "youtube", "-a", "pytfeeder", "{msg}"]
 
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens with args:

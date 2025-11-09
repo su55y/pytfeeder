@@ -9,6 +9,7 @@ from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
 from pytfeeder.models import Channel, Entry, Tag
 from .args import format_keybindings
 from .consts import DEFAULT_KEYBINDS, DEFAULT_KEYBINDS_R, DEFAULT_KEYBINDS_RE
+from .cmd import Cmd
 
 
 class PageState(Enum):
@@ -31,6 +32,7 @@ class TuiProps:
         self.c = self.feeder.config.tui
         if self.c.alphabetic_sort:
             self.feeder.channels_aplhabetic_sort()
+        self.cmd = Cmd(play_cmd=self.c.play_cmd, notify_cmd=self.c.notify_cmd)
         self.channels: list[Channel] = list()
         self.__max_unwatched_num_len = 0
         self.__max_total_num_len = 0
@@ -581,7 +583,7 @@ class TuiProps:
         if not isinstance(selected_data, Entry):
             raise Exception(f"Unexpected entry type {type(selected_data)!r}")
 
-        utils.download_video(
+        self.cmd.download_video(
             entry=selected_data,
             output=self.c.download_output,
             send_notification=self.__is_notify_allowed,
@@ -608,7 +610,7 @@ class TuiProps:
         if callback and not callback(len(entries)):
             return
 
-        utils.download_all(
+        self.cmd.download_all(
             entries=entries,  # type: ignore
             output=self.c.download_output,
             send_notification=self.__is_notify_allowed,
@@ -620,7 +622,7 @@ class TuiProps:
         if not self.__is_play_allowed:
             self.status_msg = "Play not allowed (setsid or mpv not found)"
             return
-        utils.play_video(entry, self.c.play_cmd, self.__is_notify_allowed)
+        self.cmd.play_video(entry, self.__is_notify_allowed)
 
     def open_channel_in_browser(self) -> None:
         url = "https://www.youtube.com/channel/{channel_id}"
