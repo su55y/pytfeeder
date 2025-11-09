@@ -189,6 +189,12 @@ class Config:
         yaml.add_representer(
             LogLevel, lambda d, l: d.represent_scalar(strtag, l.name.lower())
         )
+        yaml.add_representer(
+            list,
+            lambda d, p: d.represent_sequence(
+                "tag:yaml.org,2002:seq", p, flow_style=True
+            ),
+        )
 
         obj = dc.asdict(self)
         obj["data_dir"] = self.data_dir
