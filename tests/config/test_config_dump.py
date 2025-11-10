@@ -39,6 +39,7 @@ tui:
   macro4: ''
   new_mark: N
   no_update: false
+  notify_cmd: [notify-send, -i, youtube, -a, pytfeeder, '{msg}']
   play_cmd: [setsid, -f, mpv, '{url}', --ytdl-raw-options=retries=infinite]
   status_fmt: '{msg} {index} {title} {keybinds}'
   unwatched_first: false

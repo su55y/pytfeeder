@@ -99,6 +99,9 @@ tui:
   # never update on startup
   no_update: false
 
+  # notifications cmd, should include `{msg}` placeholder
+  notify_cmd: [notify-send, -i, youtube, -a, pytfeeder, '{msg}']
+
   # Popen(play_cmd) on play video, should include `{url}` placeholder
   play_cmd: [setsid, -f, mpv, '{url}', --ytdl-raw-options=retries=infinite]
 
