@@ -7,6 +7,7 @@ class Cmd:
     def __init__(self, play_cmd: list[str], notify_cmd: list[str]) -> None:
         self.__play_cmd = play_cmd
         self.__notify_cmd = notify_cmd
+        self.send_notification = True
 
     def play_cmd(self, vid_id: str) -> list[str]:
         return [s.format(url=f"https://youtu.be/{vid_id}") for s in self.__play_cmd]
@@ -14,9 +15,7 @@ class Cmd:
     def notify_cmd(self, msg: str) -> list[str]:
         return [s.format(msg=msg) for s in self.__notify_cmd]
 
-    def download_video(
-        self, entry: Entry, output: str, send_notification: bool = True
-    ) -> None:
+    def download_video(self, entry: Entry, output: str) -> None:
         p = sp.check_output(
             [
                 "tsp",
@@ -30,41 +29,27 @@ class Cmd:
             shell=False,
         )
 
-        if not send_notification:
-            return
-
         _ = self.notify(f"⬇️Start downloading {entry.title!r}...")
 
-        _ = sp.run(
-            [
-                "tsp",
-                "-D",
-                p.decode(),
-                "notify-send",
-                "-i",
-                "youtube",
-                "-a",
-                "pytfeeder",
-                f"✅Download done: {entry.title}",
-            ],
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
-        )
+        if self.send_notification:
+            _ = sp.run(
+                [
+                    "tsp",
+                    "-D",
+                    p.decode(),
+                    *self.notify_cmd(f"✅Download done: {entry.title}"),
+                ],
+                stdout=sp.DEVNULL,
+                stderr=sp.DEVNULL,
+            )
 
-    def download_all(
-        self,
-        entries: list[Entry],
-        output: str,
-        send_notification: bool = False,
-    ) -> None:
-        if send_notification:
-            _ = self.notify(f"⬇️Start downloading {len(entries)} entries...")
+    def download_all(self, entries: list[Entry], output: str) -> None:
+        _ = self.notify(f"⬇️Start downloading {len(entries)} entries...")
         for e in entries:
-            self.download_video(e, output, send_notification)
+            self.download_video(e, output)
 
-    def play_video(self, entry: Entry, send_notification: bool = False) -> None:
-        if send_notification:
-            _ = self.notify(f"{entry.title} playing...")
+    def play_video(self, entry: Entry) -> None:
+        _ = self.notify(f"{entry.title} playing...")
         _ = sp.Popen(
             self.play_cmd(vid_id=entry.id),
             stdout=sp.DEVNULL,
@@ -72,7 +57,7 @@ class Cmd:
         )
 
     def notify(self, msg: str) -> bool:
-        if not msg:
+        if not msg or not self.send_notification:
             return True
         p = sp.run(self.notify_cmd(msg), stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         if p.returncode != 0:

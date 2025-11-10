@@ -69,8 +69,6 @@ class TuiProps:
         self.refresh_last_update()
         self.is_channels_outdated = False
         self.__is_download_allowed = False
-        self.__is_notify_allowed = False
-        self.__is_play_allowed = False
         self.__is_executables_checked = False
         self._restore_entries_channel_id: str | None = None
         self._is_in_restore_from_channel = False
@@ -567,8 +565,6 @@ class TuiProps:
         from shutil import which
 
         self.__is_download_allowed = bool(which("tsp") and which("yt-dlp"))
-        self.__is_play_allowed = bool(which("setsid") and which("mpv"))
-        self.__is_notify_allowed = bool(which("notify-send"))
         self.__is_executables_checked = True
 
     def download(self) -> None:
@@ -586,7 +582,6 @@ class TuiProps:
         self.cmd.download_video(
             entry=selected_data,
             output=self.c.download_output,
-            send_notification=self.__is_notify_allowed,
         )
         if not selected_data.is_viewed:
             self.mark_as_watched()
@@ -613,16 +608,11 @@ class TuiProps:
         self.cmd.download_all(
             entries=entries,  # type: ignore
             output=self.c.download_output,
-            send_notification=self.__is_notify_allowed,
         )
         self.mark_as_watched_all()
 
     def play(self, entry: Entry) -> None:
-        self._check_executables()
-        if not self.__is_play_allowed:
-            self.status_msg = "Play not allowed (setsid or mpv not found)"
-            return
-        self.cmd.play_video(entry, self.__is_notify_allowed)
+        self.cmd.play_video(entry)
 
     def open_channel_in_browser(self) -> None:
         url = "https://www.youtube.com/channel/{channel_id}"
