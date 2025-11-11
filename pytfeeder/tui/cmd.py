@@ -4,9 +4,17 @@ from pytfeeder.models import Entry
 
 
 class Cmd:
-    def __init__(self, play_cmd: list[str], notify_cmd: list[str]) -> None:
+    def __init__(
+        self,
+        play_cmd: list[str],
+        notify_cmd: list[str],
+        download_cmd: str,
+        download_output: str,
+    ) -> None:
         self.__play_cmd = play_cmd
         self.__notify_cmd = notify_cmd
+        self.download_cmd = download_cmd
+        self.download_output = download_output
         self.send_notification = True
 
     def play_cmd(self, vid_id: str) -> list[str]:
@@ -15,43 +23,29 @@ class Cmd:
     def notify_cmd(self, msg: str) -> list[str]:
         return [s.format(msg=msg) for s in self.__notify_cmd]
 
-    def download_video(self, entry: Entry, output: str) -> None:
-        p = sp.check_output(
-            [
-                "tsp",
-                "-L",
-                "pytfeeder",
-                "yt-dlp",
-                f"https://youtu.be/{entry.id}",
-                "-o",
-                output,
-            ],
-            shell=False,
+    def download_video(self, entry: Entry) -> None:
+        _ = self.notify(f"⬇️Start downloading {entry.title!r}...")
+        _ = sp.Popen(
+            self.download_cmd.format(
+                url=f"https://youtu.be/{entry.id}",
+                title=entry.title.replace("'", ""),
+                output=self.download_output,
+            ),
+            shell=True,
+            stdout=sp.DEVNULL,
+            stderr=sp.DEVNULL,
         )
 
-        _ = self.notify(f"⬇️Start downloading {entry.title!r}...")
-
-        if self.send_notification:
-            _ = sp.run(
-                [
-                    "tsp",
-                    "-D",
-                    p.decode(),
-                    *self.notify_cmd(f"✅Download done: {entry.title}"),
-                ],
-                stdout=sp.DEVNULL,
-                stderr=sp.DEVNULL,
-            )
-
-    def download_all(self, entries: list[Entry], output: str) -> None:
+    def download_all(self, entries: list[Entry]) -> None:
         _ = self.notify(f"⬇️Start downloading {len(entries)} entries...")
         for e in entries:
-            self.download_video(e, output)
+            self.download_video(e)
 
     def play_video(self, entry: Entry) -> None:
         _ = self.notify(f"{entry.title} playing...")
         _ = sp.Popen(
             self.play_cmd(vid_id=entry.id),
+            shell=True,
             stdout=sp.DEVNULL,
             stderr=sp.DEVNULL,
         )

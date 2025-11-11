@@ -32,7 +32,12 @@ class TuiProps:
         self.c = self.feeder.config.tui
         if self.c.alphabetic_sort:
             self.feeder.channels_aplhabetic_sort()
-        self.cmd = Cmd(play_cmd=self.c.play_cmd, notify_cmd=self.c.notify_cmd)
+        self.cmd = Cmd(
+            play_cmd=self.c.play_cmd,
+            notify_cmd=self.c.notify_cmd,
+            download_cmd=self.c.download_cmd,
+            download_output=self.c.download_output,
+        )
         self.channels: list[Channel] = list()
         self.__max_unwatched_num_len = 0
         self.__max_total_num_len = 0
@@ -579,10 +584,7 @@ class TuiProps:
         if not isinstance(selected_data, Entry):
             raise Exception(f"Unexpected entry type {type(selected_data)!r}")
 
-        self.cmd.download_video(
-            entry=selected_data,
-            output=self.c.download_output,
-        )
+        self.cmd.download_video(entry=selected_data)
         if not selected_data.is_viewed:
             self.mark_as_watched()
 
@@ -605,10 +607,7 @@ class TuiProps:
         if callback and not callback(len(entries)):
             return
 
-        self.cmd.download_all(
-            entries=entries,  # type: ignore
-            output=self.c.download_output,
-        )
+        self.cmd.download_all(entries=entries)  # type: ignore
         self.mark_as_watched_all()
 
     def play(self, entry: Entry) -> None:

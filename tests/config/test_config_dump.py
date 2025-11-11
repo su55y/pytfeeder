@@ -25,6 +25,7 @@ tui:
   color_black: black
   color_white: white
   datetime_fmt: '%b %d'
+  download_cmd: 'tsp -D $(tsp -L pytfeeder yt-dlp {url} -o ''{output}'') -- notify-send -i youtube -a pytfeeder ''✅Download done: {title}'''
   download_output: ~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s
   entries_fmt: '{index} {new_mark} {published} {title}'
   feed_entries_fmt: '{index} {new_mark} {published} {channel_title} {title}'
