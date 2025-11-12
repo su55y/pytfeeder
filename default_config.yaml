@@ -57,7 +57,7 @@ tui:
   # datetime format for the {published} key of entry format
   datetime_fmt: '%b %d'
 
-  # Popen(download_cmd, shell=True) on download kb
+  # download cmd (singlequotes from title are removed)
   download_cmd: 'tsp -D $(tsp -L pytfeeder yt-dlp {url} -o ''{output}'') -- notify-send -i youtube -a pytfeeder ''✅Download done: {title}'''
 
   # the download output template used as value for yt-dlp's option `-o`
@@ -102,11 +102,11 @@ tui:
   # never update on startup
   no_update: false
 
-  # notifications cmd, should include `{msg}` placeholder
-  notify_cmd: [notify-send, -i, youtube, -a, pytfeeder, '{msg}']
+  # notifications cmd, should include `{msg}` placeholder (singlequotes from msg are removed)
+  notify_cmd: notify-send -i youtube -a pytfeeder '{msg}'
 
-  # Popen(play_cmd) on play video, should include `{url}` placeholder
-  play_cmd: [setsid, -f, mpv, '{url}', --ytdl-raw-options=retries=infinite]
+  # play cmd, should include `{url}` placeholder
+  play_cmd: setsid -f mpv {url} --ytdl-raw-options=retries=infinite
 
   # status bar format, available keys:
   # -- index       - current line index
