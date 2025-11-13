@@ -20,18 +20,17 @@ class Cmd:
     def yt_url(self, vid_id: str) -> str:
         return f"https://youtu.be/{vid_id}"
 
+    def _exec_cmd(self, cmd: str) -> None:
+        _ = sp.Popen(cmd, shell=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+
     def download_video(self, entry: Entry) -> None:
         _ = self.notify(f"⬇️Start downloading {entry.title!r}...")
-        _ = sp.Popen(
-            self.download_cmd.format(
-                url=self.yt_url(entry.id),
-                title=entry.title.replace("'", ""),
-                output=self.download_output,
-            ),
-            shell=True,
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
+        cmd = self.download_cmd.format(
+            url=self.yt_url(entry.id),
+            title=entry.title.replace("'", ""),
+            output=self.download_output,
         )
+        self._exec_cmd(cmd)
 
     def download_all(self, entries: list[Entry]) -> None:
         _ = self.notify(f"⬇️Start downloading {len(entries)} entries...")
@@ -40,22 +39,11 @@ class Cmd:
 
     def play_video(self, entry: Entry) -> None:
         _ = self.notify(f"{entry.title} playing...")
-        _ = sp.Popen(
-            self.play_cmd.format(url=self.yt_url(entry.id)),
-            shell=True,
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
-        )
+        cmd = self.play_cmd.format(url=self.yt_url(entry.id))
+        self._exec_cmd(cmd)
 
-    def notify(self, msg: str) -> bool:
+    def notify(self, msg: str) -> None:
         if not msg or not self.send_notification:
-            return True
-        p = sp.run(
-            self.notify_cmd.format(msg=msg.replace("'", "")),
-            shell=True,
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
-        )
-        if p.returncode != 0:
-            return False
-        return True
+            return
+        cmd = self.notify_cmd.format(msg=msg.replace("'", ""))
+        self._exec_cmd(cmd)
