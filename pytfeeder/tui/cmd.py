@@ -17,11 +17,14 @@ class Cmd:
         self.download_output = download_output
         self.send_notification = True
 
+    def yt_url(self, vid_id: str) -> str:
+        return f"https://youtu.be/{vid_id}"
+
     def download_video(self, entry: Entry) -> None:
         _ = self.notify(f"⬇️Start downloading {entry.title!r}...")
         _ = sp.Popen(
             self.download_cmd.format(
-                url=f"https://youtu.be/{entry.id}",
+                url=self.yt_url(entry.id),
                 title=entry.title.replace("'", ""),
                 output=self.download_output,
             ),
@@ -38,7 +41,7 @@ class Cmd:
     def play_video(self, entry: Entry) -> None:
         _ = self.notify(f"{entry.title} playing...")
         _ = sp.Popen(
-            self.play_cmd.format(url=f"https://youbu.be/{entry.id}"),
+            self.play_cmd.format(url=self.yt_url(entry.id)),
             shell=True,
             stdout=sp.DEVNULL,
             stderr=sp.DEVNULL,
