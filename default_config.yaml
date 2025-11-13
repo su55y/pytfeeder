@@ -106,7 +106,7 @@ tui:
   notify_cmd: notify-send -i youtube -a pytfeeder '{msg}'
 
   # play cmd, should include `{url}` placeholder
-  play_cmd: setsid -f mpv {url} --ytdl-raw-options=retries=infinite
+  play_cmd: mpv {url} --ytdl-raw-options=retries=infinite
 
   # status bar format, available keys:
   # -- index       - current line index

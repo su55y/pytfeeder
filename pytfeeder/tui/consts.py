@@ -13,7 +13,7 @@ DEFAULT_KEYBINDS_RE = (
 DEFAULT_DOWNLOAD_OUTPUT = "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
 
 DEFAULT_DOWNLOAD_CMD = "tsp -D $(tsp -L pytfeeder yt-dlp {url} -o '{output}') -- notify-send -i youtube -a pytfeeder '✅Download done: {title}'"
-DEFAULT_PLAY_CMD = "setsid -f mpv {url} --ytdl-raw-options=retries=infinite"
+DEFAULT_PLAY_CMD = "mpv {url} --ytdl-raw-options=retries=infinite"
 DEFAULT_NOTIFY_CMD = "notify-send -i youtube -a pytfeeder '{msg}'"
 
 OPTIONS_DESCRIPTION = """
