@@ -73,8 +73,6 @@ class TuiProps:
         self.lines = list(map(Line, self.channels))
         self.refresh_last_update()
         self.is_channels_outdated = False
-        self.__is_download_allowed = False
-        self.__is_executables_checked = False
         self._restore_entries_channel_id: str | None = None
         self._is_in_restore_from_channel = False
 
@@ -563,21 +561,7 @@ class TuiProps:
         self.reload_lines()
         self.index = min(self.index, len(self.lines) - 1)
 
-    def _check_executables(self) -> None:
-        if self.__is_executables_checked:
-            return
-
-        from shutil import which
-
-        self.__is_download_allowed = bool(which("tsp") and which("yt-dlp"))
-        self.__is_executables_checked = True
-
     def download(self) -> None:
-        self._check_executables()
-        if not self.__is_download_allowed:
-            self.status_msg = "Download not allowed (tsp or yt-dlp not found)"
-            return
-
         if len(self.lines) == 0 or self.page_state != PageState.ENTRIES:
             return
         selected_data = self.lines[self.index].data
@@ -589,11 +573,6 @@ class TuiProps:
             self.mark_as_watched()
 
     def download_all(self, callback: Callable[[int], bool] | None = None) -> None:
-        self._check_executables()
-        if not self.__is_download_allowed:
-            self.status_msg = "Download not allowed (tsp or yt-dlp not found)"
-            return
-
         if len(self.lines) == 0:
             return
         selected_data = self.lines[self.index].data
