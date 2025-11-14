@@ -2,8 +2,6 @@ import logging
 from os.path import expandvars
 from pathlib import Path
 import re
-import subprocess as sp
-import sys
 from urllib.request import urlopen
 from urllib.parse import urlparse
 from xml.etree.ElementTree import XML
@@ -86,20 +84,3 @@ def human_readable_size(size: int) -> str:
     p = math.pow(1024, i)
     s = round(size / p, 2)
     return "%s %s" % (s, size_name[i])
-
-
-def open_url(url: str) -> None:
-    popen = lambda c, shell=False: sp.Popen(
-        c,
-        stderr=sp.DEVNULL,
-        stdout=sp.DEVNULL,
-        shell=shell,
-    )
-    if sys.platform.startswith("linux"):
-        popen(["xdg-open", url])
-    elif sys.platform == "darwin":
-        popen(["open", url])
-    elif sys.platform.startswith("win"):
-        popen(["cmd", "/c", "start", "", url], shell=True)
-    else:
-        raise NotImplementedError()

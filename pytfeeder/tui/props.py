@@ -623,4 +623,4 @@ class TuiProps:
         if len(channel.channel_id) != 24:
             return
         self.status_msg = f"Opening {channel.title!r} in browser"
-        utils.open_url(url.format(channel_id=channel.channel_id))
+        self.cmd.open_url(url.format(channel_id=channel.channel_id))

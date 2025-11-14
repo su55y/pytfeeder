@@ -1,4 +1,5 @@
 import subprocess as sp
+import sys
 
 from pytfeeder.models import Entry
 
@@ -16,6 +17,13 @@ class Cmd:
         self.download_cmd = download_cmd
         self.download_output = download_output
         self.send_notification = True
+        self.open_cmd = ""
+        if sys.platform.startswith("linux"):
+            self.open_cmd = "xdg-open {url}"
+        elif sys.platform == "darwin":
+            self.open_cmd = "open {url}"
+        elif sys.platform.startswith("win"):
+            self.open_cmd = "cmd /c start {url}"
 
     def yt_url(self, vid_id: str) -> str:
         return f"https://youtu.be/{vid_id}"
@@ -46,4 +54,10 @@ class Cmd:
         if not msg or not self.send_notification:
             return
         cmd = self.notify_cmd.format(msg=msg.replace("'", ""))
+        self._exec_cmd(cmd)
+
+    def open_url(self, url: str) -> None:
+        if not self.open_cmd:
+            raise NotImplementedError(f"open cmd not implemented for {sys.platform}")
+        cmd = self.open_cmd.format(url=url)
         self._exec_cmd(cmd)
