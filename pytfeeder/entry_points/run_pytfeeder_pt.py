@@ -755,8 +755,8 @@ class App(TuiProps):
                 self.status_title = "RESTORING"
 
         @kb.add("c-o")
-        def _open_channel_in_browser(_) -> None:
-            self.open_channel_in_browser()
+        def _open_in_browser(_) -> None:
+            self.open_in_browser()
 
         @kb.add("tab")
         def _show_tags(_) -> None:

@@ -298,7 +298,7 @@ class App(TuiProps):
                     if self.enter_restore(0):
                         screen.clear()
                 case Key.CTRL_O:
-                    self.open_channel_in_browser()
+                    self.open_in_browser()
                 case Key.TAB:
                     if self.is_filtered or self.page_state == PageState.RESTORING:
                         continue

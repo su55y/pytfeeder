@@ -68,7 +68,7 @@ HELP_KEYBINDINGS = {
     "C-f": "Open Feed",
     "C-h": "Move to start screen",
     "C-r": "Enter channels restoring",
-    "C-o": "Open channel in browser",
+    "C-o": "Open in browser",
     "Enter, Space": "Restore whole channel in restore mode",
     "l, o, Right": "Enter channel in restore mode",
     "/": "Open filter prompt (C-c or Esc to close)",
