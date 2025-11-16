@@ -41,6 +41,7 @@ tui:
   new_mark: N
   no_update: false
   notify_cmd: notify-send -i youtube -a pytfeeder '{msg}'
+  open_cmd: xdg-open {url}
   play_cmd: mpv {url} --ytdl-raw-options=retries=infinite
   status_fmt: '{msg} {index} {title} {keybinds}'
   unwatched_first: false

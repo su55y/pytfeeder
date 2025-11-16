@@ -58,7 +58,7 @@ tui:
   datetime_fmt: '%b %d'
 
   # download cmd (singlequotes from title are removed)
-  download_cmd: 'tsp -D $(tsp -L pytfeeder yt-dlp {url} -o ''{output}'') -- notify-send -i youtube -a pytfeeder ''✅Download done: {title}'''
+  download_cmd: "tsp -D $(tsp -L pytfeeder yt-dlp {url} -o '{output}') -- notify-send -i youtube -a pytfeeder '✅Download done: {title}'"
 
   # the download output template used as value for yt-dlp's option `-o`
   download_output: ~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s
@@ -104,6 +104,9 @@ tui:
 
   # notifications cmd, should include `{msg}` placeholder (singlequotes from msg are removed)
   notify_cmd: notify-send -i youtube -a pytfeeder '{msg}'
+
+  # open in browser cmd (mac: `open {url}`, windows: `cmd /c start {url}`)
+  open_cmd: xdg-open {url}
 
   # play cmd, should include `{url}` placeholder
   play_cmd: mpv {url} --ytdl-raw-options=retries=infinite

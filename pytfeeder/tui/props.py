@@ -35,6 +35,7 @@ class TuiProps:
         self.cmd = Cmd(
             play_cmd=self.c.play_cmd,
             notify_cmd=self.c.notify_cmd,
+            open_cmd=self.c.open_cmd,
             download_cmd=self.c.download_cmd,
             download_output=self.c.download_output,
         )

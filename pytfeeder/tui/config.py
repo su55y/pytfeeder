@@ -26,6 +26,7 @@ class ConfigTUI:
     new_mark: str = consts.DEFAULT_NEW_MARK
     no_update: bool = False
     notify_cmd: str = consts.DEFAULT_NOTIFY_CMD
+    open_cmd: str = consts.default_open_cmd()
     play_cmd: str = consts.DEFAULT_PLAY_CMD
     status_fmt: str = consts.DEFAULT_STATUS_FMT
     unwatched_first: bool = False

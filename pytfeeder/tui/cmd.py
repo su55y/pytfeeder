@@ -9,21 +9,16 @@ class Cmd:
         self,
         play_cmd: str,
         notify_cmd: str,
+        open_cmd: str,
         download_cmd: str,
         download_output: str,
     ) -> None:
         self.play_cmd = play_cmd
         self.notify_cmd = notify_cmd
+        self.open_cmd = open_cmd
         self.download_cmd = download_cmd
         self.download_output = download_output
         self.send_notification = True
-        self.open_cmd = ""
-        if sys.platform.startswith("linux"):
-            self.open_cmd = "xdg-open {url}"
-        elif sys.platform == "darwin":
-            self.open_cmd = "open {url}"
-        elif sys.platform.startswith("win"):
-            self.open_cmd = "cmd /c start {url}"
 
     def yt_url(self, vid_id: str) -> str:
         return f"https://youtu.be/{vid_id}"

@@ -15,6 +15,22 @@ DEFAULT_DOWNLOAD_OUTPUT = "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
 DEFAULT_DOWNLOAD_CMD = "tsp -D $(tsp -L pytfeeder yt-dlp {url} -o '{output}') -- notify-send -i youtube -a pytfeeder '✅Download done: {title}'"
 DEFAULT_PLAY_CMD = "mpv {url} --ytdl-raw-options=retries=infinite"
 DEFAULT_NOTIFY_CMD = "notify-send -i youtube -a pytfeeder '{msg}'"
+DEFAULT_OPEN_CMD = "xdg-open {url}"
+DEFAULT_OPEN_CMD_M = "open {url}"
+DEFAULT_OPEN_CMD_W = "cmd /c start {url}"
+
+
+def default_open_cmd() -> str:
+    import sys
+
+    if sys.platform.startswith("linux"):
+        return DEFAULT_OPEN_CMD
+    if sys.platform == "darwin":
+        return DEFAULT_OPEN_CMD_M
+    if sys.platform.startswith("win"):
+        return DEFAULT_OPEN_CMD_W
+    return ""
+
 
 OPTIONS_DESCRIPTION = """
 macros available only in entries screens with args:
