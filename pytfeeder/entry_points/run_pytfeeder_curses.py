@@ -41,6 +41,8 @@ class Key(IntEnum):
     G = ord("G")
     J = ord("J")
     K = ord("K")
+    O = ord("O")
+    S = ord("S")
     a = ord("a")
     b = ord("b")
     c = ord("c")
@@ -57,7 +59,6 @@ class Key(IntEnum):
     q = ord("q")
     r = ord("r")
     s = ord("s")
-    S = ord("S")
     t = ord("t")
     u = ord("u")
     F1 = 265
@@ -299,6 +300,8 @@ class App(TuiProps):
                         screen.clear()
                 case Key.CTRL_O:
                     self.open_in_browser()
+                case Key.O:
+                    self.open_in_browser(always_channel=True)
                 case Key.TAB:
                     if self.is_filtered or self.page_state == PageState.RESTORING:
                         continue

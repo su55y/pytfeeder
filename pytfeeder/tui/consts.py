@@ -85,6 +85,7 @@ HELP_KEYBINDINGS = {
     "C-h": "Move to start screen",
     "C-r": "Enter channels restoring",
     "C-o": "Open in browser",
+    "O": "Open cahnnel in browser",
     "Enter, Space": "Restore whole channel in restore mode",
     "l, o, Right": "Enter channel in restore mode",
     "/": "Open filter prompt (C-c or Esc to close)",

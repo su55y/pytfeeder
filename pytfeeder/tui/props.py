@@ -5,7 +5,7 @@ import time
 import sys
 from typing import Callable
 
-from pytfeeder import Feeder, __version__, utils  # FIXME: circular import
+from pytfeeder import Feeder, __version__  # FIXME: circular import
 from pytfeeder.models import Channel, Entry, Tag
 from .args import format_keybindings
 from .consts import DEFAULT_KEYBINDS, DEFAULT_KEYBINDS_R, DEFAULT_KEYBINDS_RE
@@ -593,13 +593,17 @@ class TuiProps:
     def play(self, entry: Entry) -> None:
         self.cmd.play_video(entry)
 
-    def open_in_browser(self) -> None:
+    def open_in_browser(self, always_channel: bool = False) -> None:
         if self.index not in range(len(self.lines)):
             return
+
         selected_data = self.lines[self.index].data
-        if isinstance(selected_data, Entry):
+        if isinstance(selected_data, Tag):
+            return
+
+        if isinstance(selected_data, Entry) and not always_channel:
             url = f"https://www.youtube.com/watch?v={selected_data.id}"
-        elif isinstance(selected_data, Channel):
+        elif len(selected_data.channel_id) == 24:
             url = f"https://www.youtube.com/channel/{selected_data.channel_id}"
         else:
             return

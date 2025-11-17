@@ -758,6 +758,10 @@ class App(TuiProps):
         def _open_in_browser(_) -> None:
             self.open_in_browser()
 
+        @kb.add("O")
+        def _open_channel_in_browser(_) -> None:
+            self.open_in_browser(always_channel=True)
+
         @kb.add("tab")
         def _show_tags(_) -> None:
             if self.is_filtered or self.page_state == PageState.RESTORING:
