@@ -1,3 +1,4 @@
+import logging
 import subprocess as sp
 import sys
 
@@ -12,6 +13,7 @@ class Cmd:
         open_cmd: str,
         download_cmd: str,
         download_output: str,
+        logger: logging.Logger | None = None,
     ) -> None:
         self.play_cmd = play_cmd
         self.notify_cmd = notify_cmd
@@ -19,11 +21,14 @@ class Cmd:
         self.download_cmd = download_cmd
         self.download_output = download_output
         self.send_notification = True
+        self.logger = logger
 
     def yt_url(self, vid_id: str) -> str:
         return f"https://youtu.be/{vid_id}"
 
     def _exec_cmd(self, cmd: str) -> None:
+        if self.logger:
+            self.logger.debug(f"executing {cmd!r}")
         _ = sp.Popen(cmd, shell=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
 
     def download_video(self, entry: Entry) -> None:

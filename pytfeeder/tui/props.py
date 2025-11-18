@@ -38,6 +38,7 @@ class TuiProps:
             open_cmd=self.c.open_cmd,
             download_cmd=self.c.download_cmd,
             download_output=self.c.download_output,
+            logger=self.feeder.log,
         )
         self.channels: list[Channel] = list()
         self.__max_unwatched_num_len = 0
