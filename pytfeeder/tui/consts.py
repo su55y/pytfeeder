@@ -33,10 +33,6 @@ def default_open_cmd() -> str:
 
 
 OPTIONS_DESCRIPTION = """
-macros available only in entries screens with args:
-    $1 - id
-    $2 - title
-
 channels-fmt keys:
     {index}           - line index
     {title}           - title of the channel
@@ -57,6 +53,10 @@ status-fmt keys:
     {msg}           - status message
     {title}         - current feed title
     {last_update}   - time of last update (optionally formatted with `--last-update-fmt`)
+
+macros-fmt keys (available only for entries):
+    {id}    - video id
+    {title} - video title
 """
 
 HELP_KEYBINDINGS = {

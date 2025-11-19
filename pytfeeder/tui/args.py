@@ -111,22 +111,22 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--macro1",
-        metavar="EXE",
+        metavar="CMD",
         help="F1 macro",
     )
     parser.add_argument(
         "--macro2",
-        metavar="EXE",
+        metavar="CMD",
         help="F2 macro",
     )
     parser.add_argument(
         "--macro3",
-        metavar="EXE",
+        metavar="CMD",
         help="F3 macro",
     )
     parser.add_argument(
         "--macro4",
-        metavar="EXE",
+        metavar="CMD",
         help="F4 macro",
     )
     parser.add_argument(

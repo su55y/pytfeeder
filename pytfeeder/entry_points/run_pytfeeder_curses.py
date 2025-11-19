@@ -2,7 +2,6 @@ import asyncio
 import curses
 from enum import Enum, IntEnum, auto
 import re
-import subprocess as sp
 from typing import Literal
 import sys
 
@@ -477,12 +476,9 @@ class App(TuiProps):
         if not isinstance(selected_data, Entry):
             return
 
-        self.status_msg = f"executing {macro!r}..."
-        sp.Popen(
-            [macro, selected_data.id, selected_data.title],
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
-        )
+        cmd = macro.format(id=selected_data.id, title=selected_data.title)
+        self.status_msg = f"executing {cmd!r}..."
+        self.cmd.execute_macro(cmd)
 
     def open_help(self, screen: curses.window) -> None:
         screen.clear()

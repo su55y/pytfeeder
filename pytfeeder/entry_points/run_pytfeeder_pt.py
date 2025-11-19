@@ -1,5 +1,4 @@
 from enum import Enum, auto
-import subprocess as sp
 import sys
 
 from prompt_toolkit.application import Application, get_app
@@ -686,11 +685,9 @@ class App(TuiProps):
             if not isinstance(selected_data, Entry):
                 return
 
-            sp.Popen(
-                [macro, selected_data.id, selected_data.title],
-                stdout=sp.DEVNULL,
-                stderr=sp.DEVNULL,
-            )
+            cmd = macro.format(id=selected_data.id, title=selected_data.title)
+            self.status_msg = f"executing {cmd!r}..."
+            self.cmd.execute_macro(cmd)
 
         @kb.add("a")
         def _mark_as_watched(_) -> None:

@@ -31,6 +31,9 @@ class Cmd:
             self.logger.debug(f"executing {cmd!r}")
         _ = sp.Popen(cmd, shell=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
 
+    def execute_macro(self, cmd: str) -> None:
+        self._exec_cmd(cmd)
+
     def download_video(self, entry: Entry) -> None:
         _ = self.notify(f"⬇️Start downloading {entry.title!r}...")
         cmd = self.download_cmd.format(
