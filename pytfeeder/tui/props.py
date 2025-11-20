@@ -50,13 +50,15 @@ class TuiProps:
         self.help_status = " version {version} [h,q,Left]: close help".format(
             version=__version__
         )
-        macros = {
+        self.macros = {
             "F1": self.c.macro1,
             "F2": self.c.macro2,
             "F3": self.c.macro3,
             "F4": self.c.macro4,
         }
-        self.help_lines = list(map(lambda s: s.lstrip(), format_keybindings(macros)))
+        self.help_lines = list(
+            map(lambda s: s.lstrip(), format_keybindings(self.macros))
+        )
         self.index = 0
         self.is_filtered = False
         self._is_feed_opened = False
@@ -593,6 +595,19 @@ class TuiProps:
 
     def play(self, entry: Entry) -> None:
         self.cmd.play_video(entry)
+
+    def handle_macro(self, key: str) -> None:
+        if len(self.lines) == 0:
+            return
+        selected_data = self.lines[self.index].data
+        if not isinstance(selected_data, Entry):
+            return
+        macro = self.macros.get(key)
+        if not macro:
+            return
+        cmd = macro.format(id=selected_data.id, title=selected_data.title)
+        self.status_msg = f"executing {cmd!r}..."
+        self.cmd.execute_macro(cmd)
 
     def open_in_browser(self, always_channel: bool = False) -> None:
         if self.index not in range(len(self.lines)):

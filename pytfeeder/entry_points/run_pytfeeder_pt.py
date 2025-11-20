@@ -73,12 +73,6 @@ class App(TuiProps):
         self.filter_text = ""
         self.help_index = 0
         self.is_help_opened = False
-        self.macros = {
-            "f1": self.c.macro1,
-            "f2": self.c.macro2,
-            "f3": self.c.macro3,
-            "f4": self.c.macro4,
-        }
         self.status_title = ""
 
         self.statusbar_window = Window(
@@ -662,32 +656,13 @@ class App(TuiProps):
                 self.jump_buffer.text = str(event.key_sequence.pop().key)
                 self.jump_buffer.cursor_position = 1
 
-        @kb.add("f1")
-        @kb.add("f2")
-        @kb.add("f3")
-        @kb.add("f4")
-        def _macro(event: KeyPressEvent) -> None:
-            if (
-                self.page_state != PageState.ENTRIES
-                or len(self.lines) == 0
-                or len(event.key_sequence) != 1
-            ):
-                return
+        for k in self.macros:
 
-            macro = self.macros.get(key := event.key_sequence.pop().key)
-            if not macro or len(macro) == 0:
-                self.status_msg = f"macro {key!r} not found"
-                return
-
-            self.status_msg = f"executing {macro!r}..."
-
-            selected_data = self.lines[self.index].data
-            if not isinstance(selected_data, Entry):
-                return
-
-            cmd = macro.format(id=selected_data.id, title=selected_data.title)
-            self.status_msg = f"executing {cmd!r}..."
-            self.cmd.execute_macro(cmd)
+            @kb.add(k.lower())
+            def _macro(event: KeyPressEvent) -> None:
+                if len(self.lines) == 0 or len(event.key_sequence) != 1:
+                    return
+                self.handle_macro(event.key_sequence[0].key.upper())
 
         @kb.add("a")
         def _mark_as_watched(_) -> None:

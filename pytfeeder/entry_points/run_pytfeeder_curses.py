@@ -125,12 +125,6 @@ class App(TuiProps):
 
         self._g_pressed = False
         self.gravity = Gravity.DOWN
-        self.macros = {
-            Key.F1: self.c.macro1,
-            Key.F2: self.c.macro2,
-            Key.F3: self.c.macro3,
-            Key.F4: self.c.macro4,
-        }
         self.scroll_top = 0
 
     def start(self) -> None:
@@ -211,7 +205,7 @@ class App(TuiProps):
                     if not self.is_filtered:
                         self.handle_input(screen)
                 case Key.F1 | Key.F2 | Key.F3 | Key.F4:
-                    self.handle_macro(ch)
+                    self.handle_macro(Key(ch).name)
                 case (
                     Key.N1
                     | Key.N2
@@ -462,23 +456,6 @@ class App(TuiProps):
                     self.scroll_top = max(self.scroll_top - 1, 0)
                 if self.index + 1 == len(self.lines):
                     self.scroll_top = max((self.index + 1) - max_rows, 0)
-
-    def handle_macro(self, key: Literal[Key.F1, Key.F2, Key.F3, Key.F4]) -> None:
-        if self.page_state != PageState.ENTRIES:
-            return
-        if len(self.lines) == 0:
-            return
-        macro = self.macros.get(key)
-        if not macro or len(macro) == 0:
-            return
-
-        selected_data = self.lines[self.index].data
-        if not isinstance(selected_data, Entry):
-            return
-
-        cmd = macro.format(id=selected_data.id, title=selected_data.title)
-        self.status_msg = f"executing {cmd!r}..."
-        self.cmd.execute_macro(cmd)
 
     def open_help(self, screen: curses.window) -> None:
         screen.clear()
