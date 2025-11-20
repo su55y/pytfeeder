@@ -2,7 +2,6 @@ import asyncio
 import curses
 from enum import Enum, IntEnum, auto
 import re
-from typing import Literal
 import sys
 
 from pytfeeder import Config, Feeder, Storage, __version__

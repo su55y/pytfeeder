@@ -8,8 +8,13 @@ from typing import Callable
 from pytfeeder import Feeder, __version__  # FIXME: circular import
 from pytfeeder.models import Channel, Entry, Tag
 from .args import format_keybindings
-from .consts import DEFAULT_KEYBINDS, DEFAULT_KEYBINDS_R, DEFAULT_KEYBINDS_RE
 from .cmd import Cmd
+from .consts import (
+    DEFAULT_KEYBINDS,
+    DEFAULT_KEYBINDS_R,
+    DEFAULT_KEYBINDS_RE,
+    DEFAULT_HELP_STATUS,
+)
 
 
 class PageState(Enum):
@@ -47,9 +52,7 @@ class TuiProps:
         self._channels_indexes_map = self._make_channels_indexes_map()
         self._tags_indexes_map = self._make_tags_indexes_map()
         self.entry_formats = [self.c.entries_fmt, self.c.feed_entries_fmt]
-        self.help_status = " version {version} [h,q,Left]: close help".format(
-            version=__version__
-        )
+        self.help_status = DEFAULT_HELP_STATUS.format(version=__version__)
         self.macros = {
             "F1": self.c.macro1,
             "F2": self.c.macro2,
