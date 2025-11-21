@@ -58,6 +58,14 @@ class TuiApp:
             "F2": self.c.macro2,
             "F3": self.c.macro3,
             "F4": self.c.macro4,
+            "F5": self.c.macro5,
+            "F6": self.c.macro6,
+            "F7": self.c.macro7,
+            "F8": self.c.macro8,
+            "F9": self.c.macro9,
+            "F10": self.c.macro10,
+            "F11": self.c.macro11,
+            "F12": self.c.macro12,
         }
         self.help_lines = list(
             map(lambda s: s.lstrip(), format_keybindings(self.macros))

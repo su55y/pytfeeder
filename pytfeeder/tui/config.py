@@ -34,6 +34,14 @@ class ConfigTUI:
     macro2: str = ""
     macro3: str = ""
     macro4: str = ""
+    macro5: str = ""
+    macro6: str = ""
+    macro7: str = ""
+    macro8: str = ""
+    macro9: str = ""
+    macro10: str = ""
+    macro11: str = ""
+    macro12: str = ""
 
     def __post_init__(self) -> None:
         if isinstance(self.color_accent, str):

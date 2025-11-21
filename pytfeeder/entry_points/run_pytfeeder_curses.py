@@ -63,6 +63,14 @@ class Key(IntEnum):
     F2 = 266
     F3 = 267
     F4 = 268
+    F5 = 269
+    F6 = 270
+    F7 = 271
+    F8 = 272
+    F9 = 273
+    F10 = 274
+    F11 = 275
+    F12 = 276
 
 
 class Gravity(IntEnum):
@@ -203,7 +211,20 @@ class App(TuiApp):
                 case Key.SLASH:
                     if not self.is_filtered:
                         self.handle_input(screen)
-                case Key.F1 | Key.F2 | Key.F3 | Key.F4:
+                case (
+                    Key.F1
+                    | Key.F2
+                    | Key.F3
+                    | Key.F4
+                    | Key.F5
+                    | Key.F6
+                    | Key.F7
+                    | Key.F8
+                    | Key.F9
+                    | Key.F10
+                    | Key.F11
+                    | Key.F12
+                ):
                     self.handle_macro(Key(ch).name)
                 case (
                     Key.N1

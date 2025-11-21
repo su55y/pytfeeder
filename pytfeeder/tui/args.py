@@ -10,7 +10,7 @@ def format_keybindings(macros: dict[str, str] = {}) -> list[str]:
     max_keys_w = max(len(keys) for keys in consts.HELP_KEYBINDINGS)
     tab = " " * 4
     if len(macros):
-        del consts.HELP_KEYBINDINGS["F1-F4"]
+        del consts.HELP_KEYBINDINGS["F1-F12"]
         for key in macros:
             if macros[key]:
                 consts.HELP_KEYBINDINGS[key] = macros[key]
@@ -108,26 +108,6 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--last-update-fmt",
         help=f"{{last_update}} status key datetime format (default: {consts.DEFAULT_LAST_UPDATE_FMT.replace('%', '%%')!r})",
-    )
-    parser.add_argument(
-        "--macro1",
-        metavar="CMD",
-        help="F1 macro",
-    )
-    parser.add_argument(
-        "--macro2",
-        metavar="CMD",
-        help="F2 macro",
-    )
-    parser.add_argument(
-        "--macro3",
-        metavar="CMD",
-        help="F3 macro",
-    )
-    parser.add_argument(
-        "--macro4",
-        metavar="CMD",
-        help="F4 macro",
     )
     parser.add_argument(
         "--new-mark",

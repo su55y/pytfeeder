@@ -97,5 +97,5 @@ HELP_KEYBINDINGS = {
     "u": "Toggle unwatched_first setting",
     "Tab": "Open tags",
     "c": "Redraw screen",
-    "F1-F4": "Execute macro 1-4",
+    "F1-F12": "Execute macro 1-12",
 }
