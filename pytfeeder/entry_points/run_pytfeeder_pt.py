@@ -27,7 +27,7 @@ from pytfeeder import Config, Feeder, Storage, __version__
 from pytfeeder.logger import init_logger, LogLevel
 from pytfeeder.models import Channel, Entry, Tag
 from pytfeeder.tui import args as tui_args, ConfigTUI
-from pytfeeder.tui.props import TuiProps, PageState, Line
+from pytfeeder.tui.app import TuiApp, PageState, Line
 
 
 class PromptContainer(ConditionalContainer):
@@ -65,7 +65,7 @@ class ConfirmType(Enum):
     DOWNLOAD = auto()
 
 
-class App(TuiProps):
+class App(TuiApp):
     def __init__(self, feeder: Feeder) -> None:
         super().__init__(feeder)
 

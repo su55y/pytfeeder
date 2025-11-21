@@ -31,7 +31,7 @@ class Line:
     data: Channel | Entry | Tag
 
 
-class TuiProps:
+class TuiApp:
     def __init__(self, feeder: Feeder) -> None:
         self.feeder = feeder
         self.c = self.feeder.config.tui
