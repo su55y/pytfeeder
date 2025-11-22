@@ -99,3 +99,17 @@ HELP_KEYBINDINGS = {
     "c": "Redraw screen",
     "F1-F12": "Execute macro 1-12",
 }
+
+
+def format_keybindings(macros: dict[str, str] = {}) -> list[str]:
+    max_keys_w = max(len(keys) for keys in HELP_KEYBINDINGS)
+    tab = " " * 4
+    if len(macros):
+        del HELP_KEYBINDINGS["F1-F12"]
+        for key in macros:
+            if macros[key]:
+                HELP_KEYBINDINGS[key] = macros[key]
+    return [
+        f"{tab}{keys:<{max_keys_w}}{tab}{desc}"
+        for keys, desc in HELP_KEYBINDINGS.items()
+    ]

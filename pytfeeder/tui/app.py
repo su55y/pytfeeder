@@ -7,13 +7,13 @@ from typing import Callable
 
 from pytfeeder import Feeder, __version__  # FIXME: circular import
 from pytfeeder.models import Channel, Entry, Tag
-from .args import format_keybindings
 from .cmd import Cmd
 from .consts import (
     DEFAULT_KEYBINDS,
     DEFAULT_KEYBINDS_R,
     DEFAULT_KEYBINDS_RE,
     DEFAULT_HELP_STATUS,
+    format_keybindings,
 )
 
 
