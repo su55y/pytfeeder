@@ -507,7 +507,7 @@ class App(TuiApp):
                 pass
 
             match screen.getch():
-                case Key.h | curses.KEY_LEFT | Key.q:
+                case Key.h | curses.KEY_LEFT | Key.q | Key.QUESTION_MARK:
                     screen.clear()
                     self.gravity = Gravity.DOWN
                     break
@@ -519,7 +519,17 @@ class App(TuiApp):
                     pad_pos = 0
                 case Key.G | curses.KEY_END:
                     pad_pos = (len(self.help_lines) + 1) - max_y
+                case Key.d | Key.f:
+                    h = max_y - 1
+                    assert h > 0
+                    pad_pos = min(pad_pos + h, len(self.help_lines) - h)
+                    self.gravity = Gravity.DOWN
+                case Key.u | Key.b:
+                    h = max_y - 1
+                    assert h > 0
+                    pad_pos = max(0, pad_pos - h)
                 case curses.KEY_RESIZE:
+                    screen.clear()
                     screen.refresh()
 
     def move_up(self) -> None:

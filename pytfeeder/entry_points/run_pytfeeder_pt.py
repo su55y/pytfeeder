@@ -338,7 +338,6 @@ class App(TuiApp):
             else:
                 self.help_index = min(self.help_index + 1, len(self.help_lines) - 1)
 
-        @kb.add("b")
         @kb.add("h")
         @kb.add("left")
         @kb.add("q")
@@ -350,6 +349,28 @@ class App(TuiApp):
             event.app.layout.reset()
             event.app.layout.focus(self.main_window)
             self.status_title = ""
+
+        @kb.add("d")
+        @kb.add("f")
+        def _go_screen_down(e: KeyPressEvent):
+            w = e.app.layout.current_window
+            if not w or not w.render_info:
+                return
+
+            h = w.render_info.window_height
+            w.vertical_scroll += h
+            self.help_index = min(self.help_index + h, len(self.help_lines) - 1)
+
+        @kb.add("u")
+        @kb.add("b")
+        def _go_screen_up(e: KeyPressEvent):
+            w = e.app.layout.current_window
+            if not w or not w.render_info:
+                return
+
+            h = w.render_info.window_height
+            w.vertical_scroll -= h
+            self.help_index = max(0, self.help_index - h)
 
         return kb
 
