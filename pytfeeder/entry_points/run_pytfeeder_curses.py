@@ -484,8 +484,7 @@ class App(TuiApp):
         pad = curses.newpad(len(self.help_lines) + 1, max_x)
 
         for i, line in enumerate(self.help_lines):
-            text = f"{line}"
-            pad.addnstr(i, 0, text, min(len(text), max_x))
+            pad.addnstr(i, 0, line, min(len(line), max_x))
 
         pad.addnstr(len(self.help_lines), 0, "~", 1)
 
@@ -494,10 +493,11 @@ class App(TuiApp):
 
         while True:
             max_y, max_x = screen.getmaxyx()
-            pad.refresh(pad_pos, 0, 0, 0, max_y - 2, max_x - 1)
+            h = max_y - 1
+            pad.refresh(pad_pos, 0, 0, 0, h - 1, max_x - 1)
             try:
                 screen.addnstr(
-                    max_y - 1,
+                    h,
                     0,
                     f"{self.help_status:<{max_x}}",
                     max_x,
@@ -512,21 +512,17 @@ class App(TuiApp):
                     self.gravity = Gravity.DOWN
                     break
                 case Key.j | curses.KEY_DOWN:
-                    pad_pos = min(pad_pos + 1, pad.getyx()[0] - (max_y - 1))
+                    pad_pos = min(pad_pos + 1, pad.getyx()[0] - h)
                 case Key.k | curses.KEY_UP:
                     pad_pos = max(0, pad_pos - 1)
                 case Key.g | curses.KEY_HOME:
                     pad_pos = 0
                 case Key.G | curses.KEY_END:
-                    pad_pos = (len(self.help_lines) + 1) - max_y
+                    pad_pos = len(self.help_lines) - h
                 case Key.d | Key.f:
-                    h = max_y - 1
-                    assert h > 0
                     pad_pos = min(pad_pos + h, len(self.help_lines) - h)
                     self.gravity = Gravity.DOWN
                 case Key.u | Key.b:
-                    h = max_y - 1
-                    assert h > 0
                     pad_pos = max(0, pad_pos - h)
                 case curses.KEY_RESIZE:
                     screen.clear()
