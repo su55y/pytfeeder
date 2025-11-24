@@ -648,6 +648,10 @@ class App(TuiApp):
                 self.filter_text = ""
                 if self.is_filtered:
                     self.reset_filter()
+                    if self.parent_index in range(0, len(self.channels)):
+                        self.status_title = self.channel_title(
+                            self.channels[self.parent_index].channel_id
+                        )
                 elif self.parent_index_tags > -1:
                     self.move_back_to_tag()
                     self.status_title = self.tag_by_index(self.parent_index_tags).title

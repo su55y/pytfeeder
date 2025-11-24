@@ -104,6 +104,8 @@ class TuiApp:
         )
 
     def channel_title(self, channel_id: str) -> str:
+        if channel_id == "feed":
+            return "Feed"
         return f"{self.feeder.channel_title(channel_id):^{self.max_len_chan_title}s}"
 
     @property
