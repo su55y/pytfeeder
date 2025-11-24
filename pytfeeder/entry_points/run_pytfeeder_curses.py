@@ -479,16 +479,15 @@ class App(TuiApp):
 
     def open_help(self, screen: curses.window) -> None:
         screen.clear()
-        max_y, max_x = screen.getmaxyx()
         pad_pos = 0
-        pad = curses.newpad(len(self.help_lines) + 1, max_x)
+        max_y, max_x = screen.getmaxyx()
 
+        pad = curses.newpad(len(self.help_lines) + 1, max_x)
         for i, line in enumerate(self.help_lines):
             pad.addnstr(i, 0, line, min(len(line), max_x))
-
         pad.addnstr(len(self.help_lines), 0, "~", 1)
-
         pad.refresh(pad_pos, 0, 0, 0, max_y - 2, max_x - 1)
+
         screen.refresh()
 
         while True:
