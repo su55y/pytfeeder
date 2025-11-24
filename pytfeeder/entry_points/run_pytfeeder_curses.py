@@ -377,11 +377,13 @@ class App(TuiApp):
                             )
                         self.scroll_top = 0
                         self.index = 0
-                    elif (
-                        self.page_state == PageState.ENTRIES
-                        and self.parent_index_tags > -1
-                    ):
-                        self.move_back_to_tag()
+                    elif self.page_state == PageState.ENTRIES:
+                        if self.is_filtered:
+                            self.reset_filter()
+                        elif self.parent_index_tags > -1:
+                            self.move_back_to_tag()
+                        else:
+                            self.move_back_to_channels()
                     else:
                         sys.exit(0)
 

@@ -644,11 +644,15 @@ class App(TuiApp):
                 else:
                     self.enter_restore(self.parent_index_restore, is_move_back=True)
                 self.index = 0
-            elif self.page_state == PageState.ENTRIES and self.parent_index_tags > -1:
+            elif self.page_state == PageState.ENTRIES:
+                self.filter_text = ""
                 if self.is_filtered:
-                    self.filter_text = ""
-                self.move_back_to_tag()
-                self.status_title = self.tag_by_index(self.parent_index_tags).title
+                    self.reset_filter()
+                elif self.parent_index_tags > -1:
+                    self.move_back_to_tag()
+                    self.status_title = self.tag_by_index(self.parent_index_tags).title
+                else:
+                    self.move_back_to_channels()
             else:
                 event.app.exit()
 
