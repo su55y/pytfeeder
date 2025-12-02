@@ -7,9 +7,7 @@ DEFAULT_NEW_MARK = "N"
 DEFAULT_STATUS_FMT = "{msg} {index} {title} {keybinds}"
 DEFAULT_KEYBINDS = "[h,j,k,l]: navigate, [q]: quit, [?]: help"
 DEFAULT_KEYBINDS_R = "[l,Right,o]: enter channel, [Space,Enter]: restore channel"
-DEFAULT_KEYBINDS_RE = (
-    "[l,Right,Space,Enter]: restore entry, [h,Left,Backspace,q]: return"
-)
+DEFAULT_KEYBINDS_RE = "[l,Right,Space,Enter]: restore entry, [h,Left,Backspace,q]: return, [A]: restore all"
 DEFAULT_HELP_STATUS = " version {version} [h,q,Left,?]: close help"
 DEFAULT_DOWNLOAD_OUTPUT = "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
 
