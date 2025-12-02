@@ -700,7 +700,11 @@ class App(TuiApp):
 
         @kb.add("A")
         def _mark_as_watched_all(_) -> None:
-            self.mark_as_watched_all()
+            if self.page_state == PageState.RESTORING_ENTRIES:
+                if self.restore_all_entries():
+                    self.filter_text = ""
+            else:
+                self.mark_as_watched_all()
 
         @kb.add("d")
         def _download(_) -> None:

@@ -241,7 +241,11 @@ class App(TuiApp):
                 case Key.a:
                     self.mark_as_watched()
                 case Key.A:
-                    self.mark_as_watched_all()
+                    if self.page_state == PageState.RESTORING_ENTRIES:
+                        if self.restore_all_entries():
+                            self.scroll_top = 0
+                    else:
+                        self.mark_as_watched_all()
                 case Key.J:
                     if self.handle_move(Gravity.DOWN):
                         self.scroll_top = 0

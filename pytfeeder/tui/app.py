@@ -293,7 +293,7 @@ class TuiApp:
             self.show_tags()
 
     def restore_channel(self, c: Channel) -> bool:
-        if self.page_state != PageState.RESTORING:
+        if self.page_state not in (PageState.RESTORING, PageState.RESTORING_ENTRIES):
             return False
         count = self.feeder.restore_channel(c)
         if count == 0:
@@ -352,6 +352,27 @@ class TuiApp:
             entry.is_deleted = not entry.is_deleted
             self.index = max(0, min(self.index + 1, len(self.lines) - 1))
             self.is_channels_outdated = True
+
+    def restore_all_entries(self) -> bool:
+        selected_data = self.lines[self.index].data
+        if not isinstance(selected_data, Entry):
+            return False
+        c = Channel(
+            channel_id=selected_data.channel_id,
+            title="DELETED",
+        )
+        if not self.restore_channel(c):
+            self.status_msg = f"failed to restore {c.channel_id}"
+            return False
+
+        self.index = 0
+        self.is_filtered = False
+
+        if self._is_in_restore_from_channel and self._restore_entries_channel_id:
+            self.page_state = PageState.ENTRIES
+            self.lines = self.get_lines_by_id(self._restore_entries_channel_id)
+            return True
+        return self.enter_restore(self.parent_index_restore, is_move_back=True)
 
     def show_tags(self) -> bool:
         if self.is_channels_outdated:
