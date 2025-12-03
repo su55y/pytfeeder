@@ -242,8 +242,8 @@ class App(TuiApp):
                     self.mark_as_watched()
                 case Key.A:
                     if self.page_state == PageState.RESTORING_ENTRIES:
-                        if self.restore_all_entries():
-                            self.scroll_top = 0
+                        self.scroll_top = 0
+                        self.restore_all_entries()
                     else:
                         self.mark_as_watched_all()
                 case Key.J:
@@ -364,23 +364,15 @@ class App(TuiApp):
                         if not self.show_tags():
                             self.move_back_to_channels()
                     elif self.page_state == PageState.RESTORING_ENTRIES:
+                        self.gravity = Gravity.DOWN
                         if self.is_filtered:
                             self.reset_filter()
-                            self.gravity = Gravity.DOWN
                         if (
                             self._is_in_restore_from_channel
                             and self._restore_entries_channel_id
                         ):
-                            self.page_state = PageState.ENTRIES
-                            self.lines = self.get_lines_by_id(
-                                self._restore_entries_channel_id
-                            )
-                        else:
-                            self.enter_restore(
-                                self.parent_index_restore, is_move_back=True
-                            )
-                        self.scroll_top = 0
-                        self.index = 0
+                            self.scroll_top = 0
+                        self.leave_restore_entries()
                     elif self.page_state == PageState.ENTRIES:
                         if self.is_filtered:
                             self.reset_filter()
@@ -631,10 +623,8 @@ class App(TuiApp):
         elif self.page_state == PageState.RESTORING_ENTRIES:
             self.gravity = Gravity.DOWN
             if self._is_in_restore_from_channel and self._restore_entries_channel_id:
-                self.page_state = PageState.ENTRIES
-                self.lines = self.get_lines_by_id(self._restore_entries_channel_id)
-            else:
-                self.enter_restore(self.parent_index_restore, is_move_back=True)
+                self.scroll_top = 0
+            self.leave_restore_entries()
 
     def move_right(self, ch: int) -> None:
         selected_data = self.lines[self.index].data

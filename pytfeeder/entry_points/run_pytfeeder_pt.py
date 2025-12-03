@@ -537,14 +537,11 @@ class App(TuiApp):
                     self._is_in_restore_from_channel
                     and self._restore_entries_channel_id
                 ):
-                    self.page_state = PageState.ENTRIES
-                    self.index = 0
                     self.status_title = self.channel_title(
                         self._restore_entries_channel_id
                     )
-                    self.lines = self.get_lines_by_id(self._restore_entries_channel_id)
-                else:
-                    self.enter_restore(self.parent_index_restore, is_move_back=True)
+
+                self.leave_restore_entries()
             elif self.parent_index_tags > -1:
                 if self.is_filtered:
                     self.filter_text = ""
@@ -636,14 +633,10 @@ class App(TuiApp):
                     self._is_in_restore_from_channel
                     and self._restore_entries_channel_id
                 ):
-                    self.page_state = PageState.ENTRIES
                     self.status_title = self.channel_title(
                         self._restore_entries_channel_id
                     )
-                    self.lines = self.get_lines_by_id(self._restore_entries_channel_id)
-                else:
-                    self.enter_restore(self.parent_index_restore, is_move_back=True)
-                self.index = 0
+                self.leave_restore_entries()
             elif self.page_state == PageState.ENTRIES:
                 self.filter_text = ""
                 if self.is_filtered:
@@ -701,8 +694,8 @@ class App(TuiApp):
         @kb.add("A")
         def _mark_as_watched_all(_) -> None:
             if self.page_state == PageState.RESTORING_ENTRIES:
-                if self.restore_all_entries():
-                    self.filter_text = ""
+                self.filter_text = ""
+                self.restore_all_entries()
             else:
                 self.mark_as_watched_all()
 
