@@ -2,7 +2,7 @@ import asyncio
 from functools import lru_cache, cached_property
 import logging
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientTimeout
 
 from .config import Config
 from .models import Channel, Entry, Tag
@@ -276,7 +276,13 @@ class Feeder:
         return self.stor.add_entries(parser.entries)
 
     async def _fetch_feed(self, session: ClientSession, url: str) -> str:
-        async with session.get(url) as resp:
-            self.log.debug(f"{resp.status} {resp.reason} {resp.url}")
-            resp.raise_for_status()
-            return await resp.text()
+        max_attempt = 2
+        for attempt in range(max_attempt):
+            async with session.get(url, timeout=ClientTimeout(total=10)) as resp:
+                self.log.debug(f"{resp.status} {resp.reason} {resp.url}")
+                if resp.status == 404 and attempt < max_attempt - 1:
+                    await asyncio.sleep(0.9)
+                    continue
+                resp.raise_for_status()
+                return await resp.text()
+        raise Exception(f"Failed after retrying: {url}")
