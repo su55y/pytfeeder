@@ -87,14 +87,22 @@ tui:
   # datetime format for {last_update} status key
   last_update_fmt: '%D %T'
 
-  # macros F1-F4, available only in entries screens
-  # passed args:
-  # -- $1 - entry id
-  # -- $2 - entry title
+  # macros F1-F12 (available only for entries)
+  # macros-fmt keys:
+  #  {id}    - video id
+  #  {title} - video title
   macro1: ''
   macro2: ''
   macro3: ''
   macro4: ''
+  macro5: ''
+  macro6: ''
+  macro7: ''
+  macro8: ''
+  macro9: ''
+  macro10: ''
+  macro11: ''
+  macro12: ''
 
   # new mark string
   new_mark: N
