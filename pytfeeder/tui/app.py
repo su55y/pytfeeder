@@ -644,7 +644,9 @@ class TuiApp:
         macro = self.macros.get(key)
         if not macro:
             return
-        cmd = macro.format(id=selected_data.id, title=selected_data.title)
+        cmd = macro.format(
+            id=selected_data.id, title=selected_data.title.replace("'", "")
+        )
         self.status_msg = f"executing {cmd!r}..."
         self.cmd.execute_macro(cmd)
 

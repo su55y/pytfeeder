@@ -28,7 +28,7 @@ class Cmd:
 
     def _exec_cmd(self, cmd: str) -> None:
         if self.logger:
-            self.logger.debug(f"executing {cmd!r}")
+            self.logger.info(f"executing {cmd!r}")
         _ = sp.Popen(cmd, shell=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
 
     def execute_macro(self, cmd: str) -> None:
