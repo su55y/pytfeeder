@@ -35,9 +35,17 @@ tui:
   hide_statusbar: false
   last_update_fmt: '%D %T'
   macro1: ''
+  macro10: ''
+  macro11: ''
+  macro12: ''
   macro2: ''
   macro3: ''
   macro4: ''
+  macro5: ''
+  macro6: ''
+  macro7: ''
+  macro8: ''
+  macro9: ''
   new_mark: N
   no_update: false
   notify_cmd: notify-send -i youtube -a pytfeeder '{msg}'
