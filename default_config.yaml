@@ -87,10 +87,10 @@ tui:
   # datetime format for {last_update} status key
   last_update_fmt: '%D %T'
 
-  # macros F1-F12 (available only for entries)
-  # macros-fmt keys:
-  #  {id}    - video id
-  #  {title} - video title
+  # macros F1-F12, fmt keys:
+  #  {id}         - video id
+  #  {title}      - video/channel title
+  #  {channel_id} - channel id
   macro1: ''
   macro2: ''
   macro3: ''

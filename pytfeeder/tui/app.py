@@ -639,14 +639,22 @@ class TuiApp:
         if len(self.lines) == 0:
             return
         selected_data = self.lines[self.index].data
-        if not isinstance(selected_data, Entry):
+        if isinstance(selected_data, Tag):
             return
         macro = self.macros.get(key)
         if not macro:
             return
-        cmd = macro.format(
-            id=selected_data.id, title=selected_data.title.replace("'", "")
+
+        kwargs = dict(
+            id="",
+            title=selected_data.title.replace("'", ""),
+            channel_id=selected_data.channel_id,
         )
+        if isinstance(selected_data, Entry):
+            kwargs["id"] = selected_data.id
+
+        cmd = macro.format(**kwargs)
+
         self.status_msg = f"executing {cmd!r}..."
         self.cmd.execute_macro(cmd)
 

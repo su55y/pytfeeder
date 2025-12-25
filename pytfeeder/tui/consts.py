@@ -53,9 +53,10 @@ status-fmt keys:
     {title}         - current feed title
     {last_update}   - time of last update (optionally formatted with `--last-update-fmt`)
 
-macros-fmt keys (available only for entries):
-    {id}    - video id
-    {title} - video title
+macros-fmt keys:
+    {id}         - video id
+    {title}      - video/channel title
+    {channel_id} - channel id
 """
 
 HELP_KEYBINDINGS = {
