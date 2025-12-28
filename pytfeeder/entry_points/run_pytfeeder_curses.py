@@ -314,6 +314,7 @@ class App(TuiApp):
 
                 case Key.CTRL_R:
                     if self.enter_restore(0):
+                        self.scroll_top = 0
                         screen.clear()
                 case Key.CTRL_O:
                     self.open_in_browser()
