@@ -170,10 +170,12 @@ class Storage:
         rows = self.fetchall_rows(query)
         return {c_id: (count, unwatched) for c_id, count, unwatched in rows}
 
-    def select_stats(self) -> list[tuple[str, int, int, int]]:
+    def select_stats(self) -> list[tuple[str, int, int, int, int]]:
         query = f"""
         SELECT channel_id, COUNT(channel_id) AS c1,
-        SUM(is_viewed = 0 AND is_deleted = 0), SUM(is_deleted = 1)
+        SUM(is_deleted = 0),
+        SUM(is_viewed = 0 AND is_deleted = 0),
+        SUM(is_deleted = 1)
         FROM {TB_ENTRIES} 
         GROUP BY channel_id ORDER BY c1 DESC;"""
         return self.fetchall_rows(query)

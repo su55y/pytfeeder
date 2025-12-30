@@ -91,26 +91,31 @@ def storage_stats(feeder: Feeder) -> str:
     channels_map = {c.channel_id: c.title for c in feeder.config.all_channels}
     stats = feeder.stor.select_stats()
 
+    total_total = feeder.stor.select_entries_count()
     total_count = feeder.total_entries_count()
     total_deleted = feeder.deleted_count()
     total_new = feeder.unwatched_count()
 
-    c1, c2, c3 = len(str(total_count)), len(str(total_new)), len(str(total_deleted))
-    c1, c2, c2 = max(c1, 3), max(c2, 3), max(c3, 3)
-    stats_line_width = max_title_len + c1 + c2 + c3 + 4
+    c1, c2, c3, c4 = (
+        max(len(str(total_count)), len('count')),
+        max(len(str(total_new)), len('new')),
+        max(len(str(total_deleted)), len('del')),
+        max(len(str(total_total)), len('total')),
+    )
+    stats_line_width = max_title_len + c1 + c2 + c3 + c4 + 4
 
-    total_nums = f"{total_count:{c1}d}|{total_new:{c2}d}|{total_deleted:{c3}d}"
+    total_nums = f"{total_count:{c1}d}|{total_new:{c2}d}|{total_deleted:{c3}d}|{total_total:{c4}d}"
     total_stats_footer = (
         f"{'='*stats_line_width}\n{'TOTAL':<{max_title_len+1}}|{total_nums}"
     )
 
-    header = f"{'TITLE':^{max_title_len+1}}|{'TOT':^{c1}}|{'NEW':^{c2}}|{'DEL':^{c3}}"
+    header = f"{'title':^{max_title_len+1}}|{'count':^{c1}}|{'new':^{c2}}|{'del':^{c3}}|{'total':^{c4}}"
     header += f"\n{'-'*len(header)}"
 
     entries_stats_str = ""
     deleted_stats_str = ""
-    for channel_id, count, new, deleted in stats:
-        nums = f"{count:{c1}d}|{new:{c2}d}|{deleted:{c3}d}"
+    for channel_id, total, count, new, deleted in stats:
+        nums = f"{count:{c1}d}|{new:{c2}d}|{deleted:{c3}d}|{total:{c4}d}"
         title = channels_map.get(channel_id)
         if title is None:
             deleted_stats_str += f"{channel_id:<{max_title_len+1}}|{nums}\n"
@@ -143,12 +148,14 @@ def storage_file_stats(storage_path: Path) -> str:
 
 
 def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
-    total = unwatched = deleted = 0
+    count = total = unwatched = deleted = 0
     last_update = ""
     channels_with_updates = ""
 
+    if "{count" in fmt:
+        count = feeder.total_entries_count()
     if "{total" in fmt:
-        total = feeder.total_entries_count()
+        total = feeder.stor.select_entries_count()
     if "{unwatched" in fmt:
         unwatched = feeder.unwatched_count()
     if "{deleted" in fmt:
@@ -174,6 +181,7 @@ def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
         )
 
     return fmt.format(
+        count=count,
         total=total,
         unwatched=unwatched,
         deleted=deleted,
