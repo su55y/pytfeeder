@@ -8,7 +8,7 @@ from pytfeeder.logger import LogLevel, init_logger
 
 STATS_FMT_KEYS = """
 stats-fmt keys:
-    {total}                 - total entries count
+    {total}                 - total entries count (excluding deleted)
     {unwatched}             - new entries count
     {deleted}               - marked as deleted entries count
     {last_update}           - last update datetime, can be used with fmt like `{last_update#%%D %%T}`
@@ -85,7 +85,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def entries_stats(feeder: Feeder) -> str:
+def storage_stats(feeder: Feeder) -> str:
     max_title_len = max(len(c.title) for c in feeder.config.channels)
     max_title_len = max(max_title_len, 24)
     channels_map = {c.channel_id: c.title for c in feeder.config.all_channels}
@@ -147,11 +147,11 @@ def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
     last_update = ""
     channels_with_updates = ""
 
-    if "{total}" in fmt:
+    if "{total" in fmt:
         total = feeder.total_entries_count()
-    if "{unwatched}" in fmt:
+    if "{unwatched" in fmt:
         unwatched = feeder.unwatched_count()
-    if "{deleted}" in fmt:
+    if "{deleted" in fmt:
         deleted = feeder.deleted_count()
     if "{last_update" in fmt:
         import re
@@ -168,7 +168,7 @@ def stats_fmt_str(feeder: Feeder, fmt: str) -> str:
 
         lu = feeder.updater.last_update
         last_update = lu.strftime(fmts.pop()) if lu else "Unknown"
-    if "{channels_with_updates}" in fmt:
+    if "{channels_with_updates" in fmt:
         channels_with_updates = "\n".join(
             c.title for c in feeder.channels if c.have_updates
         )
@@ -230,7 +230,7 @@ def main():
     feeder = Feeder(config, Storage(config.storage_path))
 
     if args.storage_stats:
-        print(entries_stats(feeder))
+        print(storage_stats(feeder))
         print("File stats:\n" + storage_file_stats(config.storage_path))
         sys.exit(0)
 
