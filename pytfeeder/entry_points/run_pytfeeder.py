@@ -8,7 +8,8 @@ from pytfeeder.logger import LogLevel, init_logger
 
 STATS_FMT_KEYS = """
 stats-fmt keys:
-    {total}                 - total entries count (excluding deleted)
+    {count}                 - entries count (excluding deleted)
+    {total}                 - total entries count
     {unwatched}             - new entries count
     {deleted}               - marked as deleted entries count
     {last_update}           - last update datetime, can be used with fmt like `{last_update#%%D %%T}`
@@ -45,7 +46,7 @@ def parse_args() -> argparse.Namespace:
         "-H",
         "--ignore-hidden",
         action="store_true",
-        help="Excludes updates count of hidden channels on `--sync`",
+        help="Excludes updates count of hidden channels on --sync",
     )
     parser.add_argument(
         "-p",
@@ -97,38 +98,38 @@ def storage_stats(feeder: Feeder) -> str:
     total_new = feeder.unwatched_count()
 
     c1, c2, c3, c4 = (
-        max(len(str(total_count)), len('count')),
-        max(len(str(total_new)), len('new')),
-        max(len(str(total_deleted)), len('del')),
-        max(len(str(total_total)), len('total')),
+        max(len(str(total_count)), len("count")),
+        max(len(str(total_new)), len("new")),
+        max(len(str(total_deleted)), len("del")),
+        max(len(str(total_total)), len("total")),
     )
-    stats_line_width = max_title_len + c1 + c2 + c3 + c4 + 4
+    stats_line_width = max_title_len + c1 + c2 + c3 + c4 + 5
 
     total_nums = f"{total_count:{c1}d}|{total_new:{c2}d}|{total_deleted:{c3}d}|{total_total:{c4}d}"
     total_stats_footer = (
-        f"{'='*stats_line_width}\n{'TOTAL':<{max_title_len+1}}|{total_nums}"
+        f"{'='*stats_line_width}\n{'Summary':<{max_title_len+1}}|{total_nums}"
     )
 
     header = f"{'title':^{max_title_len+1}}|{'count':^{c1}}|{'new':^{c2}}|{'del':^{c3}}|{'total':^{c4}}"
     header += f"\n{'-'*len(header)}"
 
-    entries_stats_str = ""
-    deleted_stats_str = ""
+    channels_stats_str = ""
+    unknown_stats_str = ""
     for channel_id, total, count, new, deleted in stats:
         nums = f"{count:{c1}d}|{new:{c2}d}|{deleted:{c3}d}|{total:{c4}d}"
         title = channels_map.get(channel_id)
         if title is None:
-            deleted_stats_str += f"{channel_id:<{max_title_len+1}}|{nums}\n"
+            unknown_stats_str += f"{channel_id:<{max_title_len+1}}|{nums}\n"
         else:
-            entries_stats_str += f"{title:<{max_title_len+1}}|{nums}\n"
+            channels_stats_str += f"{title:<{max_title_len+1}}|{nums}\n"
 
     unknown_section = ""
-    if deleted_stats_str:
+    if unknown_stats_str:
         unknown_section = (
-            f"{' UNKNOWN CHANNELS ':-^{stats_line_width}}\n{deleted_stats_str}"
+            f"{' UNKNOWN CHANNELS ':-^{stats_line_width}}\n{unknown_stats_str}"
         )
 
-    return f"{header}\n{entries_stats_str}{unknown_section}{total_stats_footer}\n"
+    return f"{header}\n{channels_stats_str}{unknown_section}{total_stats_footer}\n"
 
 
 def storage_file_stats(storage_path: Path) -> str:
