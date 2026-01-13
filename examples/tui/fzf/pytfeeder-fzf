@@ -38,6 +38,17 @@ done < <(
     GROUP BY channel_id"
 )
 
+download_() {
+    vid_id="$1"
+    if [ -z "$vid_id" ] || [ "${#vid_id}" -ne 11 ]; then
+        return
+    fi
+    vid_title="${2:-$vid_id}"
+    notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
+    qid="$(tsp -L pytfeeder yt-dlp "https://youtu.be/$vid_id" -o "$DOWNLOAD_OUTPUT")"
+    tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>&1
+}
+
 select_query() {
     if [ "$1" = feed ]; then
         cat <<EOF
@@ -91,13 +102,12 @@ while :; do
                     cid="${title##* }"
                     title="${title% *}"
                     c_title="${channels_map[$cid]}"
-                    id="$(printf '%s \033[3m%s\033[0m' "$id" "$c_title")"
+                    id="$(printf '%s \033[3m%s\033[0m' "$id" "${c_title#* }")"
                 fi
                 if [ $is_viewed -eq 0 ]; then
-                    printf '%s \033[1;32m%s\033[0m\n' "$id" "$title"
-                else
-                    echo "$id $title"
+                    title="$(printf '\033[1;32m%s\033[0m' "$title")"
                 fi
+                echo "$id $title"
             done | fzf --ansi --ghost="$channel_title" \
             --header='[esc,ctrl-q]: Go back, [ctrl-space]: Play' \
             --bind='ctrl-space:execute-silent(\
@@ -113,7 +123,5 @@ while :; do
     vid_title="$(echo "${selected_line#* }" | sed 's/^[ \t]*//; s/[ \t\n]*$//')"
 
     [ -n "$vid_id" ] || exit 0
-    notify-send -i youtube -a pytfeeder "⬇️Start downloading '$vid_title'..."
-    qid="$(tsp -L pytfeeder yt-dlp "https://youtu.be/$vid_id" -o "$DOWNLOAD_OUTPUT")"
-    tsp -D "$qid" notify-send -i youtube -a pytfeeder "✅Download done: '$vid_title'" >/dev/null 2>&1
+    download_ "$vid_id" "$vid_title"
 done
