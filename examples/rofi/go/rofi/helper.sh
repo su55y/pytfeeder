@@ -2,7 +2,7 @@
 
 # optional for download
 DOWNLOAD_OUTPUT="$HOME/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
-# go rofi executable
+# go helper executable
 PYTFEEDER_GO_ROFI="$SCRIPTPATH/go-ytfeeder-rofi"
 # storage filepath
 PYTFEEDER_STORAGE="${XDG_DATA_HOME:-$HOME/.local/share}/pytfeeder/pytfeeder.db"

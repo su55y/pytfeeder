@@ -1,19 +1,23 @@
 #!/bin/sh
 
+MODENAME=pytfeeder-rofi
+
 SCRIPTPATH="$(
     cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit 1
     pwd -P
 )"
 
-[ -f "$SCRIPTPATH/helper.sh" ] || {
-    notify-send -i rofi -a pytfeeder-rofi 'helper script not found'
+HELPER="$SCRIPTPATH/helper.sh"
+if [ ! -f "$HELPER" ]; then
+    printf '<b>%s</b>\n%s not found' "$MODENAME" "$HELPER" | rofi -markup -e -
     exit 1
-}
+fi
 
-[ -f "$SCRIPTPATH/helper.py" ] || {
-    notify-send -i rofi -a pytfeeder-rofi 'py helper script not found'
+PY_HELPER="$SCRIPTPATH/helper.py"
+if [ ! -f "$PY_HELPER" ]; then
+    printf '<b>%s</b>\n%s not found' "$MODENAME" "$PY_HELPER" | rofi -markup -e -
     exit 1
-}
+fi
 
 theme() {
     cat <<EOF
@@ -46,7 +50,7 @@ element.selected.urgent {
 EOF
 }
 
-HELPER="$SCRIPTPATH/helper.py" rofi -i -show pytfeeder-rofi \
-    -modi "pytfeeder-rofi:$SCRIPTPATH/helper.sh" \
-    -no-config -theme-str "$(theme)" \
-    -normal-window -eh 2
+PY_HELPER="$PY_HELPER" rofi -i -no-config \
+    -show "$MODENAME" -modi "$MODENAME:$HELPER" \
+    -eh 2 -theme-str "$(theme)" \
+    -normal-window
