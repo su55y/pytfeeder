@@ -1,9 +1,9 @@
 #!/bin/sh
 
+[ -f "$LAUNCHER" ] || exit 1
+
 # optional for download
 DOWNLOAD_OUTPUT="$HOME/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s"
-# go helper executable
-PYTFEEDER_GO_ROFI="$SCRIPTPATH/go-ytfeeder-rofi"
 # storage filepath
 PYTFEEDER_STORAGE="${XDG_DATA_HOME:-$HOME/.local/share}/pytfeeder/pytfeeder.db"
 
@@ -13,8 +13,6 @@ err_msg() {
     [ -n "$1" ] && printf '\000message\037error: %s\n\000urgent\0370\n \000nonselectable\037true\n' "$1"
     exit 1
 }
-
-[ -f "$PYTFEEDER_GO_ROFI" ] || err_msg "go executable not found at $PYTFEEDER_GO_ROFI"
 
 clean_title() {
     echo "$1" | sed -E 's/<[^>]+>[^<]*<\/[^>]*>//g' | sed 's/\r.*//;s/^[ \t]*//;s/[ \t]*$//'
@@ -61,7 +59,7 @@ print_feed() {
     printf '\000keep-filter\037true\n'
     printf '\000keep-selection\037true\n'
     printf 'back\000info\037main\n'
-    "$PYTFEEDER_GO_ROFI" -i feed \
+    "$GO_HELPER" -i feed \
         -feed-entries-fmt '{title}\r<b>{published}</b> <i>{channel_title}</i>\000info\037{id}\037active\037{active}' \
         -datetime-fmt '<i>%d %B</i>'
 }
@@ -70,7 +68,7 @@ start_menu() {
     case "$N" in
     2) print_feed ;;
     *)
-        "$PYTFEEDER_GO_ROFI" -channels-fmt '<b>[{unwatched_total}]</b> {title}\000info\037{id}\037active\037{active}'
+        "$GO_HELPER" -channels-fmt '<b>[{unwatched_total}]</b> {title}\000info\037{id}\037active\037{active}'
         printf "\000new-selection\0370\n"
         ;;
     esac
@@ -81,7 +79,7 @@ print_channel_feed() {
     printf '\000keep-filter\037true\n'
     printf '\000keep-selection\037true\n'
     printf 'back\000info\037main\n'
-    "$PYTFEEDER_GO_ROFI" -i="$1" \
+    "$GO_HELPER" -i="$1" \
         -entries-fmt '<b>{published}</b> {title}\000info\037{id}\037active\037{active}' \
         -datetime-fmt '%b %d'
 }
@@ -95,10 +93,10 @@ case $ROFI_RETV in
 # select line
 1)
     case "$ROFI_INFO" in
-    feed) setsid -f "${SCRIPTPATH}/launcher.sh" 2 >/dev/null 2>&1 ;;
+    feed) setsid -f "$LAUNCHER" 2 >/dev/null 2>&1 ;;
     main)
         case $N in
-        2) setsid -f "${SCRIPTPATH}/launcher.sh" >/dev/null 2>&1 ;;
+        2) setsid -f "$LAUNCHER" >/dev/null 2>&1 ;;
         *) start_menu ;;
         esac
         ;;

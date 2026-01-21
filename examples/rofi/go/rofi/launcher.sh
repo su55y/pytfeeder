@@ -19,6 +19,8 @@ if [ ! -f "$GO_HELPER" ]; then
     exit 1
 fi
 
+LAUNCHER="$SCRIPTPATH/$(basename "$0")"
+
 # theme string
 theme() {
     cat <<EOF
@@ -50,7 +52,7 @@ EOF
 }
 N=1
 [ -n "$1" ] && N="$1"
-N="$N" SCRIPTPATH="$SCRIPTPATH" rofi -i -no-config \
+N="$N" LAUNCHER="$LAUNCHER" GO_HELPER="$GO_HELPER" rofi -i -no-config \
     -show "$MODENAME" -modi "$MODENAME:$HELPER" \
     -eh "$N" -theme-str "$(theme)" \
     -normal-window
