@@ -669,7 +669,7 @@ class TuiApp:
         if isinstance(selected_data, Entry) and not always_channel:
             url = f"https://www.youtube.com/watch?v={selected_data.id}"
         elif len(selected_data.channel_id) == 24:
-            url = f"https://www.youtube.com/channel/{selected_data.channel_id}"
+            url = f"https://www.youtube.com/channel/{selected_data.channel_id}/videos"
         else:
             return
 
